@@ -8,11 +8,11 @@ class Admin:
         self.bot = bot
 
     @commands.command(hidden=True)
-    async def reload(self, *, module: str):
+    async def reload(self, *, mdl: str):
         """Reloads a module."""
         try:
-            self.bot.unload_extension(module)
-            self.bot.load_extension(module)
+            self.bot.unload_extension(mdl)
+            self.bot.load_extension(mdl)
         except Exception as e:
             await self.bot.say('\N{PISTOL}')
             await self.bot.say('{}: {}'.format(type(e).__name__, e))

@@ -11,14 +11,15 @@ discord_logger = logging.getLogger('discord')
 discord_logger.setLevel(logging.CRITICAL)
 log = logging.getLogger()
 log.setLevel(logging.INFO)
-handler = logging.FileHandler(filename='miki.log', encoding='utf-8', mode='w')
+handler = logging.FileHandler(filename='botto.log', encoding='utf-8', mode='w')
 log.addHandler(handler)
 
 initial_extensions = [
-    'modules.account',
+    # 'modules.account',
     'modules.pasta',
     'modules.admin',
     'modules.vote',
+    'modules.birthday',
     'modules.reactions'
 ]
 
@@ -46,9 +47,10 @@ async def on_ready():
     if not hasattr(bot, 'uptime'):
         bot.uptime = datetime.datetime.utcnow()
 
-@bot.event
-async def on_reaction_added():
-    print
+
+# @bot.event
+# async def on_reaction():
+#     print
 
 
 @bot.event
@@ -68,6 +70,10 @@ def load_credentials():
     if os.path.isfile("credentials.json"):
         with open('credentials.json') as f:
             return json.load(f)
+    else:
+        log.warning('file "credentials.json" not found; Generating...')
+        with open('credentials.json', 'w+') as f:
+            f.write(json.dumps({'token': '', 'client_id': ''}))
 
 
 if __name__ == '__main__':
@@ -77,15 +83,22 @@ if __name__ == '__main__':
         bot.command_prefix = '$'
         token = credentials.get('debug_token', credentials['token'])
     else:
-        token = credentials['token']
+        try:
+            token = credentials['token']
+        except TypeError:
+            log.critical('auth token not defined')
 
-    bot.client_id = credentials['client_id']
+    try:
+        bot.client_id = credentials['client_id']
+    except TypeError:
+        log.critical('client id not defined')
 
     for extension in initial_extensions:
         try:
             bot.load_extension(extension)
         except Exception as e:
             print('Failed to load extension {}\n{}: {}'.format(extension, type(e).__name__, e))
+            log.error('Failed to load extension {}\n{}: {}'.format(extension, type(e).__name__, e))
 
     bot.run(token)
     handlers = log.handlers[:]

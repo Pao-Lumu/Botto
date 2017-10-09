@@ -1,4 +1,3 @@
-import discord
 from random import randrange
 from discord.ext import commands
 
@@ -14,39 +13,49 @@ class Reactions:
     others = ['https://imgur.com/8hs1FJy', 'https://imgur.com/NedVAcC', 'https://imgur.com/k6In5Tp', 'https://imgur.com/cGB0Lt4', 'https://imgur.com/VdVsGaM', 'https://imgur.com/ZyyNgrw', 'https://imgur.com/fNzcuxc', 'https://imgur.com/vUuKoHL', 'https://imgur.com/QN1yi2V', 'https://imgur.com/86ajxf5', 'https://imgur.com/Haqa6eM','https://imgur.com/gallery/rMa3CWT','https://imgur.com/gallery/3FxJFLI']
 
     anything = dogs + cats + foxes + others
+
     def __init__(self, bot):
         self.bot = bot
 
     @commands.command(aliases=['doggo', 'puppy', 'pup', 'pupper','dogs','pups'])
     async def dog(self):
+        """
+        Put a cute puppy on in chat.
+        :return:
+        """
         pic = self._create_embed(self.dogs)
         await self.bot.say(pic)
 
     @commands.command(aliases=['kitty','kitten', 'cats'])
     async def cat(self):
-        '''
+        """
         Put a cute kitty in the channel.
-        '''
+        :return:
+        """
         pic = self._create_embed(self.cats)
         await self.bot.say(pic)
 
     @commands.command(aliases=['foxes', 'foxs', 'fax'])
     async def fox(self):
+        """
+        Put a cute fox in the channel.
+        :return:
+        """
         pic = self._create_embed(self.foxes)
         await self.bot.say(pic)
 
-#     @commands.command()
-#     async def baby(self):
-#         babies = ['']
-#         await self.bot.say(embed=e)a
-
     @commands.command(aliases=['aww','qt','squee','coot'])
     async def cute(self):
+        """
+        Put a random cute creature in the channel.
+        :return:
+        """
         pic = self._create_embed(self.anything)
         await self.bot.say(pic)
 
     def _create_embed(self, l):
         return l[randrange(0,len(l),1)]
+
 
 def setup(bot):
     bot.add_cog(Reactions(bot))
