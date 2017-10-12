@@ -1,2 +1,6 @@
+# bot token file
 credentials.json
+# compiled files
 *.pyc
+__pycache__/
+
