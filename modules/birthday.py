@@ -1,6 +1,6 @@
 from discord.ext import commands
 import utilities
-from .utils.miki_sql import AccountSQL, GuildSQL
+from .utils.botto_sql import AccountSQL, GuildSQL
 import datetime
 import discord
 
@@ -11,36 +11,43 @@ class Birthday:
         self.db = AccountSQL()
         self.gdb = GuildSQL()
 
-    @commands.command(pass_context=True,aliases=['birthdayset', 'setbirthday', 'bds'])
-    async def bdayset(self, ctx):
+    @commands.command(pass_context=True, aliases=['setbday', 'sbd'])
+    async def setbirthday(self, ctx):
         """
-        Use one of the following formats:
         yyyy-mm-dd
         yyyy/mm/dd
         yyyy|mm|dd
         """
-        print(dir(ctx))
-        print(dir(ctx.message))
-        print(dir(ctx.message.channel))
-        # print(dir(ctx.message.author))
-        # print(ctx.message.author.id)
-        # print(dir(ctx.message.type))
-        # print(dir(ctx.message.server))
         cmd = await self.extract_cmd_text(ctx)
-        year, day, month = cmd[0].replace('|', '-').replace('/', '-').split('-')
-        self.db.add(ctx.message.author.id)
-        self.db.set_user_birthday(ctx.message.author.id, int(day), int(month), int(year))
-        e = await utilities.success_embed('Set birthday for {}!'.format(ctx.message.author.name))
-        await self.bot.say(embed=e)
+        if cmd:
+            year, month, day = cmd[0].replace('|', '-').replace('/', '-').split('-')
+            self.db.add(ctx.message.author.id, day, month, year)
+            e = await utilities.success_embed('Set birthday for {} to {}-{}-{}!'.format(ctx.message.author.name, year, month, day))
+            await self.bot.say(embed=e)
+        else:
+            e = await utilities.error_embed('Sorry, that's the wrong format. Be sure to use the format: YYYY-MM-DD')
 
-    # @commands.command(pass_context=True, aliases=['bdt', 'birthdaystoday'])
-    # async def bdaytoday(self, ctx):
-    #     x = datetime.datetime.now().date()
-    #     guild = ctx.message.server.id
-    #     y,m,d = (x.year, x.month, x.day)
-    #     self.db.get_users_with_birthday(d,m,)
+    @commands.command(pass_context=True, aliases=['bdt', 'birthdaytoday', ''bdaystoday', 'bdaytoday'])
+    async def birthdaystoday(self, ctx):
+        """Displays people who have birthdays today."""
+        x = datetime.datetime.now().date()
+        guild = ctx.message.server
+        y,m,d = (x.year, x.month, x.day)
+        bdays = self.db.get_users_with_birthday(d,m)
+        e = discord.Embed()
+        e.set_author(name="Birthday's today:")
+        if bdays:
+            for user in bdays:
+                r = discord.utils.get(guild.members, id=user[0])
+                if r != None:
+                    e.add_field(name=r.name, value='Age: '+ str(y-int(user[1])))
+        else:
+            e.description = "Looks like no one's having a birthday today."
+        await self.bot.say(embed=e)
+                
+
     @commands.command(pass_context=True, hidden=True, aliases=['bdaychannelset', 'bdsc'])
-    async def bdaysetchannel(self, ctx):
+    async def setbirthdaychannel(self, ctx):
         channel = ''
         guild_id = ctx.message.server.id
         if len(ctx.message.channel_mentions) >= 1:
@@ -48,21 +55,25 @@ class Birthday:
         else:
             channel = ctx.message.channel
         self.gdb.set_guild_birthday_channel(guild_id, channel.id)
-        e = await utilities.success_embed('Successfully set birthday announcements channel to {}!'.format(channel.name))
+        e = await utilities.success_embed('Successfully set birthday announcement channel to {}!'.format(channel.name))
         await self.bot.say(embed=e)
 
     @commands.command(pass_context=True)
-    async def bdayinfo(self, ctx):
-        cid = self.gdb.get_guild_birthday_channel(ctx.message.server.id)
+    async def birthdayinfo(self, ctx):
+        """Shows a server's birthday announcement channel and the user's currently set birthday."""
+        cid = self.gdb.get_guild_birthday_channel(ctx.message.server.id)[0]
         channel = discord.utils.get(ctx.message.server.channels, id=cid)
-        y = self.db.get_user_birthday(ctx.message.author.id)
-        if y == None:
-            y = '\nNot Set'
-        await self.bot.say(str(channel)+str(y))
-    # @commands.command()
-    # async def
-    # @commands.command()
-    # async def
+        if ctx.message.mentions >= 1:
+            user = ctx.message.mentions[0].id
+        else:
+            user = ctx.message.author.id
+        uid = self.db.get_user_birthday(ctx.message.author.id)
+        if uid != None:
+            birthday = '{}-{}-{}'.format(y[2], y[1], y[0])
+        else:
+            birthday = 'Not Set'
+        e = await utilities.info_embed('Birthday channel: {}\nUser Birthday: {}'.format(channel.name, birthday))
+        await self.bot.say(embed=e)
 
 
     async def extract_cmd_text(self, ctx, spaces=-1, chr=' ', index=1):
@@ -75,3 +86,5 @@ class Birthday:
 def setup(bot):
     bot.add_cog(Birthday(bot))
     print('Loaded module birthday')
+
+# def teardown()

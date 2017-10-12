@@ -5,6 +5,7 @@ import os
 import sys
 import traceback
 
+import discord
 from discord.ext import commands
 
 discord_logger = logging.getLogger('discord')
@@ -40,6 +41,7 @@ async def on_command_error(error, ctx):
 
 @bot.event
 async def on_ready():
+    await bot.change_presence(game=discord.Game(name="with fire"))
     print('Logged in as:')
     print('Username: ' + bot.user.name)
     print('ID: ' + bot.user.id)
@@ -62,8 +64,11 @@ async def on_resumed():
 async def on_message(message):
     if message.author.bot:
         return
-
     await bot.process_commands(message)
+
+# @bot.event
+# async def on_server_join(server):
+#     await bot.process_commands()
 
 
 def load_credentials():
@@ -74,6 +79,7 @@ def load_credentials():
         log.warning('file "credentials.json" not found; Generating...')
         with open('credentials.json', 'w+') as f:
             f.write(json.dumps({'token': '', 'client_id': ''}))
+        print('Please input your bot\'s credentials and restart.')
 
 
 if __name__ == '__main__':

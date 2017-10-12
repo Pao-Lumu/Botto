@@ -4,7 +4,7 @@ import discord
 from discord.ext import commands
 
 import utilities
-from miki_sql import PastaSQL
+from .utils.botto_sql import PastaSQL
 
 
 class Pasta:

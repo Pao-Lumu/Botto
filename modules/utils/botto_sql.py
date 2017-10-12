@@ -7,8 +7,8 @@ class BaseSQL:
             self.db = sqlite3.connect(filename)
             self.cursor = self.db.cursor()
             self.cursor.execute('''CREATE TABLE pasta(pasta_tag text, pasta_text text, creator_id text, creation_date text, uses integer, likes integer, dislikes integer)''')
-            self.cursor.execute('''CREATE TABLE account(user_id text, bday_day int, bday_month int, bday_year int)''')
-            self.cursor.execute('''CREATE TABLE guild(guild_id int, bday_channel int)''')
+            self.cursor.execute('''CREATE TABLE account(user_id text, bday_day text, bday_month text, bday_year text)''')
+            self.cursor.execute('''CREATE TABLE guild(guild_id text, bday_channel text)''')
         else:
             self.db = sqlite3.connect(filename)
             self.cursor = self.db.cursor()
@@ -31,7 +31,7 @@ class AccountSQL(BaseSQL):
         if not self.exists(user_id):
             self.cursor.execute("INSERT INTO account VALUES(?,?,?,?)", (user_id, day, month, year,))
         else:
-            self.cursor.execute("UPDATE account SET bday_day=? AND bday_month=? AND bday_year=? WHERE user_id=?", (day, month, year, user_id))
+            self.cursor.execute("UPDATE account SET bday_day=?, bday_month=?, bday_year=? WHERE user_id=?", (day, month, year, user_id))
         self.db.commit()
 
     def exists(self, user_id):
@@ -46,14 +46,13 @@ class AccountSQL(BaseSQL):
 
     def get_user_birthday(self, user_id):
         if self.exists(user_id):
-            self.cursor.execute("SELECT * FROM account WHERE user_id=?", (user_id,))
+            self.cursor.execute("SELECT bday_day, bday_month, bday_year FROM account WHERE user_id=?", (user_id,))
             return self.cursor.fetchone()
         else:
             return None
 
-    def get_users_with_birthday(self, day, month, guild_id):
-        # self.cursor.execute("SELECT * FROM account WHERE bday_day=? AND bday_month=?", (day, month,guild_id))
-        self.cursor.execute("SELECT * FROM account WHERE bday_day=? AND bday_month=?", (day, month,))
+    def get_users_with_birthday(self, day, month):
+        self.cursor.execute("SELECT user_id, bday_year FROM account WHERE bday_day=? AND bday_month=?", (day, month,))
         return self.cursor.fetchall()
 
     def get_user_data(self, user_id, field='*'):
@@ -64,7 +63,7 @@ class AccountSQL(BaseSQL):
 
 
 
-# (guild_id int, bday_channel int)
+# (guild_id text, bday_channel text)
 class GuildSQL(BaseSQL):
     def add(self, guild_id, channel_id=None):
         if not self.exists(guild_id):
