@@ -4,7 +4,7 @@ import discord
 from discord.ext import commands
 
 import utilities
-from .utils.botto_sql import PastaSQL
+from utils.botto_sql import PastaSQL
 
 
 class Pasta:
@@ -12,7 +12,7 @@ class Pasta:
 
     def __init__(self, bot):
         self.bot = bot
-        self.db = PastaSQL()
+        self.db = PastaSQL(bot.db, bot.cursor)
         # self.cursor.execute('''CREATE TABLE pasta
         # (pasta_tag text, pasta_text text, creator_id text, creation_date text,
         # uses integer, likes integer, dislikes integer)''')

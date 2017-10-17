@@ -21,7 +21,8 @@ def init_funcs(bot):
         db = sqlite3.connect(db_name)
         cursor = db.cursor()
     bot.pruned_messages = []
-    bot.sqlite.cursor = cursor
+    bot.db = db
+    bot.cursor = cursor
 
 
 class Botto(commands.Bot):
@@ -32,7 +33,26 @@ class Botto(commands.Bot):
         super().__init__(command_prefix=command_prefix, *args, **kwargs)
         # TODO MAKE CUSTOM HELP THAT DOESN'T LOOK LIKE SHIT
         # self.remove_command('help')
+        init_funcs(self)
 
     @property
     def get_cursor(self):
         return cursor
+
+    def get_member(self, id:str):
+        return discord.utils.get(self.get_all_members(), id=id)
+
+    def run(self, token):
+        super().run(token)
+
+    def die(self):
+        try:
+            self.loop.stop()
+            db.close()
+            tasks = asyncio.gather(*asyncio.Task.alltasks(), loop=self.loop)
+            tasks.stop()
+            self.loop.run_forever()
+            tasks.exception()
+        except Exception as e:
+             print(e)
+

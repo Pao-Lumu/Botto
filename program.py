@@ -7,6 +7,7 @@ import traceback
 
 import discord
 from discord.ext import commands
+import botto
 
 discord_logger = logging.getLogger('discord')
 discord_logger.setLevel(logging.CRITICAL)
@@ -24,7 +25,7 @@ initial_extensions = [
     'modules.reactions'
 ]
 
-bot = commands.Bot(command_prefix=">>")
+bot = botto.Botto(command_prefix=">>")
 
 
 @bot.event

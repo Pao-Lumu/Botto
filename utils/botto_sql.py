@@ -2,24 +2,9 @@ import sqlite3
 import os.path
 
 class BaseSQL:
-    def __init__(self, filename='botto.db'):
-        if not os.path.exists(filename):
-            self.db = sqlite3.connect(filename)
-            self.cursor = self.db.cursor()
-            self.cursor.execute('''CREATE TABLE pasta(pasta_tag text, pasta_text text, creator_id text, creation_date text, uses integer, likes integer, dislikes integer)''')
-            self.cursor.execute('''CREATE TABLE account(user_id text, bday_day text, bday_month text, bday_year text)''')
-            self.cursor.execute('''CREATE TABLE guild(guild_id text, bday_channel text)''')
-        else:
-            self.db = sqlite3.connect(filename)
-            self.cursor = self.db.cursor()
-
-    def close(self):
-        self.db.commit()
-        self.db.close()
-
-    def close_no_save(self):
-        self.db.close()
-
+    def __init__(self, db, cursor):
+        self.cursor = cursor
+        self.db = db
 
 
 

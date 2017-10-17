@@ -10,33 +10,37 @@ import asyncio
 class Birthday:
     def __init__(self, bot):
         self.bot = bot
-        self.db = AccountSQL()
-        self.gdb = GuildSQL()
+        self.db = AccountSQL(bot.db, bot.cursor)
+        self.gdb = GuildSQL(bot.db, bot.cursor)
 
-    @commands.command()
+
+
+
+
+
+    @commands.command(hidden=True)
     async def _bday_loop(self):
         guilds = self.gdb.get_all_guild_birthday_channels()
         all_channels = []
         x = datetime.datetime.now().date()
         y, m, d = (x.year, x.month, x.day)
-        for channel in guilds:
-            bdchannel = discord.Channel(id=channel[0])
-            bdays = self.db.get_users_with_birthday(d, m)
-            e = discord.Embed()
-            e.set_author(name="Birthdays today:")
-            if bdays:
-                for user in bdays:
-                    r = discord.utils.get(bdchannel.server.members, id=user[0])
-                    if r != None:
-                        e.add_field(name=r.name, value='Age: ' + str(y - int(user[1])))
-            else:
-                e.description = "Looks like no one's having a birthday today."
-            all_channels.append((Announcement(self.bot, bdchannel), e))
-        # while True:
-        if True:
-            for ann, em in all_channels:
-                await ann.say_list(em)
-            await asyncio.sleep(10)
+        if guilds:
+            for channel in guilds:
+                bdchannel = discord.Object(id=channel[0])
+                bdays = self.db.get_users_with_birthday(d, m)
+                e = discord.Embed()
+                e.set_author(name="Birthdays today:")
+                if bdays:
+                    for user in bdays:
+                        r = discord.utils.get(bdchannel.server.members, id=user[0])
+                        if r != None:
+                            e.add_field(name=r.name, value='Age: ' + str(y - int(user[1])))
+                else:
+                    e.description = "Looks like no one's having a birthday today."
+                all_channels.append(Announcement(self.bot, bdchannel).say_list(e))
+            while True:
+                await asyncio.gather(*all_channels)
+                await asyncio.sleep(24*60*60)
 
     @commands.command(pass_context=True, aliases=['setbday', 'sbd'])
     async def setbirthday(self, ctx):
