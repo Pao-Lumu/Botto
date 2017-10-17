@@ -4,31 +4,31 @@ from utils.botto_sql import AccountSQL, GuildSQL
 from utils.announcement import Announcement
 import datetime
 import discord
+import asyncio
+
 
 class Birthday:
-
     def __init__(self, bot):
         self.bot = bot
         self.db = AccountSQL()
         self.gdb = GuildSQL()
-        # await _bday_loop()
 
     @commands.command()
     async def _bday_loop(self):
-        guilds = gdb.get_all_guild_birthday_channels()
+        guilds = self.gdb.get_all_guild_birthday_channels()
         all_channels = []
         x = datetime.datetime.now().date()
         y, m, d = (x.year, x.month, x.day)
-        for channel in guild:
-            bdchannel = discord.Object(id=guild[0], time=(0,0,0,0))
-            bdays = self.db.get_users_with_birthday(d,m)
+        for channel in guilds:
+            bdchannel = discord.Channel(id=channel[0])
+            bdays = self.db.get_users_with_birthday(d, m)
             e = discord.Embed()
             e.set_author(name="Birthdays today:")
             if bdays:
                 for user in bdays:
-                    r = discord.utils.get(bdchannel.guild.members, id=user[0])
+                    r = discord.utils.get(bdchannel.server.members, id=user[0])
                     if r != None:
-                        e.add_field(name=r.name, value='Age: '+ str(y-int(user[1])))
+                        e.add_field(name=r.name, value='Age: ' + str(y - int(user[1])))
             else:
                 e.description = "Looks like no one's having a birthday today."
             all_channels.append((Announcement(self.bot, bdchannel), e))
@@ -49,7 +49,8 @@ class Birthday:
         if cmd:
             year, month, day = cmd[0].replace('|', '-').replace('/', '-').split('-')
             self.db.add(ctx.message.author.id, day, month, year)
-            e = await utilities.success_embed('Set birthday for {} to {}-{}-{}!'.format(ctx.message.author.name, year, month, day))
+            e = await utilities.success_embed(
+                'Set birthday for {} to {}-{}-{}!'.format(ctx.message.author.name, year, month, day))
             await self.bot.say(embed=e)
         else:
             e = await utilities.error_embed("Sorry, that's the wrong format. Be sure to use the format: YYYY-MM-DD")
@@ -60,18 +61,17 @@ class Birthday:
         x = datetime.datetime.now().date()
         guild = ctx.message.server
         y, m, d = (x.year, x.month, x.day)
-        bdays = self.db.get_users_with_birthday(d,m)
+        bdays = self.db.get_users_with_birthday(d, m)
         e = discord.Embed()
         e.set_author(name="Birthday's today:")
         if bdays:
             for user in bdays:
                 r = discord.utils.get(guild.members, id=user[0])
                 if r != None:
-                    e.add_field(name=r.name, value='Age: '+ str(y-int(user[1])))
+                    e.add_field(name=r.name, value='Age: ' + str(y - int(user[1])))
         else:
             e.description = "Looks like no one's having a birthday today."
         await self.bot.say(embed=e)
-                
 
     @commands.command(pass_context=True, hidden=True, aliases=['bdaychannelset', 'bdsc'])
     async def setbirthdaychannel(self, ctx):
@@ -101,16 +101,16 @@ class Birthday:
             birthday = 'Not Set'
         e = await utilities.info_embed('Birthday channel: {}\nUser Birthday: {}'.format(channel.name, birthday))
         await self.bot.say(embed=e)
-        x = Announcement(self.bot, ctx.message.channel, time=(0,0,1,0))
+        x = Announcement(self.bot, ctx.message.channel, time=(0, 0, 1, 0))
         await x.wait_for_time(content="Smoq on the watani")
 
     @commands.command(pass_context=True, hidden=True)
     async def ggez(self, ctx):
-        x = Announcement(self.bot, ctx.message.channel, time=(0,0,0,3))
+        x = Announcement(self.bot, ctx.message.channel, time=(0, 0, 0, 3))
         ppap = ctx.message.channel.id
         await x.wait_for_time(content=ppap)
         shan = discord.Object(id=ppap)
-        y = Announcement(self.bot, shan, time=(0,0,0,1))
+        y = Announcement(self.bot, shan, time=(0, 0, 0, 1))
         await y.wait_for_time(content='hahg')
 
     async def extract_cmd_text(self, ctx, spaces=-1, chr=' ', index=1):
@@ -120,7 +120,7 @@ class Birthday:
             cmd = ctx.message.content.split(chr, spaces)[index:]
         return cmd
 
+
 def setup(bot):
     bot.add_cog(Birthday(bot))
     print('Loaded module birthday')
-
