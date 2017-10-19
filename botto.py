@@ -1,9 +1,11 @@
-import discord, asyncio
-from discord.ext import commands
+import asyncio
+import os.path
 # from .utils.botto_sql import AccountSQL, PastaSQL, GuildSQL
 import sqlite3
-import os.path
 import time
+
+import discord
+from discord.ext import commands
 
 
 def init_funcs(bot):
@@ -49,10 +51,9 @@ class Botto(commands.Bot):
         try:
             self.loop.stop()
             db.close()
-            tasks = asyncio.gather(*asyncio.Task.alltasks(), loop=self.loop)
+            tasks = asyncio.gather(*asyncio.Task.all_tasks(), loop=self.loop)
             tasks.stop()
             self.loop.run_forever()
             tasks.exception()
         except Exception as e:
              print(e)
-

@@ -25,9 +25,7 @@ class Birthday:
     @commands.command(pass_context=True, aliases=['setbday', 'sbd'])
     async def setbirthday(self, ctx):
         """
-        yyyy-mm-dd
-        yyyy/mm/dd
-        yyyy|mm|dd
+        Set your own birthday using the following format: yyyy-mm-dd OR yyyy/mm/dd OR yyyy|mm|dd
         """
         cmd = await self.extract_cmd_text(ctx)
         if cmd:
@@ -57,7 +55,7 @@ class Birthday:
             e.description = "Looks like no one's having a birthday today."
         await self.bot.say(embed=e)
 
-    @commands.command(pass_context=True, hidden=True, aliases=['bdaychannelset', 'bdsc'])
+    @commands.command(pass_context=True, hidden=True, aliases=['bdaychannelset', 'bdsc', 'sbdc','setbdaychannel'])
     async def setbirthdaychannel(self, ctx):
         channel = ''
         guild_id = ctx.message.server.id
@@ -75,27 +73,25 @@ class Birthday:
         cid = self.gdb.get_guild_birthday_channel(ctx.message.server.id)[0]
         channel = discord.utils.get(ctx.message.server.channels, id=cid)
         if len(ctx.message.mentions) >= 1:
-            user = ctx.message.mentions[0].id
+            user = ctx.message.mentions[0]
         else:
-            user = ctx.message.author.id
-        uid = self.db.get_user_birthday(ctx.message.author.id)
+            user = ctx.message.author
+        uid = self.db.get_user_birthday(user.id)
         if uid != None:
             birthday = '{}-{}-{}'.format(uid[2], uid[1], uid[0])
         else:
             birthday = 'Not Set'
-        e = await utilities.info_embed('Birthday channel: {}\nUser Birthday: {}'.format(channel.name, birthday))
+        e = await utilities.info_embed('Username: {} ({})\nBirthday channel: {}\nUser Birthday: {}'.format(user.nick, user.name, channel.name, birthday))
         await self.bot.say(embed=e)
-        x = Announcement(self.bot, ctx.message.channel, time=(0, 0, 1, 0))
-        await x.wait_for_time(content="Smoq on the watani")
 
-    @commands.command(pass_context=True, hidden=True)
-    async def ggez(self, ctx):
-        x = Announcement(self.bot, ctx.message.channel, time=(0, 0, 0, 3))
-        ppap = ctx.message.channel.id
-        await x.wait_for_time(content=ppap)
-        shan = discord.Object(id=ppap)
-        y = Announcement(self.bot, shan, time=(0, 0, 0, 1))
-        await y.wait_for_time(content='hahg')
+    # @commands.command(pass_context=True)
+    # async def guildbirthdays(self, ctx):
+    #     x = Announcement(self.bot, ctx.message.channel, time=(0, 0, 0, 3))
+    #     ppap = ctx.message.channel.id
+    #     await x.wait_for_time(content=ppap)
+    #     shan = discord.Object(id=ppap)
+    #     y = Announcement(self.bot, shan, time=(0, 0, 0, 1))
+    #     await y.wait_for_time(content='hahg')
 
     async def extract_cmd_text(self, ctx, spaces=-1, chr=' ', index=1):
         if spaces == -1:

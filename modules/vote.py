@@ -1,5 +1,6 @@
 from discord.ext import commands
 
+
 class Vote:
 
     def __init__(self, bot):
@@ -16,7 +17,6 @@ class Vote:
         actual_vote = await self.bot.say(cmd[0])
         for emoji in ('\N{WHITE HEAVY CHECK MARK}', '\N{CROSS MARK}'):
             await self.bot.add_reaction(actual_vote, emoji)
-
 
     @commands.command(pass_context=True)
     async def voteopt(self, ctx):
@@ -36,12 +36,13 @@ class Vote:
 """.format(num2word[num], opt)
                 num += 1
             actual_vote = await self.bot.say(text)
-            for emoji in range(0, len(cmd)-1):
+            for emoji in range(0, len(cmd) - 1):
                 await self.bot.add_reaction(actual_vote, num2word[emoji])
 
     async def extract_cmd_text(self, ctx, spaces: int, chr=' ', index=1):
         cmd = ctx.message.content.split(chr, spaces)[index:]
         return cmd
+
 
 def setup(bot):
     bot.add_cog(Vote(bot))
