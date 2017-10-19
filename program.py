@@ -4,10 +4,12 @@ import logging
 import os
 import sys
 import traceback
+import asyncio
 
 import discord
 from discord.ext import commands
 import botto
+from funcs.bday_loop import BDLoop
 
 discord_logger = logging.getLogger('discord')
 discord_logger.setLevel(logging.CRITICAL)
@@ -49,6 +51,10 @@ async def on_ready():
     print('------')
     if not hasattr(bot, 'uptime'):
         bot.uptime = datetime.datetime.utcnow()
+    print("Starting birthday announcement loop...")
+    x = BDLoop
+    asyncio.ensure_future(funcs.bday_loop._bday_loop(), loop=bot.loop)
+    
 
 
 # @bot.event
