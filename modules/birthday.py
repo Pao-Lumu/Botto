@@ -1,5 +1,5 @@
 from discord.ext import commands
-import utilities
+import utils.utilities as utilities
 from utils.botto_sql import AccountSQL, GuildSQL
 from utils.announcement import Announcement
 import datetime
@@ -84,14 +84,24 @@ class Birthday:
         e = await utilities.info_embed('Username: {} ({})\nBirthday channel: {}\nUser Birthday: {}'.format(user.nick, user.name, channel.name, birthday))
         await self.bot.say(embed=e)
 
-    # @commands.command(pass_context=True)
-    # async def guildbirthdays(self, ctx):
-    #     x = Announcement(self.bot, ctx.message.channel, time=(0, 0, 0, 3))
-    #     ppap = ctx.message.channel.id
-    #     await x.wait_for_time(content=ppap)
-    #     shan = discord.Object(id=ppap)
-    #     y = Announcement(self.bot, shan, time=(0, 0, 0, 1))
-    #     await y.wait_for_time(content='hahg')
+    @commands.command(pass_context=True)
+    async def guildbirthdays(self, ctx):
+        guild = ctx.message.server
+        bdays = []
+        for member in guild.members:
+            bdays.append(self.db.get_user_data(member.id))
+        e = discord.Embed()
+        e.set_author(name="All Birthdays:")
+        if bdays:
+            for user in bdays:
+                if user:
+                    r = discord.utils.get(guild.members, id=user[0])
+                    if r != None:
+                        e.add_field(name=r.name, value='Birthday: ' + datetime.date(int(user[3]),int(user[2]),int(user[1])).strftime('%A, %d %b, %Y'))
+        else:
+            e.description = "Looks like no one has set their birthday. Use `setbday` to add yours."
+        await self.bot.say(embed=e)
+        
 
     async def extract_cmd_text(self, ctx, spaces=-1, chr=' ', index=1):
         if spaces == -1:

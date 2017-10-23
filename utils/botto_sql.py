@@ -44,7 +44,9 @@ class AccountSQL(BaseSQL):
         return self.cursor.fetchall()
 
     def get_user_data(self, user_id, field='*'):
-        return
+        self.cursor.execute(
+            "SELECT * FROM account WHERE user_id=?", (user_id,))
+        return self.cursor.fetchone()
 
 
 # (guild_id text, bday_channel text)

@@ -3,7 +3,7 @@ from datetime import date
 import discord
 from discord.ext import commands
 
-import utilities
+import utils.utilities as utilities
 from utils.botto_sql import PastaSQL
 
 
@@ -13,9 +13,6 @@ class Pasta:
     def __init__(self, bot):
         self.bot = bot
         self.db = PastaSQL(bot.db, bot.cursor)
-        # self.cursor.execute('''CREATE TABLE pasta
-        # (pasta_tag text, pasta_text text, creator_id text, creation_date text,
-        # uses integer, likes integer, dislikes integer)''')
 
     @commands.command(pass_context=True, aliases=['p'])
     async def pasta(self, ctx):
@@ -143,7 +140,7 @@ class Pasta:
 
     @commands.command(pass_context=True, aliases=['mp'])
     async def mypasta(self, ctx):
-        """"""
+        """Look at pastas made by yourself or other people"""
         if ctx.message.mentions:
             user_id = ctx.message.mentions[0].id
             user_name = ctx.message.mentions[0].name + " doesn't"
