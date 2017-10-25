@@ -18,7 +18,7 @@ def init_funcs(bot):
         cursor.execute(
             '''CREATE TABLE pasta(pasta_tag text, pasta_text text, creator_id text, creation_date text, uses integer, likes integer, dislikes integer)''')
         cursor.execute('''CREATE TABLE account(user_id text, bday_day text, bday_month text, bday_year text)''')
-        cursor.execute('''CREATE TABLE guild(guild_id text, bday_channel text)''')
+        cursor.execute('''CREATE TABLE guild(guild_id text, bday_channel text, bday_announcement_time text)''')
     else:
         db = sqlite3.connect(db_name)
         cursor = db.cursor()

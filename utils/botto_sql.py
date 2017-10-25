@@ -49,12 +49,12 @@ class AccountSQL(BaseSQL):
         return self.cursor.fetchone()
 
 
-# (guild_id text, bday_channel text)
+# (guild_id text, bday_channel text, bday_announcement_time text)
 class GuildSQL(BaseSQL):
     def add(self, guild_id, channel_id=None):
         if not self.exists(guild_id):
             self.cursor.execute(
-                "INSERT INTO guild VALUES(?,?)", (guild_id, channel_id,))
+                "INSERT INTO guild VALUES(?,?,?)", (guild_id, channel_id, "0000"))
         else:
             self.cursor.execute(
                 "UPDATE guild SET bday_channel=? WHERE guild_id=?", (channel_id, guild_id))
@@ -76,6 +76,15 @@ class GuildSQL(BaseSQL):
         self.cursor.execute(
             """SELECT bday_channel FROM guild WHERE guild_id=?""", (guild_id,))
         return self.cursor.fetchone()
+
+    def set_guild_birthday_announcement_time(self, guild_id, time):
+        self.cursor.execute("""UPDATE guild SET bday_announcement_time=? WHERE guild_id=?""", (time, guild_id))
+        return True
+
+
+    def get_guild_birthday_announcement_time(self, guild_id):
+        self.cursor.execute("""SELECT bday_announcement_time FROM guild WHERE guild_id=?""")
+        return self.cursor.fetchone
 
     def get_guild_data(self, guild_id, field='*'):
         self.cursor.execute(
