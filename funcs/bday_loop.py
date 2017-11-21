@@ -34,9 +34,6 @@ class BDLoop:
         bdays = self.db.get_users_with_birthday(day, month)
         time = self.gdb.get_guild_birthday_announcement_time(bdchannel.server.id)[0]
         time_h,time_m = int(time[0:2]), int(time[2:])
-        if time_h >
-        # IF LAST MESSAGE FROM BOT < 24 HOURS AGO, SPEAK
-        # ELSE AWAIT GIVEN TIME
         embed = discord.Embed()
         embed.set_author(name="Birthdays today:")
         if bdays:
