@@ -27,7 +27,7 @@ initial_extensions = [
     'modules.reactions'
 ]
 
-bot = botto.Botto(command_prefix=">>")
+bot = botto.Botto(command_prefix="]")
 
 
 @bot.event
