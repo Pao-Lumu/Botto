@@ -55,7 +55,7 @@ class Birthday:
             for user in bdays:
                 r = discord.utils.get(guild.members, id=user[0])
                 if r != None:
-                    e.add_field(name=r.name, value='Age: ' + str(y - int(user[1])))
+                    e.add_field(name=r.name, value='Age: `{}`'.format(str(y - int(user[1]))))
         else:
             e.description = "Looks like no one's having a birthday today."
         await self.bot.say(embed=e)
@@ -73,7 +73,7 @@ class Birthday:
             for user in bdays:
                 r = discord.utils.get(guild.members, id=user[0])
                 if r:
-                    e.add_field(name=r.name, value='Age: ' + str(y - int(user[1])))
+                    e.add_field(name=r.name, value='Age: `{}`'.format(str(y - int(user[1]))))
         else:
             e.description = "Looks like no one's having a birthday this month."
         await self.bot.say(embed=e)
@@ -122,11 +122,11 @@ class Birthday:
                 if user:
                     r = discord.utils.get(guild.members, id=user[0])
                     if r != None:
-                        e.add_field(name=r.name, value='Birthday: ' + datetime.date(int(user[3]), int(user[2]),
+                        e.add_field(name=r.name, value='Birthday: `{}`'.format(datetime.date(int(user[3]), int(user[2]),
                                                                                     int(user[1])).strftime(
-                            '%A, %d %b, %Y'))
+                            '%A, %d %b, %Y')))
         else:
-            e.description = "Looks like no one has set their birthday. Use `setbday` to add yours."
+            e.description = "Looks like no one has set their birthday. Use `birthday set` to add yours."
         await self.bot.say(embed=e)
 
     async def extract_cmd_text(self, context, spaces=-1, chr=' ', index=1):
