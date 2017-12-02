@@ -6,6 +6,7 @@ import time
 
 import discord
 from discord.ext import commands
+from utils import checks
 
 
 def init_funcs(bot):
@@ -36,6 +37,35 @@ class Botto(commands.Bot):
         # TODO MAKE CUSTOM HELP THAT DOESN'T LOOK LIKE SHIT
         # self.remove_command('help')
         init_funcs(self)
+
+    async def on_command_error(self, e, ctx):
+        try:
+            if isinstance(e, commands.MissingRequiredArgument):
+                await self.command_help(ctx)
+                ctx.command.reset_cooldown(ctx)
+            elif isinstance(e, commands.BadArgument):
+                await self.command_help(ctx)
+                ctx.command.reset_cooldown(ctx)
+            elif isinstance(e, checks.No_Perms):
+                await self.send_message(ctx.message.channel, ":no_entry: `You don't have permission to use this command.`")
+            elif isinstance(e, checks.No_Owner):
+                await self.send_message(ctx.message.channel, ":no_entry: `Bot Owner Only`")
+            elif isinstance(e, checks.No_Mod):
+                await self.send_message(ctx.message.channel, ":no_entry: `Only Server Moderators or Above can use this command`")
+            elif isinstance(e, checks.No_Admin):
+                await self.send_message(ctx.message.channel, ":no_entry: `Administrator Only`")
+            elif isinstance(e, checks.No_Role):
+                await self.send_message(ctx.message.channel, ":no_entry: `No Custom Role or Specific Permission`")
+            elif isinstance(e, checks.No_ServerandPerm):
+                await self.send_message(ctx.message.channel, ":no_entry: `Server specific command or no permission`")
+            elif isinstance(e, checks.Nsfw):
+                await self.send_message(ctx.message.channel, ":underage: `NSFW command, please add [nsfw] in your channel topic or move to a channel named nsfw!`")
+            else:
+                if isinstance(e, commands.CommandNotFound):
+                    return
+        except Exception as e:
+            print(e)
+
 
     @property
     def get_cursor(self):
