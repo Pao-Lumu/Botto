@@ -1,8 +1,8 @@
 Task exception was never retrieved
-future: <Task finished coro=<BDLoop.bday_loop() done, defined at /home/evan/Botto/funcs/bday_loop.py:19> exception=AttributeError("'Object' object has no attribute 'server'",)>
+future: <Task finished coro=<BDLoop.bday_loop() done, defined at /home/evan/PycharmProjects/Botto/funcs/bday_loop.py:19> exception=AttributeError("'Object' object has no attribute 'server'",)>
 Traceback (most recent call last):
-  File "/home/evan/Botto/funcs/bday_loop.py", line 27, in bday_loop
+  File "/home/evan/PycharmProjects/Botto/funcs/bday_loop.py", line 27, in bday_loop
     await asyncio.gather(*all_channels)
-  File "/home/evan/Botto/funcs/bday_loop.py", line 35, in _get_bdays
+  File "/home/evan/PycharmProjects/Botto/funcs/bday_loop.py", line 35, in _get_bdays
     time = self.gdb.get_guild_birthday_announcement_time(bdchannel.server.id)[0]
 AttributeError: 'Object' object has no attribute 'server'

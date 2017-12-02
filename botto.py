@@ -19,7 +19,7 @@ def init_funcs(bot):
         cursor.execute(
             '''CREATE TABLE pasta(pasta_tag text, pasta_text text, creator_id text, creation_date text, uses integer, likes integer, dislikes integer)''')
         cursor.execute('''CREATE TABLE account(user_id text, bday_day text, bday_month text, bday_year text)''')
-        cursor.execute('''CREATE TABLE guild(guild_id text, bday_channel text, bday_announcement_time text)''')
+        cursor.execute('''CREATE TABLE guild(guild_id text, bday_channel text, bday_announcement_time text, admin_role text, mod_role text)''')
     else:
         db = sqlite3.connect(db_name)
         cursor = db.cursor()
@@ -34,7 +34,7 @@ class Botto(commands.Bot):
         asyncio.get_child_watcher().attach_loop(self.loop)
         command_prefix = kwargs.pop('command_prefix', commands.when_mentioned_or('.'))
         super().__init__(command_prefix=command_prefix, *args, **kwargs)
-        # TODO MAKE CUSTOM HELP THAT DOESN'T LOOK LIKE SHIT
+        # TODO: MAKE CUSTOM HELP THAT DOESN'T LOOK LIKE SHIT
         # self.remove_command('help')
         init_funcs(self)
 

@@ -16,8 +16,8 @@ class Pasta:
 
     @commands.command(pass_context=True, aliases=['p'])
     async def pasta(self, ctx):
+        """View a user-submitted pasta"""
         cmd = await self.extract_cmd_text(ctx, 1)
-        """Call up a user-submitted pasta"""
         if len(cmd) <= 0:
             e = await utilities.error_embed("Please state which pasta you would like to identify.")
             await self.bot.say(embed=e)
@@ -79,20 +79,6 @@ class Pasta:
         await self.bot.say(embed=e)
         return
 
-    @commands.command(pass_context=True, aliases=['lp'])
-    async def lovepasta(self, ctx):
-        """Show your love for a pasta."""
-        await self.vote_pasta(ctx, True)
-
-    @commands.command(pass_context=True, aliases=['hp'])
-    async def hatepasta(self, ctx):
-        """Hate on a pasta. You monster."""
-        await self.vote_pasta(ctx, False)
-
-    async def vote_pasta(self, ctx, vote):
-        e = await utilities.wip_embed()
-        await self.bot.say(embed=e)
-
     @commands.command(pass_context=True, aliases=['dp'])
     async def deletepasta(self, ctx):
         """Remove a pasta. Accidents happen."""
@@ -132,11 +118,11 @@ class Pasta:
                 e.add_field(name=item[0], value=item[1])
         await self.bot.say(embed=e)
 
-    @commands.command(pass_context=True, aliases=['tp'])
-    async def toppasta(self, ctx):
-        """This command shows the most loved pastas!"""
-        e = await utilities.wip_embed()
-        await self.bot.say(embed=e)
+    # @commands.command(pass_context=True, aliases=['tp'])
+    # async def toppasta(self, ctx):
+    #     """This command shows the most loved pastas!"""
+    #     e = await utilities.wip_embed()
+    #     await self.bot.say(embed=e)
 
     @commands.command(pass_context=True, aliases=['mp'])
     async def mypasta(self, ctx):
@@ -163,6 +149,7 @@ class Pasta:
 
     @commands.command(pass_context=True, aliases=['ep'])
     async def editpasta(self, ctx):
+        """Fix that pasta that you screwed up"""
         cmd = await self.extract_cmd_text(ctx, 2)
         user_id = ctx.message.author.id
         pasta_tag = cmd[0]
@@ -182,16 +169,17 @@ class Pasta:
         await self.bot.say(embed=e)
         return
 
-    @commands.command(pass_context=True, aliases=['sp'])
-    async def searchpasta(self, ctx):
-        cmd = ctx.message.content.split(' ', 2)[1:]
-        if len(cmd) <= 0:
-            # error
-            return
-        if len(cmd) == 1:
-            # self.db.
-            return
-        return
+    # @commands.command(pass_context=True, aliases=['sp'])
+    # async def searchpasta(self, ctx):
+    #     """Look for a pasta"""
+    #     cmd = ctx.message.content.split(' ', 2)[1:]
+    #     if len(cmd) <= 0:
+    #         # error
+    #         return
+    #     if len(cmd) == 1:
+    #         # self.db.
+    #         return
+    #     return
 
     async def extract_cmd_text(self, ctx, spaces: int):
         cmd = ctx.message.content.split(" ", spaces)[1:]

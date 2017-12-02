@@ -49,12 +49,12 @@ class AccountSQL(BaseSQL):
         return self.cursor.fetchone()
 
 
-# (guild_id text, bday_channel text, bday_announcement_time text)
+# (guild_id text, bday_channel text, bday_announcement_time text, admin_role text, mod_role text)
 class GuildSQL(BaseSQL):
     def add(self, guild_id, channel_id=None):
         if not self.exists(guild_id):
             self.cursor.execute(
-                "INSERT INTO guild VALUES(?,?,?)", (guild_id, channel_id, "0000"))
+                "INSERT INTO guild VALUES(?,?,?,?,?)", (guild_id, channel_id, "0000", "admin", "mod"))
         else:
             self.cursor.execute(
                 "UPDATE guild SET bday_channel=? WHERE guild_id=?", (channel_id, guild_id))
@@ -79,8 +79,8 @@ class GuildSQL(BaseSQL):
 
     def set_guild_birthday_announcement_time(self, guild_id, time):
         self.cursor.execute("""UPDATE guild SET bday_announcement_time=? WHERE guild_id=?""", (time, guild_id))
+        self.db.commit()
         return True
-
 
     def get_guild_birthday_announcement_time(self, guild_id):
         self.cursor.execute("""SELECT bday_announcement_time FROM guild WHERE guild_id=?""")
@@ -93,6 +93,32 @@ class GuildSQL(BaseSQL):
 
     def get_all_guild_birthday_channels(self):
         self.cursor.execute("""SELECT bday_channel FROM guild""")
+        return self.cursor.fetchall()
+
+    def set_admin_role(self, guild_id, role_id):
+        if not self.exists(guild_id):
+            self.cursor.execute(
+                "INSERT INTO guild VALUES(?,?,?,?,?)", (guild_id, None, "0000", role_id, "mod"))
+        else:
+            self.cursor.execute(
+                "UPDATE guild SET admin_role=? WHERE guild_id=?", (role_id, guild_id))
+        self.db.commit()
+
+    def get_admin_role(self, guild_id):
+        self.cursor.execute("""SELECT admin_role FROM guild WHERE guild_id=?""", (guild_id,))
+        return self.cursor.fetchall()
+
+    def set_mod_role(self, guild_id, role_id):
+        if not self.exists(guild_id):
+            self.cursor.execute(
+                "INSERT INTO guild VALUES(?,?,?,?,?)", (guild_id, None, "0000", "admin", role_id))
+        else:
+            self.cursor.execute(
+                "UPDATE guild SET mod_role=? WHERE guild_id=?", (role_id, guild_id))
+        self.db.commit()
+
+    def get_mod_role(self, guild_id):
+        self.cursor.execute("""SELECT mod_role FROM guild WHERE guild_id=?""", (guild_id,))
         return self.cursor.fetchall()
 
 

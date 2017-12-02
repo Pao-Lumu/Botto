@@ -5,17 +5,28 @@ from discord.ext import commands
 
 class Reactions:
 
-    dogs = ['https://i.imgur.com/mnUMXnn.jpg', 'https://i.imgur.com/gM5qDFS.jpg', 'https://i.imgur.com/hqVWTBL.jpg', 'https://i.imgur.com/ninvz2s.gifv', 'https://i.imgur.com/0ydrPTp.gifv', 'https://i.imgur.com/q8lVC7Y.mp4', 'https://i.imgur.com/YdlsiIL.jpg', 'https://i.imgur.com/ToRZyvK.jpg', 'https://i.imgur.com/NWz24Zl.jpg',
-            'https://imgur.com/gallery/Uw21RC2', 'https://i.imgur.com/eDAvzBW.jpg', 'https://imgur.com/gallery/KQaL5', 'https://imgur.com/gallery/K8Xcc', 'https://imgur.com/gallery/cMk7o', 'https://imgur.com/gallery/6kVTD', 'https://imgur.com/gallery/TxzrZPQ', 'https://imgur.com/gallery/NusvP9g', 'https://imgur.com/gallery/xVJ5n']
+    dogs = ['https://i.imgur.com/mnUMXnn.jpg', 'https://i.imgur.com/gM5qDFS.jpg', 'https://i.imgur.com/hqVWTBL.jpg',
+            'https://i.imgur.com/ninvz2s.gifv', 'https://i.imgur.com/0ydrPTp.gifv', 'https://i.imgur.com/q8lVC7Y.mp4',
+            'https://i.imgur.com/YdlsiIL.jpg', 'https://i.imgur.com/ToRZyvK.jpg', 'https://i.imgur.com/NWz24Zl.jpg',
+            'https://imgur.com/gallery/Uw21RC2', 'https://i.imgur.com/eDAvzBW.jpg', 'https://imgur.com/gallery/KQaL5',
+            'https://imgur.com/gallery/K8Xcc', 'https://imgur.com/gallery/cMk7o', 'https://imgur.com/gallery/6kVTD',
+            'https://imgur.com/gallery/TxzrZPQ', 'https://imgur.com/gallery/NusvP9g', 'https://imgur.com/gallery/xVJ5n']
 
-    cats = ['https://imgur.com/hPAxFc6', 'https://imgur.com/gallery/d8AfKpg', 'https://imgur.com/gallery/IIyhF', 'https://imgur.com/gallery/7Zgf2', 'https://imgur.com/gallery/ZhYT2QW',
-            'https://i.imgur.com/px2wX4e.jpg', 'https://i.imgur.com/lJ9qUeT.jpg', 'https://i.imgur.com/LCbpYxJ.jpg', 'https://imgur.com/gallery/XHjP2', 'https://imgur.com/gallery/43RAc']
+    cats = ['https://imgur.com/hPAxFc6', 'https://imgur.com/gallery/d8AfKpg', 'https://imgur.com/gallery/IIyhF',
+            'https://imgur.com/gallery/7Zgf2', 'https://imgur.com/gallery/ZhYT2QW', 'https://i.imgur.com/px2wX4e.jpg',
+            'https://i.imgur.com/lJ9qUeT.jpg', 'https://i.imgur.com/LCbpYxJ.jpg', 'https://imgur.com/gallery/XHjP2',
+            'https://imgur.com/gallery/43RAc']
 
-    foxes = ['https://imgur.com/GcYn5tc', 'https://imgur.com/3MTIPvl', 'https://imgur.com/vOYfgbf', 'https://imgur.com/40RMFx7', 'https://imgur.com/3cC9Bpu', 'https://imgur.com/mOLLT6s',
-             'https://imgur.com/fi0WDCs', 'https://imgur.com/wGzjiWo', 'https://imgur.com/wkJZZFY', 'https://imgur.com/jS6N8MA', 'https://imgur.com/ZoW7UZw', 'https://i.imgur.com/4ZmkJuw.gifv']
+    foxes = ['https://imgur.com/GcYn5tc', 'https://imgur.com/3MTIPvl', 'https://imgur.com/vOYfgbf',
+             'https://imgur.com/40RMFx7', 'https://imgur.com/3cC9Bpu', 'https://imgur.com/mOLLT6s',
+             'https://imgur.com/fi0WDCs', 'https://imgur.com/wGzjiWo', 'https://imgur.com/wkJZZFY',
+             'https://imgur.com/jS6N8MA', 'https://imgur.com/ZoW7UZw', 'https://i.imgur.com/4ZmkJuw.gifv']
 
-    others = ['https://imgur.com/8hs1FJy', 'https://imgur.com/NedVAcC', 'https://imgur.com/k6In5Tp', 'https://imgur.com/cGB0Lt4', 'https://imgur.com/VdVsGaM', 'https://imgur.com/ZyyNgrw', 'https://imgur.com/fNzcuxc',
-              'https://imgur.com/vUuKoHL', 'https://imgur.com/QN1yi2V', 'https://imgur.com/86ajxf5', 'https://imgur.com/Haqa6eM', 'https://imgur.com/gallery/rMa3CWT', 'https://imgur.com/gallery/3FxJFLI']
+    others = ['https://imgur.com/8hs1FJy', 'https://imgur.com/NedVAcC', 'https://imgur.com/k6In5Tp',
+              'https://imgur.com/cGB0Lt4', 'https://imgur.com/VdVsGaM', 'https://imgur.com/ZyyNgrw',
+              'https://imgur.com/fNzcuxc', 'https://imgur.com/vUuKoHL', 'https://imgur.com/QN1yi2V',
+              'https://imgur.com/86ajxf5', 'https://imgur.com/Haqa6eM', 'https://imgur.com/gallery/rMa3CWT',
+              'https://imgur.com/gallery/3FxJFLI']
 
     anything = dogs + cats + foxes + others
 
