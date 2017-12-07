@@ -35,14 +35,15 @@ class Admin:
             self.bot.command_prefix = prefix
             await self.bot.say('Prefix set to: `{}`'.format(prefix))
 
-    @commands.command(hidden=True)
+    @commands.command(hidden=True, pass_context=True)
     @checks.is_owner()
-    async def status(self, *status: str):
+    async def status(self, ctx, *status: str):
         if status:
             await self.bot.change_presence(game=discord.Game(name=" ".join(status)))
             e = await self.bot.say("Success!")
             await asyncio.sleep(5)
             await self.bot.delete_message(e)
+            await self.bot.delete_message(ctx.message)
 
 
 
