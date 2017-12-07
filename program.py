@@ -16,7 +16,7 @@ discord_logger = logging.getLogger('discord')
 discord_logger.setLevel(logging.CRITICAL)
 log = logging.getLogger()
 log.setLevel(logging.INFO)
-handler = logging.FileHandler(filename='botto.log', encoding='utf-8', mode='w')
+handler = logging.FileHandler(filename='botto.log', encoding='utf-8', mode='r+')
 log.addHandler(handler)
 
 initial_extensions = [
@@ -87,6 +87,7 @@ if __name__ == '__main__':
         token = credentials['debug_token']
         bot.client_id = credentials['debug_client_id']
     else:
+        token = ""
         try:
             token = credentials['token']
         except TypeError:
@@ -106,7 +107,14 @@ if __name__ == '__main__':
             log.error('Failed to load extension {}\n{}: {}'.format(
                 extension, type(e).__name__, e))
 
-    bot.run(token)
+    e = True
+    while e:
+        try:
+            bot.run(token)
+        except TimeoutError:
+            print("Failed to connect to Discord. Retrying in a few seconds.")
+
+
     handlers = log.handlers[:]
     for hdlr in handlers:
         hdlr.close()

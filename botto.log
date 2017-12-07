@@ -6,3 +6,12 @@ Traceback (most recent call last):
   File "/home/evan/PycharmProjects/Botto/funcs/bday_loop.py", line 35, in _get_bdays
     time = self.gdb.get_guild_birthday_announcement_time(bdchannel.server.id)[0]
 AttributeError: 'Object' object has no attribute 'server'
+e 324, in _invoke_callbacks
+    callback(self)
+  File "/usr/lib64/python3.6/asyncio/futures.py", line 419, in _call_set_state
+    dest_loop.call_soon_threadsafe(_set_state, destination, source)
+  File "/usr/lib64/python3.6/asyncio/base_events.py", line 620, in call_soon_threadsafe
+    self._check_closed()
+  File "/usr/lib64/python3.6/asyncio/base_events.py", line 357, in _check_closed
+    raise RuntimeError('Event loop is closed')
+RuntimeError: Event loop is closed
