@@ -3,6 +3,7 @@ from utils import checks
 from discord import Embed
 from utils.botto_sql import GuildSQL
 import discord
+import asyncio
 
 class Admin:
     """You shouldn't be here..."""
@@ -33,6 +34,17 @@ class Admin:
         else:
             self.bot.command_prefix = prefix
             await self.bot.say('Prefix set to: `{}`'.format(prefix))
+
+    @commands.command(hidden=True)
+    @checks.is_owner()
+    async def status(self, *status: str):
+        if status:
+            await self.bot.change_presence(game=discord.Game(name=" ".join(status)))
+            e = await self.bot.say("Success!")
+            await asyncio.sleep(5)
+            await self.bot.delete_message(e)
+
+
 
     @commands.group("roles")
     @checks.admin_or_perm()
