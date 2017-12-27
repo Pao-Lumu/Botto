@@ -1,17 +1,23 @@
 Task exception was never retrieved
-future: <Task finished coro=<BDLoop.bday_loop() done, defined at C:\Users\JoJo\PycharmProjects\Botto\funcs\bday_loop.py:19> exception=AttributeError("'Object' object has no attribute 'server'",)>
+future: <Task finished coro=<BDLoop.bday_loop() done, defined at /home/pi/Botto/funcs/bday_loop.py:19> exception=AttributeError("'Object' object has no attribute 'server'",)>
 Traceback (most recent call last):
-  File "C:\Users\JoJo\PycharmProjects\Botto\funcs\bday_loop.py", line 27, in bday_loop
+  File "/home/pi/Botto/funcs/bday_loop.py", line 27, in bday_loop
     await asyncio.gather(*all_channels)
-  File "C:\Users\JoJo\PycharmProjects\Botto\funcs\bday_loop.py", line 35, in _get_bdays
+  File "/home/pi/Botto/funcs/bday_loop.py", line 35, in _get_bdays
     time = self.gdb.get_guild_birthday_announcement_time(bdchannel.server.id)[0]
 AttributeError: 'Object' object has no attribute 'server'
- _invoke_callbacks
-    callback(self)
-  File "/usr/lib64/python3.6/asyncio/futures.py", line 419, in _call_set_state
-    dest_loop.call_soon_threadsafe(_set_state, destination, source)
-  File "/usr/lib64/python3.6/asyncio/base_events.py", line 620, in call_soon_threadsafe
-    self._check_closed()
-  File "/usr/lib64/python3.6/asyncio/base_events.py", line 357, in _check_closed
-    raise RuntimeError('Event loop is closed')
-RuntimeError: Event loop is closed
+Failing the WebSocket connection: 1006 
+Failing the WebSocket connection: 1006 
+() done, defined at /home/pi/Botto/funcs/bday_loop.py:19> exception=AttributeError("'Object' object has no attribute 'server'",)>
+Traceback (most recent call last):
+  File "/home/pi/Botto/funcs/bday_loop.py", line 27, in bday_loop
+    await asyncio.gather(*all_channels)
+  File "/home/pi/Botto/funcs/bday_loop.py", line 35, in _get_bdays
+    time = self.gdb.get_guild_birthday_announcement_time(bdchannel.server.id)[0]
+AttributeError: 'Object' object has no attribute 'server'
+    yield from self._wait_for_data('readexactly')
+  File "/usr/local/lib/python3.6/asyncio/streams.py", line 458, in _wait_for_data
+    yield from self._waiter
+  File "/usr/local/lib/python3.6/asyncio/selector_events.py", line 724, in _read_ready
+    data = self._sock.recv(self.max_size)
+ConnectionResetError: [Errno 104] Connection reset by peer
