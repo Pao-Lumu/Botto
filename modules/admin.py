@@ -43,7 +43,8 @@ class Admin:
             e = await self.bot.say("Success!")
             await asyncio.sleep(5)
             await self.bot.delete_message(e)
-            await self.bot.delete_message(ctx.message)
+            if not ctx.message.channel.is_private:
+                await self.bot.delete_message(ctx.message)
 
 
 

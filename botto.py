@@ -3,6 +3,7 @@ import os.path
 # from .utils.botto_sql import AccountSQL, PastaSQL, GuildSQL
 import sqlite3
 import time
+import platform
 
 import discord
 from discord.ext import commands
@@ -31,7 +32,8 @@ def init_funcs(bot):
 class Botto(commands.Bot):
     def __init__(self, *args, **kwargs):
         self.loop = kwargs.pop('loop', asyncio.get_event_loop())
-        asyncio.get_child_watcher().attach_loop(self.loop)
+        if platform.system() == "Linux":
+            asyncio.get_child_watcher().attach_loop(self.loop)
         command_prefix = kwargs.pop('command_prefix', commands.when_mentioned_or('.'))
         super().__init__(command_prefix=command_prefix, *args, **kwargs)
         # TODO: MAKE CUSTOM HELP THAT DOESN'T LOOK LIKE SHIT

@@ -5,12 +5,16 @@ import logging
 import os
 import sys
 import traceback
+import random
 
 import discord
 from discord.ext import commands
 
 import botto
 from funcs.bday_loop import BDLoop
+
+if len(sys.argv) > 1:
+    os.chdir(sys.argv[1])
 
 discord_logger = logging.getLogger('discord')
 discord_logger.setLevel(logging.CRITICAL)
@@ -45,7 +49,7 @@ async def on_command_error(error, ctx):
 
 @bot.event
 async def on_ready():
-    await bot.change_presence(game=discord.Game(name="with fire"))
+    await randomize_presence()
     print('Logged in as:')
     print('Username: ' + bot.user.name)
     print('ID: ' + bot.user.id)
@@ -55,6 +59,14 @@ async def on_ready():
     print("Starting birthday announcement loop...")
     asyncio.ensure_future(BDLoop(bot).bday_loop(), loop=bot.loop)
     print("Done!")
+
+
+async def randomize_presence():
+    x = random.randint(0, 9)
+    presences = ["with fire", "with its food", "Half-Life 3", "Cards Against Humanity", "you like a damn fiddle!",
+                 "The Blame Game", "with itself", "by itself", "MCR while crying over a picture of Miki",
+                 "its trap card!"]
+    await bot.change_presence(game=discord.Game(name=presences[x]))
 
 
 @bot.event
@@ -67,6 +79,7 @@ async def on_message(message):
     if message.author.bot:
         return
     await bot.process_commands(message)
+
 
 def load_credentials():
     if os.path.isfile("credentials.json"):
@@ -113,7 +126,6 @@ if __name__ == '__main__':
             bot.run(token)
         except TimeoutError:
             print("Failed to connect to Discord. Retrying in a few seconds.")
-
 
     handlers = log.handlers[:]
     for hdlr in handlers:
