@@ -28,7 +28,8 @@ initial_extensions = [
     'modules.admin',
     'modules.vote',
     'modules.birthday',
-    'modules.reactions'
+    'modules.reactions',
+    'modules.misc'
 ]
 
 bot = botto.Botto(command_prefix="]")
