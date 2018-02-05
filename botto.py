@@ -32,6 +32,7 @@ def init_funcs(bot):
 class Botto(commands.Bot):
     def __init__(self, *args, **kwargs):
         self.loop = kwargs.pop('loop', asyncio.get_event_loop())
+        self.cog_folder = kwargs.pop('cog_folder')
         if platform.system() == "Linux":
             asyncio.get_child_watcher().attach_loop(self.loop)
         command_prefix = kwargs.pop('command_prefix', commands.when_mentioned_or('.'))

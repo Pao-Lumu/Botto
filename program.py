@@ -32,7 +32,7 @@ initial_extensions = [
     'modules.misc'
 ]
 
-bot = botto.Botto(command_prefix="]")
+bot = botto.Botto(command_prefix="]", cog_folder="modules")
 
 
 @bot.event
