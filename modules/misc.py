@@ -17,8 +17,13 @@ class Misc:
         else:
             user = ctx.message.author
         roles = user.roles
+        roles.reverse()
         rolelist = ""
+        f = True
         for role in roles:
+            if str(role.color) != "#000000" and f == True:
+                color = role.color
+                f = False
             rolelist += "`" + str(role.name) + "` "
         top_role = user.top_role
         status = user.game
@@ -35,6 +40,7 @@ class Misc:
             status_text = "Idle"
             status = ""
         e = discord.Embed()
+        e.color = color
         e.set_author(name="Who is " + user.name + "?")
         e.add_field(name="Username", value=user.name + user.discriminator)
         e.add_field(name="Nickname", value=user.nick)
