@@ -10,7 +10,7 @@ class Admin:
 
     def __init__(self, bot):
         self.bot = bot
-        self.gdb = GuildSQL(bot.db, bot.cursor)
+        # self.gdb = GuildSQL(bot.db, bot.cursor)
 
     @commands.command(hidden=True)
     @checks.is_owner()
@@ -59,23 +59,23 @@ class Admin:
         pass
 
 
-    @checks.admin_or_perm()
-    @roles.command(pass_context=True)
-    async def admin(self, ctx, *roll):
-        if not roll:
-            return
-        role = ctx.message.role_mentions[0] if ctx.message.role_mentions else discord.utils.find(lambda m: m.name == " ".join(list(roll)), ctx.message.server.roles)
+    # @checks.admin_or_perm()
+    # @roles.command(pass_context=True)
+    # async def admin(self, ctx, *roll):
+    #     if not roll:
+    #         return
+    #     role = ctx.message.role_mentions[0] if ctx.message.role_mentions else discord.utils.find(lambda m: m.name == " ".join(list(roll)), ctx.message.server.roles)
 
-        try:
-            admin = self.gdb.get_admin_role(ctx.message.server.id)[0]
-        except:
-            return
+    #     try:
+    #         admin = self.gdb.get_admin_role(ctx.message.server.id)[0]
+    #     except:
+    #         return
 
-        if admin == role.id:
-            await self.bot.say("Role `{}` is already set as the Admin role.".format(role.name))
+    #     if admin == role.id:
+    #         await self.bot.say("Role `{}` is already set as the Admin role.".format(role.name))
 
-        self.gdb.set_admin_role(ctx.message.server.id, role_id=role.id)
-        await self.bot.say("`{}` is now set as the Admin role.".format(role.name))
+    #     self.gdb.set_admin_role(ctx.message.server.id, role_id=role.id)
+    #     await self.bot.say("`{}` is now set as the Admin role.".format(role.name))
 
 
         # get string or tagged role id
@@ -86,25 +86,25 @@ class Admin:
 
         # admin = self.gdb.get_admin_role(ctx.guild)
 
-        return
+        # return
 
-    @checks.admin_or_perm()
-    @roles.command(pass_context=True)
-    async def moderator(self, ctx, *roll):
-        if not roll:
-            return
-        role = ctx.message.role_mentions[0] if ctx.message.role_mentions else discord.utils.find(lambda m: m.name == " ".join(list(roll)), ctx.message.server.roles)
+    # @checks.admin_or_perm()
+    # @roles.command(pass_context=True)
+    # async def moderator(self, ctx, *roll):
+    #     if not roll:
+    #         return
+    #     role = ctx.message.role_mentions[0] if ctx.message.role_mentions else discord.utils.find(lambda m: m.name == " ".join(list(roll)), ctx.message.server.roles)
 
-        try:
-            mod = self.gdb.get_mod_role(ctx.message.server.id)[0]
-        except:
-            return
+    #     try:
+    #         mod = self.gdb.get_mod_role(ctx.message.server.id)[0]
+    #     except:
+    #         return
 
-        if mod == role.id:
-            await self.bot.say("Role `{}` is already set as the Mod role.".format(role.name))
+    #     if mod == role.id:
+    #         await self.bot.say("Role `{}` is already set as the Mod role.".format(role.name))
 
-        self.gdb.set_mod_role(ctx.message.server.id, role_id=role.id)
-        await self.bot.say("`{}` is now set as the Mod role.".format(role.name))
+    #     self.gdb.set_mod_role(ctx.message.server.id, role_id=role.id)
+    #     await self.bot.say("`{}` is now set as the Mod role.".format(role.name))
 
     # async def
 

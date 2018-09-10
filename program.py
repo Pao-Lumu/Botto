@@ -11,7 +11,6 @@ import discord
 from discord.ext import commands
 
 import botto
-from funcs.bday_loop import BDLoop
 
 if len(sys.argv) > 1:
     os.chdir(sys.argv[1])
@@ -24,12 +23,7 @@ handler = logging.FileHandler(filename='botto.log', encoding='utf-8', mode='r+')
 log.addHandler(handler)
 
 initial_extensions = [
-    'modules.pasta',
-    'modules.admin',
-    'modules.vote',
-    'modules.birthday',
-    'modules.reactions',
-    'modules.misc'
+    'modules.admin'
 ]
 
 bot = botto.Botto(command_prefix="]", cog_folder="modules")
@@ -50,26 +44,33 @@ async def on_command_error(error, ctx):
 
 @bot.event
 async def on_ready():
-    await randomize_presence()
     print('Logged in as:')
     print('Username: ' + bot.user.name)
     print('ID: ' + bot.user.id)
     print('------')
     if not hasattr(bot, 'uptime'):
         bot.uptime = datetime.datetime.utcnow()
-    print("Starting birthday announcement loop...")
-    asyncio.ensure_future(BDLoop(bot).bday_loop(), loop=bot.loop)
-    print("Done!")
 
-
-async def randomize_presence():
-    x = random.randint(0, 9)
-    presences = ["with fire", "with its food", "Half-Life 3", "Cards Against Humanity", "you like a damn fiddle!",
-                 "The Blame Game", "with itself", "by itself", "MCR while crying over a picture of Miki",
-                 "its trap card!"]
-    await bot.change_presence(game=discord.Game(name=presences[x]))
-
-
+async def get_current_server_status():
+    await bot.wait_until_ready()
+    game = ""
+    while not bot.is_closed:
+        proc = await asyncio.create_subprocess_shell("/usr/bin/python3 ~/Botto/sensor.py", stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.DEVNULL)
+        p = await proc.communicate()
+        p = p[0].decode("utf-8").rstrip()
+        if p == game:
+            pass
+        elif not p: 
+            game = p
+            await bot.change_presence()
+            print("Stopped All Servers")
+        elif game != p:
+            game = p
+            np = discord.Game(name=str(p))
+            print("Now Playing: " + str(p))
+            await bot.change_presence(game=np)
+        await asyncio.sleep(15)
+        
 @bot.event
 async def on_resumed():
     print('resumed...')
@@ -124,6 +125,7 @@ if __name__ == '__main__':
     e = True
     while e:
         try:
+            bot.loop.create_task(get_current_server_status())
             bot.run(token)
         except TimeoutError:
             print("Failed to connect to Discord. Retrying in a few seconds.")

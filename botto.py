@@ -10,23 +10,23 @@ from discord.ext import commands
 from utils import checks
 
 
-def init_funcs(bot):
+# def init_funcs(bot):
     # SQLite3
-    global db, cursor
-    db_name = 'botto.db'
-    if not os.path.exists(db_name):
-        db = sqlite3.connect(db_name)
-        cursor = db.cursor()
-        cursor.execute(
-            '''CREATE TABLE pasta(pasta_tag text, pasta_text text, creator_id text, creation_date text, uses integer, likes integer, dislikes integer)''')
-        cursor.execute('''CREATE TABLE account(user_id text, bday_day text, bday_month text, bday_year text)''')
-        cursor.execute('''CREATE TABLE guild(guild_id text, bday_channel text, bday_announcement_time text, admin_role text, mod_role text)''')
-    else:
-        db = sqlite3.connect(db_name)
-        cursor = db.cursor()
-    bot.pruned_messages = []
-    bot.db = db
-    bot.cursor = cursor
+    # global db, cursor
+    # db_name = 'botto.db'
+    # if not os.path.exists(db_name):
+    #     db = sqlite3.connect(db_name)
+    #     cursor = db.cursor()
+    #     cursor.execute(
+    #         '''CREATE TABLE pasta(pasta_tag text, pasta_text text, creator_id text, creation_date text, uses integer, likes integer, dislikes integer)''')
+    #     cursor.execute('''CREATE TABLE account(user_id text, bday_day text, bday_month text, bday_year text)''')
+    #     cursor.execute('''CREATE TABLE guild(guild_id text, bday_channel text, bday_announcement_time text, admin_role text, mod_role text)''')
+    # else:
+    #     db = sqlite3.connect(db_name)
+    #     cursor = db.cursor()
+    # bot.pruned_messages = []
+    # bot.db = db
+    # bot.cursor = cursor
 
 
 class Botto(commands.Bot):
@@ -39,7 +39,7 @@ class Botto(commands.Bot):
         super().__init__(command_prefix=command_prefix, *args, **kwargs)
         # TODO: MAKE CUSTOM HELP THAT DOESN'T LOOK LIKE SHIT
         # self.remove_command('help')
-        init_funcs(self)
+        # init_funcs(self)
 
     async def on_command_error(self, e, ctx):
         try:
