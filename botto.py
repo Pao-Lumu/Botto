@@ -1,45 +1,38 @@
 import asyncio
 import os.path
-# from .utils.botto_sql import AccountSQL, PastaSQL, GuildSQL
 import sqlite3
 import time
+import inspect
+import datetime
 import platform
 
 import discord
 from discord.ext import commands
 from utils import checks
-
-
-# def init_funcs(bot):
-    # SQLite3
-    # global db, cursor
-    # db_name = 'botto.db'
-    # if not os.path.exists(db_name):
-    #     db = sqlite3.connect(db_name)
-    #     cursor = db.cursor()
-    #     cursor.execute(
-    #         '''CREATE TABLE pasta(pasta_tag text, pasta_text text, creator_id text, creation_date text, uses integer, likes integer, dislikes integer)''')
-    #     cursor.execute('''CREATE TABLE account(user_id text, bday_day text, bday_month text, bday_year text)''')
-    #     cursor.execute('''CREATE TABLE guild(guild_id text, bday_channel text, bday_announcement_time text, admin_role text, mod_role text)''')
-    # else:
-    #     db = sqlite3.connect(db_name)
-    #     cursor = db.cursor()
-    # bot.pruned_messages = []
-    # bot.db = db
-    # bot.cursor = cursor
+import json
 
 
 class Botto(commands.Bot):
     def __init__(self, *args, **kwargs):
         self.loop = kwargs.pop('loop', asyncio.get_event_loop())
         self.cog_folder = kwargs.pop('cog_folder')
+        self.game = ""
+        self.cooldown_cyka = 0
+        self.cooldown_blyat = 0
         if platform.system() == "Linux":
             asyncio.get_child_watcher().attach_loop(self.loop)
         command_prefix = kwargs.pop('command_prefix', commands.when_mentioned_or('.'))
+
+        self._game_running = asyncio.Event(loop=self.loop)
+        self._game_stopped = asyncio.Event(loop=self.loop)
+
         super().__init__(command_prefix=command_prefix, *args, **kwargs)
-        # TODO: MAKE CUSTOM HELP THAT DOESN'T LOOK LIKE SHIT
-        # self.remove_command('help')
-        # init_funcs(self)
+
+    @asyncio.coroutine
+    def wait_until_ready(self):
+        # print(f"{inspect.stack()[1][3]} is waiting for the bot to start...")
+        yield from self._is_ready.wait()
+
 
     async def on_command_error(self, e, ctx):
         try:
@@ -70,12 +63,30 @@ class Botto(commands.Bot):
             print(e)
 
 
-    @property
-    def get_cursor(self):
-        return cursor
+    @asyncio.coroutine
+    def wait_until_game_running(self):
+        # print("Waiting for the game to run...")
+        yield from self._game_running.wait()
 
-    def get_member(self, id:str):
-        return discord.utils.get(self.get_all_members(), id=id)
+    @asyncio.coroutine
+    def wait_until_game_stopped(self):
+        # print("Waiting for the game to stop...")
+        yield from self._game_stopped.wait()
+
+    @property
+    def is_game_running(self):
+        return self._game_running.is_set()
+
+    @property
+    def is_game_stopped(self):
+        return self._game_stopped.is_set()
+
+
+    def bprint(self, text):
+        time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        p = text.split("\n")
+        for x in p:
+            print("{} ~ {}".format(time, x))
 
     def run(self, token):
         super().run(token)
@@ -83,10 +94,9 @@ class Botto(commands.Bot):
     def die(self):
         try:
             self.loop.stop()
-            db.close()
             tasks = asyncio.gather(*asyncio.Task.all_tasks(), loop=self.loop)
             tasks.stop()
             self.loop.run_forever()
             tasks.exception()
         except Exception as e:
-             print(e)
+            print(e)

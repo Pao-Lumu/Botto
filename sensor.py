@@ -10,3 +10,7 @@ games = {"gmod": "GMod", "teeworlds": "Teeworlds", "minecraft": "Minecraft", "tf
 for game in games:
      if output.find(game) != -1:
          print(games[game])
+         print(output)
+else:
+     print("")
+     print("")

@@ -1,8 +1,12 @@
 # bot token file
 credentials.json
+botcfg.json
+
+# bot logs
+logs/
 
 # compiled files
-*.py[c0d]
+*.py[c0d.]*
 __pycache__/
 *.log
 
