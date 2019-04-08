@@ -1,29 +1,18 @@
 #!/usr/bin/env python3
 
 import asyncio
-from asyncio.subprocess import PIPE, DEVNULL
 import datetime
 import json
-import logging
 import logging.handlers
 import os
-import socket
-import sys
-import textwrap
-import traceback
 import random
-import re
-import game
+import sys
+import traceback
 
-import discord
 from discord.ext import commands
 
-import botto
-import sensor2
-import valve
-import mcrcon
-import aiofiles
-from mcstatus import MinecraftServer as mc
+import ogbot_base
+import game
 
 if len(sys.argv) > 1:
     os.chdir(sys.argv[1])
@@ -37,19 +26,18 @@ discord_logger.setLevel(logging.CRITICAL)
 sh = logging.StreamHandler(sys.stderr)
 sh.setLevel(logging.CRITICAL)
 
-fmt = logging.Formatter('%(asctime)s - %(message)s', datefmt = "%Y-%m-%d %H:%M:%S")
+fmt = logging.Formatter('%(asctime)s - %(message)s', datefmt="%Y-%m-%d %H:%M:%S")
 
 sh.setFormatter(fmt)
 log.addHandler(sh)
 discord_logger.addHandler(sh)
 
 initial_extensions = [
-      'modules.admin',
-      'modules.comrade'
-#     'modules.santa'
+    'modules.admin',
+    'modules.comrade'
 ]
 
-bot = botto.Botto(command_prefix=">", cog_folder="modules")
+bot = ogbot_base.Botto(command_prefix=">", cog_folder="modules")
 
 
 @bot.event
@@ -78,6 +66,7 @@ Primary Chat Channel: {}
     if not hasattr(bot, 'uptime'):
         bot.uptime = datetime.datetime.utcnow()
 
+
 def load_credentials():
     if os.path.isfile("credentials.json"):
         with open('credentials.json') as f:
@@ -87,6 +76,7 @@ def load_credentials():
         with open('credentials.json', 'w+') as f:
             f.write(json.dumps({'token': '', 'client_id': ''}))
         bot.bprint('Please input your bot\'s credentials and restart.')
+
 
 def load_botconfig():
     if os.path.isfile("botcfg.json"):
@@ -117,7 +107,7 @@ async def on_member_update(vor, ab):
               "nick": {"on_set": "set their nickname to {}", "on_update": "changed their nickname to {}",
                        "on_delete": "deleted their nickname"}}
 
-    for x,y in states.items():
+    for x, y in states.items():
         before = vor.__getattribute__(x)
         after = ab.__getattribute__(x)
         if str(before) == "Spotify" or str(after) == "Spotify":
@@ -131,6 +121,7 @@ async def on_member_update(vor, ab):
                 msg = y["on_update"].format(before, after)
             log.warning(f"{x.upper()} - {ab.name} {msg}")
             continue
+
 
 @bot.event
 async def on_voice_state_update(vor, ab):
@@ -147,7 +138,7 @@ async def on_voice_state_update(vor, ab):
               "voice_channel": {"on_set": "joined {}", "on_update": "moved from {} to {}",
                                 "on_delete": "left {}"}}
 
-    for x,y in states.items():
+    for x, y in states.items():
         before = getattr(vor, x)
         after = getattr(ab, x)
         if before != after:
@@ -157,11 +148,9 @@ async def on_voice_state_update(vor, ab):
                 msg = y["on_delete"].format(before)
             else:
                 msg = y["on_update"].format(before, after)
-            
+
             log.warning(f"{x.upper()} - {vor.name} {msg}")
-    
-    # if ab.voice_channel.id == "442678350272528394":
-        # await gulag_em(ab)
+
 
 @bot.event
 async def on_message(message):
@@ -173,14 +162,8 @@ async def on_message(message):
     await bot.process_commands(message)
 
 
-# Custom methods to simplify code
-
-# async def gulag_em(a):
-    # print(dir(a))
-
-
 async def comrade_check(msg):
-    chance = (datetime.datetime.now().timestamp() - bot.cooldown_cyka)/1200 - .05
+    chance = (datetime.datetime.now().timestamp() - bot.cooldown_cyka) / 1200 - .05
     if random.random() + chance <= .95:
         return
     if msg.clean_content:
@@ -192,7 +175,9 @@ async def comrade_check(msg):
     if bot.cooldown_blyat + 3600 < datetime.datetime.now().timestamp():
         blyat = True
 
-    comrades = {"I": "We", "i": "we", "I'm": "We're", "i'm": "we're", "I'll": "We'll", "i'll": "we'll", "I'd": "We'd", "i'd": "we'd", "I've": "We've", "i've": "we've", "my": "our", "mine": "ours", "My": "Our", "Mine": "Ours", "am": "are", "Am": "Are", "Me": "Us", "me": "us"}
+    comrades = {"I": "We", "i": "we", "I'm": "We're", "i'm": "we're", "I'll": "We'll", "i'll": "we'll", "I'd": "We'd",
+                "i'd": "we'd", "I've": "We've", "i've": "we've", "my": "our", "mine": "ours", "My": "Our",
+                "Mine": "Ours", "am": "are", "Am": "Are", "Me": "Us", "me": "us"}
     for cheeki in breeki:
         if cheeki in comrades.keys():
             vodka.append("{}".format(comrades[cheeki]))
@@ -205,7 +190,7 @@ async def comrade_check(msg):
     if msg.author.voice_channel and not msg.author.is_afk and cyka and blyat:
         bot.cooldown_blyat = datetime.datetime.now().timestamp()
         bot.v = await bot.join_voice_channel(msg.author.voice_channel)
-        player = bot.v.create_ffmpeg_player("blyat.ogg")
+        player = bot.v.create_ffmpeg_player("audio/blyat.ogg")
         player.start()
         await asyncio.sleep(25)
         player.stop()
@@ -213,7 +198,7 @@ async def comrade_check(msg):
             await bot.v.disconnect()
         except:
             print("Hey lotus why don't you eat a fucking dick")
-   
+
 
 if __name__ == '__main__':
     credentials = load_credentials()
@@ -237,7 +222,6 @@ if __name__ == '__main__':
                 extension, type(e).__name__, e))
             log.error('Failed to load extension {}\n{}: {}'.format(
                 extension, type(e).__name__, e))
-
 
     d = str(datetime.date.today())
     log_path = os.path.join("logs", "ogbot.log")
@@ -264,15 +248,3 @@ if __name__ == '__main__':
     for hdlr in handlers:
         hdlr.close()
         log.removeHandler(hdlr)
-
-
-#     if message.author.id == "538196392288452620" and "@​everyone" in message.clean_content:
-#         aero_hmm = """Aero: Before you ping everyone, think.
-# Is this urgent enough that everyone needs to know ASAP?
-# Or can I just put it in chat *without* the tag and let people respond to it as they're able, rather than disturbing them?
-# 
-# I respect your right to get everyone's attention, which is why I made this, rather than removing the ability for you to ping everyone entirely.
-# And, if what you put in the above message IS truly urgent, then I sincerely apologize.
-# 
-# But unless it's something that pertains to everyone, or something very, VERY important, it's usually better to just leave out the mention."""
-#         await bot.send_message(message.channel, aero_hmm)

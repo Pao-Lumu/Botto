@@ -17,10 +17,6 @@ class Comrade:
 
     @commands.command(pass_context=True)
     async def comrade(self, ctx):
-        # print(dir(ctx))
-        # print(ctx.args)
-        # print(ctx.view)
-        # print(ctx.invoked_subcommand)
         breeki = ctx.message.clean_content.split(" ")[1:]
         vodka = []
         cyka = False
@@ -49,8 +45,8 @@ _**Soviet Anthem Plays**_""".format(" ".join(vodka)))
         try:
             if ctx.message.author.voice_channel and not ctx.message.author.is_afk:
                 self.bot.cooldown_blyat = datetime.datetime.now().timestamp()
-                self.bot.v = await bot.join_voice_channel(context.message.author.voice_channel)
-                player = self.bot.v.create_ffmpeg_player("blyat.ogg")
+                self.bot.v = await self.bot.join_voice_channel(ctx.message.author.voice_channel)
+                player = self.bot.v.create_ffmpeg_player("audio/blyat.ogg")
                 player.start()
                 await asyncio.sleep(25)
                 player.stop()
