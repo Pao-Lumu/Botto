@@ -8,6 +8,7 @@ import os
 import random
 import sys
 import traceback
+import discord
 
 from discord.ext import commands
 
@@ -43,9 +44,9 @@ bot = ogbot_base.Botto(command_prefix=">", cog_folder="modules")
 @bot.event
 async def on_command_error(error, ctx):
     if isinstance(error, commands.NoPrivateMessage):
-        await bot.send_message(ctx.message.author, 'This command cannot be used in private messages.')
+        await ctx.message.author.send('This command cannot be used in private messages.')
     elif isinstance(error, commands.DisabledCommand):
-        await bot.send_message(ctx.message.author, 'Sorry. This command is disabled and cannot be used.')
+        await ctx.message.author.send('Sorry. This command is disabled and cannot be used.')
     elif isinstance(error, commands.CommandInvokeError):
         print('In {0.command.qualified_name}:'.format(ctx), file=sys.stderr)
         traceback.print_tb(error.original.__traceback__)
@@ -55,7 +56,7 @@ async def on_command_error(error, ctx):
 
 @bot.event
 async def on_ready():
-    bot.chat_channel = bot.get_channel("491059677325557771")
+    bot.chat_channel = bot.get_channel(491059677325557771)
     bot.bprint("Bot started!")
     bot.bprint("""------------------
 Logged in as:
@@ -98,34 +99,23 @@ async def on_resumed():
 
 @bot.event
 async def on_member_update(vor, ab):
-    if vor.server.id != "442600877434601472" or vor.bot:
+    if vor.server.id != 442600877434601472 or vor.bot:
         return
+
+
+
     states = {"status": {"on_set": "came online ({})", "on_update": "changed status from {} to {}",
                          "on_delete": "went offline"},
-              "game": {"on_set": "started playing {}", "on_update": "swapped from {} to {}",
-                       "on_delete": "stopped playing {}"},
+              "activities": {'playing': {"on_set": "started playing {}", "on_update": "swapped from {} to {}",
+                           "on_delete": "stopped playing {}"}},
               "nick": {"on_set": "set their nickname to {}", "on_update": "changed their nickname to {}",
                        "on_delete": "deleted their nickname"}}
 
-    for x, y in states.items():
-        before = vor.__getattribute__(x)
-        after = ab.__getattribute__(x)
-        if str(before) == "Spotify" or str(after) == "Spotify":
-            return
-        if before != after:
-            if not before or str(before) == "offline":
-                msg = y["on_set"].format(after)
-            elif not after or str(after) == "offline":
-                msg = y["on_delete"].format(before)
-            else:
-                msg = y["on_update"].format(before, after)
-            log.warning(f"{x.upper()} - {ab.name} {msg}")
-            continue
 
 
 @bot.event
-async def on_voice_state_update(vor, ab):
-    if vor.server.id != "442600877434601472":
+async def on_voice_state_update(member, vor, ab):
+    if vor.server.id != 442600877434601472:
         return
     states = {"deaf": {"on_set": "is now server-deafened",
                        "on_delete": "in no longer server-deafened"},
@@ -135,7 +125,7 @@ async def on_voice_state_update(vor, ab):
                             "on_delete": "undeafened themselves"},
               "self_mute": {"on_set": "muted themselves",
                             "on_delete": "unmuted themselves"},
-              "voice_channel": {"on_set": "joined {}", "on_update": "moved from {} to {}",
+              "channel": {"on_set": "joined {}", "on_update": "moved from {} to {}",
                                 "on_delete": "left {}"}}
 
     for x, y in states.items():
@@ -149,16 +139,16 @@ async def on_voice_state_update(vor, ab):
             else:
                 msg = y["on_update"].format(before, after)
 
-            log.warning(f"{x.upper()} - {vor.name} {msg}")
-
+            log.warning(f"{x.upper()} - {member.name} {msg}")
+#
 
 @bot.event
 async def on_message(message):
     if message.author.bot:
         return
-    if message.channel.id == "442600877434601475" and message.clean_content:
-        if message.clean_content[0] != '#':
-            await comrade_check(message)
+    # if message.channel.id == 442600877434601475 and message.clean_content:
+    #     if message.clean_content[0] != '#':
+    #         await comrade_check(message)
     await bot.process_commands(message)
 
 
@@ -185,12 +175,12 @@ async def comrade_check(msg):
         else:
             vodka.append(cheeki)
     if cyka:
-        await bot.send_message(msg.channel, "*" + " ".join(vodka) + "\n*Soviet Anthem Plays*")
+        await msg.channel.send("*" + " ".join(vodka) + "\n*Soviet Anthem Plays*")
         bot.cooldown_cyka = datetime.datetime.now().timestamp()
     if msg.author.voice_channel and not msg.author.is_afk and cyka and blyat:
         bot.cooldown_blyat = datetime.datetime.now().timestamp()
-        bot.v = await bot.join_voice_channel(msg.author.voice_channel)
-        player = bot.v.create_ffmpeg_player("audio/blyat.ogg")
+        bot.v = await msg.author.voice_channel.connect()
+        player = bot.v.play(discord.FFmpegPCMAudio("audio/blyat.ogg"))
         player.start()
         await asyncio.sleep(25)
         player.stop()
