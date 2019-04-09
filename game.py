@@ -11,7 +11,6 @@ import mcrcon
 import valve
 import valve.source
 from mcstatus import MinecraftServer as mc
-# from utils import ogstatus as mc
 from valve import rcon
 from valve.source.a2s import ServerQuerier as src
 
@@ -171,7 +170,7 @@ class Game:
                                     x = rcon.command(msg.clean_content)
                                     if x:
                                         await self.bot.send_message(self.bot.chat_channel, f'```{x}```')
-                                elif msg.clean_content[0]:
+                                else:
                                     command = f"say §9§l{msg.author.name}§r: {msg.clean_content}"
                                     if len(command) >= 100:
                                         wrapped = textwrap.wrap(msg.clean_content, 100 - 14 + len(msg.author.name))
@@ -180,11 +179,9 @@ class Game:
                                     else:
                                         rcon.command(command)
                                         self.bot.bprint(f"Discord | <{msg.author.name}>: {msg.clean_content}")
-                                        if msg.attachments:
-                                            rcon.command(
-                                                f"say §l{msg.author.name}§r: Image {msg.attachments[0]['filename']}")
-                                            self.bot.bprint(
-                                                f"Discord | {msg.author.name}: Image {msg.attachments[0]['filename']}")
+                                if msg.attachments:
+                                    rcon.command(f"say §l{msg.author.name}§r: Image {msg.attachments[0]['filename']}")
+                                    self.bot.bprint(f"Discord | {msg.author.name}: Image {msg.attachments[0]['filename']}")
                         else:
                             pass
                 except socket.error as e:
