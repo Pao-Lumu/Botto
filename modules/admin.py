@@ -6,7 +6,7 @@ from discord.ext import commands
 from utils import checks
 
 
-class Admin:
+class Admin(commands.Cog):
     """You shouldn't be here..."""
 
     def __init__(self, bot):

@@ -56,14 +56,19 @@ async def on_command_error(error, ctx):
 
 @bot.event
 async def on_ready():
-    bot.chat_channel = bot.get_channel(491059677325557771)
+    # bot.chat_channel = bot.get_channel(491059677325557771)
+    bot.chat_channel = {"name": 'xd'}
     bot.bprint("Bot started!")
+    print(dir(bot))
+    print(bot.user.name)
+    print(bot.chat_channel)
     bot.bprint("""------------------
 Logged in as:
 Username: {}
 ID: {}
 Primary Chat Channel: {}
-------------------""".format(bot.user.name, bot.user.id, bot.chat_channel.name))
+------------------""".format(bot.user.name, bot.user.id, bot.chat_channel))
+
     if not hasattr(bot, 'uptime'):
         bot.uptime = datetime.datetime.utcnow()
 
@@ -99,7 +104,7 @@ async def on_resumed():
 
 @bot.event
 async def on_member_update(vor, ab):
-    if vor.server.id != 442600877434601472 or vor.bot:
+    if vor.guild.id != 442600877434601472 or vor.bot:
         return
 
 
@@ -115,7 +120,7 @@ async def on_member_update(vor, ab):
 
 @bot.event
 async def on_voice_state_update(member, vor, ab):
-    if vor.server.id != 442600877434601472:
+    if member.guild.id != 442600877434601472:
         return
     states = {"deaf": {"on_set": "is now server-deafened",
                        "on_delete": "in no longer server-deafened"},
@@ -146,48 +151,8 @@ async def on_voice_state_update(member, vor, ab):
 async def on_message(message):
     if message.author.bot:
         return
-    # if message.channel.id == 442600877434601475 and message.clean_content:
-    #     if message.clean_content[0] != '#':
-    #         await comrade_check(message)
+
     await bot.process_commands(message)
-
-
-async def comrade_check(msg):
-    chance = (datetime.datetime.now().timestamp() - bot.cooldown_cyka) / 1200 - .05
-    if random.random() + chance <= .95:
-        return
-    if msg.clean_content:
-        if msg.clean_content[0] == '>':
-            return
-    breeki = msg.clean_content.split(" ")
-    cyka, blyat = False, False
-    vodka = []
-    if bot.cooldown_blyat + 3600 < datetime.datetime.now().timestamp():
-        blyat = True
-
-    comrades = {"I": "We", "i": "we", "I'm": "We're", "i'm": "we're", "I'll": "We'll", "i'll": "we'll", "I'd": "We'd",
-                "i'd": "we'd", "I've": "We've", "i've": "we've", "my": "our", "mine": "ours", "My": "Our",
-                "Mine": "Ours", "am": "are", "Am": "Are", "Me": "Us", "me": "us"}
-    for cheeki in breeki:
-        if cheeki in comrades.keys():
-            vodka.append("{}".format(comrades[cheeki]))
-            cyka = True
-        else:
-            vodka.append(cheeki)
-    if cyka:
-        await msg.channel.send("*" + " ".join(vodka) + "\n*Soviet Anthem Plays*")
-        bot.cooldown_cyka = datetime.datetime.now().timestamp()
-    if msg.author.voice_channel and not msg.author.is_afk and cyka and blyat:
-        bot.cooldown_blyat = datetime.datetime.now().timestamp()
-        bot.v = await msg.author.voice_channel.connect()
-        player = bot.v.play(discord.FFmpegPCMAudio("audio/blyat.ogg"))
-        player.start()
-        await asyncio.sleep(25)
-        player.stop()
-        try:
-            await bot.v.disconnect()
-        except:
-            print("Hey lotus why don't you eat a fucking dick")
 
 
 if __name__ == '__main__':
@@ -228,7 +193,7 @@ if __name__ == '__main__':
     bot.loop.create_task(gms.get_current_server_status())
     bot.loop.create_task(gms.send_from_discord_to_server())
     bot.loop.create_task(gms.send_from_server_to_discord())
-    bot.loop.create_task(gms.update_channel_description())
+    bot.loop.create_task(gms.update_server_information())
     bot.loop.create_task(gms.check_server_running())
     bot.loop.create_task(gms.check_server_stopped())
 
