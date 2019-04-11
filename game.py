@@ -4,6 +4,7 @@ import os
 import re
 import socket
 import textwrap
+import itertools
 
 import aiofiles
 import discord
@@ -49,6 +50,7 @@ class Game:
     async def get_current_server_status(self):
         await self.bot.wait_until_ready()
         await asyncio.sleep(1)
+        await self.set_bot_status('a', 'a')
         self.bot.game, self.bot.gwd = ("", "")
         while not self.bot.is_closed:
             d = sensor.get_running()
@@ -75,6 +77,7 @@ class Game:
                 self.bot.game_version = version
                 self.bot.bprint(f"Server Status | Now Playing: {self.bot.game} {version}")
                 await self.bot.change_presence(game=np)
+
                 await self.bot.wait_until_game_stopped()
 
     def lookup_mc_server(self, address, fails):
@@ -96,6 +99,11 @@ class Game:
             pass
         except:
             print("uh ok")
+
+    async def set_bot_status(self, game: str, status: str, player_count: str):
+        padder = [game, ''.join(list(itertools.repeat('\u3000', 40))) + status + ''.join(list(itertools.repeat('\u3000', 40))) + 'e']
+        print(f"{' '.join(padder)}")
+        await self.bot.change_presence(activity=discord.Game(f"{' '.join(padder)}"))
 
     async def send_from_server_to_discord(self):
         await self.bot.wait_until_game_running()
@@ -210,7 +218,7 @@ class Game:
             else:
                 await asyncio.sleep(5)
 
-    async def update_channel_description(self):
+    async def update_server_information(self):
         await self.bot.wait_until_ready()
         await asyncio.sleep(3)
         while not self.bot.is_closed:
@@ -223,44 +231,48 @@ class Game:
                 server = mc.lookup("localhost:22222")
                 failed = False
                 version = ''
+                mod_count
                 player_count = ''
                 while "minecraft" in self.bot.gwd:
                     try:
                         stats = server.status()
                         version, online, max = stats.version.name, stats.players.online, stats.players.max
+                        if 'modinfo' in stats.raw:
+                            mod_count = len(stats.raw['modinfo']['modList'])
+                        else:
+                            mod_count = 'Vanilla'
+
                         player_count = f"({online}/{max} players)" if not failed else ""
                         if failed:
                             stats = server.query()
                             version, online, max = stats.software.version, stats.players.online, stats.players.max
                             player_count = f"({online}/{max} players)" if not failed else ""
                     except BrokenPipeError:
-                        print("Server running a pre-1.7 version of MC, or is still starting. (BrokenPipeError)")
-                        failed = True
+                        self.bot.bprint("Server running a MC version <1.7, or is still starting. (BrokenPipeError)")
                         await asyncio.sleep(5)
-                        pass
+                        break
                     except ConnectionRefusedError:
-                        print("Server either not running, or not on the correct port. (ConnectionRefusedError)")
-                        failed = True
-                        pass
+                        self.bot.bprint("Server running on incorrect port. (ConnectionRefusedError)")
+                        break
                     except socket.timeout:
-                        print("Server not responding. (socket.timeout)")
+                        self.bot.bprint("Server not responding. (socket.timeout)")
                         failed = True
                     except NameError:
                         pass
                     except Exception as e:
-                        print(f"Failed with Exception {e}")
+                        self.bot.bprint(f"Failed with Exception {e}")
                         failed = True
                         pass
                     except:
                         print("Failed with unknown error")
                         failed = True
                         pass
-
                     try:
                         cur_status = f"Playing: Minecraft {version} {player_count}"
                         await self.bot.edit_channel(self.bot.chat_channel, topic=cur_status)
-                    except discord.Forbidden as e:
-                        print("Bot lacks permissions to edit channels. (discord.Forbidden)")
+                        await self.set_bot_status(f'Minecraft {version}', mod_count, player_count)
+                    except discord.Forbidden:
+                        self.bot.bprint("Bot lacks permissions to edit channels. (discord.Forbidden)")
                         pass
                     await asyncio.sleep(30)
             elif "gmod" in self.bot.gwd:
