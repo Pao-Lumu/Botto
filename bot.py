@@ -59,9 +59,6 @@ async def on_ready():
     # bot.chat_channel = bot.get_channel(491059677325557771)
     bot.chat_channel = {"name": 'xd'}
     bot.bprint("Bot started!")
-    print(dir(bot))
-    print(bot.user.name)
-    print(bot.chat_channel)
     bot.bprint("""------------------
 Logged in as:
 Username: {}
