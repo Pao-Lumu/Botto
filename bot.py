@@ -101,47 +101,93 @@ async def on_resumed():
 
 @bot.event
 async def on_member_update(vor, ab):
-    if vor.guild.id != 442600877434601472 or vor.bot:
+    # if vor.guild.id != 442600877434601472 or vor.bot:
+    if vor.bot:
         return
 
+    states = {"status": {"set": "came online ({})", "update": "changed status from {} to {}",
+                         "unset": "went offline"},
+              "activities": {'playing': {"set": "started playing {}",
+                                         "unset": "stopped playing {}"},
+                             'streaming': {"set": "is streaming {}",
+                                           "unset": "stopped streaming {}"},
+                             'listening': {"set": "is listening to {}",
+                                           "unset": "stopped listening to {}"}},
+              "nick": {"set": "set their nickname to {}", "update": "changed their nickname to {}",
+                       "unset": "deleted their nickname"}}
+    changes = []
+    if vor.status == ab.status:
+        pass
+    else:
+        x = 'status'
+        if ab.status is discord.Status.offline:
+            changes.append((x, states[x]['unset']))
+        elif vor.status is discord.Status.offline:
+            changes.append((x, states[x]['set'].format(ab.status)))
+        else:
+            changes.append((x, states[x]['update'].format()))
+
+    if vor.activities == ab.activities:
+        pass
+    else:
+        x = 'activities'
+        diff = set(vor.activities) ^ set(ab.activities)
+        for a in diff:
+            if a in vor.activities:
+                changes.append((x, states[x][a.type.value]['unset'].format(a.name)))
+            elif a in ab.activities:
+                changes.append((x, states['activities'][a.type.value]['set'].format(a.name)))
+        else:
+            bot.bprint('evan you should fix your status code')
+
+    if vor.nick == ab.nick:
+        pass
+    else:
+        if not vor.nick:
+            changes.append(states['nick']['set'].format(ab.nick))
+        elif not ab.nick:
+            changes.append(states['nick']['unset'])
+        else:
+            changes.append(states['nick']['update'].format(ab.nick))
+
+    for x, msg in changes:
+        log.warning(f"{x.upper()} - {ab.name} {msg}")
 
 
-    states = {"status": {"on_set": "came online ({})", "on_update": "changed status from {} to {}",
-                         "on_delete": "went offline"},
-              "activities": {'playing': {"on_set": "started playing {}", "on_update": "swapped from {} to {}",
-                           "on_delete": "stopped playing {}"}},
-              "nick": {"on_set": "set their nickname to {}", "on_update": "changed their nickname to {}",
-                       "on_delete": "deleted their nickname"}}
-
+@bot.event
+async def on_user_update(vor, ab):
+    pass
 
 
 @bot.event
 async def on_voice_state_update(member, vor, ab):
     if member.guild.id != 442600877434601472:
         return
-    states = {"deaf": {"on_set": "is now server-deafened",
-                       "on_delete": "in no longer server-deafened"},
-              "mute": {"on_set": "is now muted",
-                       "on_delete": "is no longer server-muted"},
-              "self_deaf": {"on_set": "deafened themselves",
-                            "on_delete": "undeafened themselves"},
-              "self_mute": {"on_set": "muted themselves",
-                            "on_delete": "unmuted themselves"},
-              "channel": {"on_set": "joined {}", "on_update": "moved from {} to {}",
-                                "on_delete": "left {}"}}
+    states = {"deaf": {"set": "is now server-deafened",
+                       "unset": "in no longer server-deafened"},
+              "mute": {"set": "is now muted",
+                       "unset": "is no longer server-muted"},
+              "self_deaf": {"set": "deafened themselves",
+                            "unset": "undeafened themselves"},
+              "self_mute": {"set": "muted themselves",
+                            "unset": "unmuted themselves"},
+              "channel": {"set": "joined {}", "update": "moved from {} to {}",
+                          "unset": "left {}"}}
 
     for x, y in states.items():
         before = getattr(vor, x)
         after = getattr(ab, x)
         if before != after:
             if not before:
-                msg = y["on_set"].format(after)
+                msg = y["set"].format(after)
             elif not after:
-                msg = y["on_delete"].format(before)
+                msg = y["unset"].format(before)
             else:
-                msg = y["on_update"].format(before, after)
+                msg = y["update"].format(before, after)
 
             log.warning(f"{x.upper()} - {member.name} {msg}")
+
+
 #
 
 @bot.event

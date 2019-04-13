@@ -1,15 +1,10 @@
 import asyncio
-import os.path
-import sqlite3
-import time
 import inspect
 import datetime
 import platform
 
-import discord
 from discord.ext import commands
 from utils import checks
-import json
 
 
 class Botto(commands.Bot):

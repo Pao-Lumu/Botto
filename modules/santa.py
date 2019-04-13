@@ -20,10 +20,11 @@ class Santa:
         s = Santana(p)
         b = s.oye()
         for person, santa in b.items():
-            discord_id = discord.User(id=p[person])
+            discord_id = int(p[person])
             message = "{}, you have been assigned {} as your secret santa.".format(person.capitalize(),
                                                                                    santa.capitalize())
-            await self.bot.send_message(discord_id, content=message)
+            member = discord.utils.get(self.bot.get_all_members, id=discord_id)
+            await member.send(content=message)
 
         print(dir(ctx))
 

@@ -98,7 +98,7 @@ class Comrade(commands.Cog):
                 elif breeki.isupper():
                     raw[cheeki] = comrades[breeki.casefold()].upper()
                 else:
-                    raw[cheeki] = comrades[breeki.casefold()]
+                    raw[cheeki] = comrades[breeki.casefold()].capitalize()
                 cyka = True
 
         if cyka:
@@ -112,9 +112,6 @@ class Comrade(commands.Cog):
             # await ctx.send(":musical_note: Guess who's going to the GUUUULAG! The GUUULAG! The GUUUUUULAG! :musical_note:")
             return
         try:
-            # print(dir(ctx))
-            # print(dir(ctx.author))
-            # print(dir(ctx.author.voice))
             if ctx.author.voice.channel and not ctx.author.voice.afk:
                 self.bot.cooldown_blyat = datetime.datetime.now().timestamp()
                 vc = await ctx.author.voice.channel.connect()
@@ -122,7 +119,7 @@ class Comrade(commands.Cog):
                 await asyncio.sleep(25)
                 vc.stop()
                 await vc.disconnect()
-        except AttributeError:
+        except AttributeError as e:
             print(e)
             await ctx.send("GET IN VOICE CHAT BLYAT!")
         except:
