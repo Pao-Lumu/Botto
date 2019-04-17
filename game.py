@@ -50,7 +50,7 @@ class Game:
     async def get_current_server_status(self):
         await self.bot.wait_until_ready()
         await asyncio.sleep(1)
-        await self.set_bot_status('a', 'a')
+        await self.set_bot_status('Hello', 'There', 'Bobby')
         self.bot.game, self.bot.gwd = ("", "")
         while not self.bot.is_closed:
             d = sensor.get_running()
@@ -101,7 +101,7 @@ class Game:
             print("uh ok")
 
     async def set_bot_status(self, game: str, status: str, player_count: str):
-        padder = [game, ''.join(list(itertools.repeat('\u3000', 40))) + status + ''.join(list(itertools.repeat('\u3000', 40))) + 'e']
+        padder = [game, ''.join(list(itertools.repeat('\u3000', 40-len(game)))) + status + ''.join(list(itertools.repeat('\u3000', 40-len(status)))) + player_count]
         print(f"{' '.join(padder)}")
         await self.bot.change_presence(activity=discord.Game(f"{' '.join(padder)}"))
 
@@ -231,14 +231,14 @@ class Game:
                 server = mc.lookup("localhost:22222")
                 failed = False
                 version = ''
-                mod_count
+                mod_count = ''
                 player_count = ''
                 while "minecraft" in self.bot.gwd:
                     try:
                         stats = server.status()
                         version, online, max = stats.version.name, stats.players.online, stats.players.max
                         if 'modinfo' in stats.raw:
-                            mod_count = len(stats.raw['modinfo']['modList'])
+                            mod_count = f"{len(stats.raw['modinfo']['modList'])} mods installed"
                         else:
                             mod_count = 'Vanilla'
 

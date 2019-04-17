@@ -1,19 +1,18 @@
 #!/usr/bin/env python3
 
-import asyncio
 import datetime
 import json
 import logging.handlers
 import os
-import random
 import sys
 import traceback
-import discord
+from pprint import pprint
 
+import discord
 from discord.ext import commands
 
-import ogbot_base
 import game
+import ogbot_base
 
 if len(sys.argv) > 1:
     os.chdir(sys.argv[1])
@@ -102,7 +101,7 @@ async def on_resumed():
 @bot.event
 async def on_member_update(vor, ab):
     # if vor.guild.id != 442600877434601472 or vor.bot:
-    if vor.bot:
+    if vor.guild.id != 245674056760819712 or vor.bot:
         return
 
     states = {"status": {"set": "came online ({})", "update": "changed status from {} to {}",
@@ -111,10 +110,10 @@ async def on_member_update(vor, ab):
                                          "unset": "stopped playing {}"},
                              'streaming': {"set": "is streaming {}",
                                            "unset": "stopped streaming {}"},
-                             'listening': {"set": "is listening to {}",
+                             'listening': {"set": "is listening to {} by {} on Spotify",
                                            "unset": "stopped listening to {}"}},
-              "nick": {"set": "set their nickname to {}", "update": "changed their nickname to {}",
-                       "unset": "deleted their nickname"}}
+              "nick": {"set": "Nickname set to {}", "update": "Nickname changed to {}",
+                       "unset": "Nickname was deleted"}}
     changes = []
     if vor.status == ab.status:
         pass
@@ -125,20 +124,36 @@ async def on_member_update(vor, ab):
         elif vor.status is discord.Status.offline:
             changes.append((x, states[x]['set'].format(ab.status)))
         else:
-            changes.append((x, states[x]['update'].format()))
+            changes.append((x, states[x]['update'].format(vor.status, ab.status)))
 
     if vor.activities == ab.activities:
         pass
     else:
         x = 'activities'
-        diff = set(vor.activities) ^ set(ab.activities)
+        bef = set(map(lambda x: x.name, vor.activities))
+        aft = set(map(lambda x: x.name, ab.activities))
+        print(vor.activities[0] == ab.activities[0])
+        for n, c in enumerate(vor.activities):
+            if isinstance(c, discord.Spotify):
+                # do something
+                pass
+            if c in ab.activities:
+                pass
+            else:
+                print(c.name)
+        diffkey = bef.symmetric_difference(aft)
+        zz = vor.activities + ab.activities
+        diff = [a for a in zz if (a.name in diffkey)]
         for a in diff:
             if a in vor.activities:
-                changes.append((x, states[x][a.type.value]['unset'].format(a.name)))
+                changes.append((x, states[x][a.type.name]['unset'].format(a.name)))
             elif a in ab.activities:
-                changes.append((x, states['activities'][a.type.value]['set'].format(a.name)))
+                changes.append((x, states['activities'][a.type.name]['set'].format(
+                    *[a.title, a.artist] if hasattr(a, 'title') else [a.name])))
+            else:
+                bot.bprint('evan you should fix your status code')
         else:
-            bot.bprint('evan you should fix your status code')
+            pass
 
     if vor.nick == ab.nick:
         pass
@@ -156,11 +171,22 @@ async def on_member_update(vor, ab):
 
 @bot.event
 async def on_user_update(vor, ab):
+    # x = zip((vor.avatar, vor.username, vor.discriminator), (ab.avatar, ab.username, ab.discriminator))
+    x = zip((vor.avatar, vor.username, vor.discriminator), (ab.avatar, ab.username, ab.discriminator))
+    key = ('avatar', 'username', 'discriminator')
+
+    for y, z in enumerate(x):
+        if z[0] == z[1]:
+            pass
+        else:
+            msg = f'{vor.username} changed their {key[y]} from {z[0]} to {z[1]}.'
+            log.warning(f"{y} - {ab.name} {msg}")
     pass
 
 
 @bot.event
 async def on_voice_state_update(member, vor, ab):
+    # pprint(dir(member))
     if member.guild.id != 442600877434601472:
         return
     states = {"deaf": {"set": "is now server-deafened",
@@ -173,6 +199,7 @@ async def on_voice_state_update(member, vor, ab):
                             "unset": "unmuted themselves"},
               "channel": {"set": "joined {}", "update": "moved from {} to {}",
                           "unset": "left {}"}}
+
 
     for x, y in states.items():
         before = getattr(vor, x)
@@ -194,7 +221,6 @@ async def on_voice_state_update(member, vor, ab):
 async def on_message(message):
     if message.author.bot:
         return
-
     await bot.process_commands(message)
 
 
