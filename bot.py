@@ -6,13 +6,13 @@ import logging.handlers
 import os
 import sys
 import traceback
-from pprint import pprint
 
 import discord
 from discord.ext import commands
 
 import game
 import ogbot_base
+from utils import helpers
 
 if len(sys.argv) > 1:
     os.chdir(sys.argv[1])
@@ -103,7 +103,9 @@ async def on_member_update(vor, ab):
     # if vor.guild.id != 442600877434601472 or vor.bot:
     if vor.guild.id != 245674056760819712 or vor.bot:
         return
-
+    print("A")
+    bef = frozenset(map(lambda x: helpers.MiniActivity(x), vor.activities))
+    aft = frozenset(map(lambda x: helpers.MiniActivity(x), ab.activities))
     states = {"status": {"set": "came online ({})", "update": "changed status from {} to {}",
                          "unset": "went offline"},
               "activities": {'playing': {"set": "started playing {}",
@@ -126,28 +128,22 @@ async def on_member_update(vor, ab):
         else:
             changes.append((x, states[x]['update'].format(vor.status, ab.status)))
 
-    if vor.activities == ab.activities:
+    if bef == aft:
         pass
     else:
         x = 'activities'
-        bef = set(map(lambda x: x.name, vor.activities))
-        aft = set(map(lambda x: x.name, ab.activities))
-        print(vor.activities[0] == ab.activities[0])
-        for n, c in enumerate(vor.activities):
-            if isinstance(c, discord.Spotify):
-                # do something
-                pass
-            if c in ab.activities:
-                pass
-            else:
-                print(c.name)
-        diffkey = bef.symmetric_difference(aft)
-        zz = vor.activities + ab.activities
-        diff = [a for a in zz if (a.name in diffkey)]
+        diff = aft.symmetric_difference(bef)
         for a in diff:
-            if a in vor.activities:
+            if a.type == discord.ActivityType.listening:
+                if a in aft:
+                    changes.append((x, states['activities'][a.type.name]['set'].format(
+                        *[a.title, a.artist] if hasattr(a, 'title') else [a.name])))
+                elif len(diff) % 2 == 1:
+                    changes.append((x, states[x][a.type.name]['unset'].format(a.name)))
+
+            elif a.ob in vor.activities:
                 changes.append((x, states[x][a.type.name]['unset'].format(a.name)))
-            elif a in ab.activities:
+            elif a.ob in ab.activities:
                 changes.append((x, states['activities'][a.type.name]['set'].format(
                     *[a.title, a.artist] if hasattr(a, 'title') else [a.name])))
             else:
@@ -171,7 +167,6 @@ async def on_member_update(vor, ab):
 
 @bot.event
 async def on_user_update(vor, ab):
-    # x = zip((vor.avatar, vor.username, vor.discriminator), (ab.avatar, ab.username, ab.discriminator))
     x = zip((vor.avatar, vor.username, vor.discriminator), (ab.avatar, ab.username, ab.discriminator))
     key = ('avatar', 'username', 'discriminator')
 
@@ -199,7 +194,6 @@ async def on_voice_state_update(member, vor, ab):
                             "unset": "unmuted themselves"},
               "channel": {"set": "joined {}", "update": "moved from {} to {}",
                           "unset": "left {}"}}
-
 
     for x, y in states.items():
         before = getattr(vor, x)
