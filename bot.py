@@ -55,8 +55,8 @@ async def on_command_error(error, ctx):
 
 @bot.event
 async def on_ready():
-    # bot.chat_channel = bot.get_channel(491059677325557771)
-    bot.chat_channel = {"name": 'xd'}
+    bot.chat_channel = bot.get_channel(388432640740687872)
+    # bot.chat_channel = {"name": 'xd'}
     bot.bprint("Bot started!")
     bot.bprint("""------------------
 Logged in as:

@@ -1,10 +1,10 @@
 import asyncio
 import datetime
+import itertools
 import os
 import re
 import socket
 import textwrap
-import itertools
 
 import aiofiles
 import discord
@@ -102,7 +102,6 @@ class Game:
 
     async def set_bot_status(self, game: str, status: str, player_count: str):
         padder = [game, ''.join(list(itertools.repeat('\u3000', 40-len(game)))) + status + ''.join(list(itertools.repeat('\u3000', 40-len(status)))) + player_count]
-        print(f"{' '.join(padder)}")
         await self.bot.change_presence(activity=discord.Game(f"{' '.join(padder)}"))
 
     async def send_from_server_to_discord(self):

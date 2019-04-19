@@ -1,9 +1,10 @@
 import asyncio
-import inspect
 import datetime
+import inspect
 import platform
 
 from discord.ext import commands
+
 from utils import checks
 
 
@@ -17,7 +18,7 @@ class Botto(commands.Bot):
         if platform.system() == "Linux":
             asyncio.get_child_watcher().attach_loop(self.loop)
         command_prefix = kwargs.pop('command_prefix', commands.when_mentioned_or('.'))
-        self.debug = False
+        self.debug = True
 
         self._game_running = asyncio.Event(loop=self.loop)
         self._game_stopped = asyncio.Event(loop=self.loop)
@@ -50,11 +51,11 @@ class Botto(commands.Bot):
             print(e)
 
     async def wait_until_game_running(self):
-        # print("Waiting for the game to run...")
+        print("Waiting for the game to run...")
         await self._game_running.wait()
 
     async def wait_until_game_stopped(self):
-        # print("Waiting for the game to stop...")
+        print("Waiting for the game to stop...")
         await self._game_stopped.wait()
 
     @property

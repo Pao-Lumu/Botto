@@ -1,12 +1,16 @@
-import time
 import subprocess
-import os
 import json
-from os import path
+import os
+import subprocess
 from datetime import datetime
-# import asyncio 
+from os import path
+
+
+# import asyncio
 
 def get_running():
+    # ps = subprocess.Popen("/usr/bin/pwdx $(/usr/bin/netstat -tulpen | grep -P :22222 | grep -oP '\d{1,5}(?=\/)')", shell=True, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+    # TODO REWRITE THIS!!!!
      ps = subprocess.Popen("/usr/bin/pwdx $(/usr/bin/netstat -tulpen | grep -P :22222 | grep -oP '\d{1,5}(?=\/)')", shell=True, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
      raw = ps.stdout.read().decode("utf-8").rstrip()
      if raw:
