@@ -72,7 +72,7 @@ class Botto(commands.Bot):
 
         for x in p:
             if self.debug:
-                print(f"{time}{inspect.stack()[1][3]} ~ {x}")
+                print(f"{time} {inspect.stack()[1][3]} ~ {x}")
             else:
                 print(f"{time} ~ {x}")
 
