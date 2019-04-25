@@ -75,10 +75,10 @@ class Botto(commands.Bot):
     def bprint(self, text):
         time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         p = text.split("\n")
-
         for x in p:
             if self.debug:
                 print(f"{time} {inspect.stack()[1][3]} ~ {x}")
+
             else:
                 print(f"{time} ~ {x}")
 

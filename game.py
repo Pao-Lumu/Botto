@@ -25,7 +25,7 @@ class Game:
 
     async def check_server_running(self):
         await self.bot.wait_until_ready()
-        while not self.bot.is_closed:
+        while not self.bot.is_closed():
             data = sensor.get_running()
             if data:
                 self.bot._game_stopped.clear()
@@ -37,7 +37,7 @@ class Game:
 
     async def check_server_stopped(self):
         await self.bot.wait_until_ready()
-        while not self.bot.is_closed:
+        while not self.bot.is_closed():
             data = sensor.get_running()
             if not data:
                 self.bot._game_running.clear()
@@ -49,9 +49,8 @@ class Game:
 
     async def get_current_server_status(self):
         await self.bot.wait_until_ready(1)
-        # await self.set_bot_status('Hello', 'There', 'Bobby')
         self.bot.game, self.bot.gwd = ("", "")
-        while not self.bot.is_closed:
+        while not self.bot.is_closed():
             d = sensor.get_running()
             # If no game is running:
             if not d:
@@ -106,7 +105,7 @@ class Game:
 
     async def send_from_server_to_discord(self):
         await self.bot.wait_until_game_running(20)
-        while not self.bot.is_closed:
+        while not self.bot.is_closed():
             if "minecraft" in self.bot.gwd:
                 fpath = os.path.join(self.bot.gwd, "logs", "latest.log") if os.path.exists(
                     os.path.join(self.bot.gwd, "logs", "latest.log")) else os.path.join(self.bot.gwd, "server.log")
@@ -155,7 +154,7 @@ class Game:
 
     async def send_from_discord_to_server(self):
         await self.bot.wait_until_game_running(20)
-        while not self.bot.is_closed:
+        while not self.bot.is_closed():
             last_reconnect = datetime.datetime(1, 1, 1)
             password = self.bot.gameinfo["rcon"] if self.bot.gameinfo["rcon"] else "ogboxrcon"
             if "minecraft" in self.bot.gwd:
@@ -214,7 +213,7 @@ class Game:
 
     async def update_server_information(self):
         await self.bot.wait_until_ready(3)
-        while not self.bot.is_closed:
+        while not self.bot.is_closed():
             if not self.bot.game:
                 if self.bot.chat_channel.topic:
                     await self.bot.edit_channel(self.bot.chat_channel, topic="")
