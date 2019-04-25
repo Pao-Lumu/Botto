@@ -10,7 +10,7 @@ def get_running():
     if platform.system() == 'Windows':
         return None
     else:
-        ps = subprocess.Popen("/usr/bin/pwdx $(/usr/sbin/ss -tulpn | grep -P :22222 | grep -oP '\\d{1,5}(?=/)')",
+        ps = subprocess.Popen("/usr/bin/pwdx $(/usr/sbin/ss -tulpn | grep -P :22222 | grep -oP '(?<=pid=)(\d+)",
                               shell=True, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
         raw = ps.stdout.read().decode("utf-8").rstrip()
 
@@ -35,8 +35,9 @@ def init_game_info():
                     gi = json.load(file)
                     return gi
                 except json.decoder.JSONDecodeError as e:
-                        print(f"JSON decoding error | {e}")
-                        pass
+                    print(f"JSON decoding error | {e}")
+                    pass
+
         elif "serverfiles" in x:
             x = root
             pass
@@ -44,7 +45,7 @@ def init_game_info():
             z = False
             lr = str(datetime.now().timestamp())
             with open(path.join(x, ".gameinfo.json"), "w+") as file:
-                basic = {"name": current.title(), "folder": x, "last_run": lr, "rcon": "", "version":""}
+                basic = {"name": current.title(), "folder": x, "last_run": lr, "rcon": "", "version": ""}
                 json.dump(basic, file)
                 return basic
         else:
