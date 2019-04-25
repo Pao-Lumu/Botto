@@ -25,10 +25,12 @@ class Botto(commands.Bot):
 
         super().__init__(command_prefix=command_prefix, *args, **kwargs)
 
-    async def wait_until_ready(self):
+    async def wait_until_ready(self, delay=0):
         if self.debug:
             self.bprint("Waiting for the bot to start...")
         await super().wait_until_ready()
+        if delay:
+            await asyncio.sleep(delay)
 
     async def on_command_error(self, e, ctx):
         try:
@@ -50,13 +52,17 @@ class Botto(commands.Bot):
         except Exception as e:
             print(e)
 
-    async def wait_until_game_running(self):
+    async def wait_until_game_running(self, delay=0):
         print("Waiting for the game to run...")
         await self._game_running.wait()
+        if delay:
+            await asyncio.sleep(delay)
 
-    async def wait_until_game_stopped(self):
+    async def wait_until_game_stopped(self, delay=0):
         print("Waiting for the game to stop...")
         await self._game_stopped.wait()
+        if delay:
+            await asyncio.sleep(delay)
 
     @property
     def is_game_running(self):

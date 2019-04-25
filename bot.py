@@ -103,6 +103,7 @@ async def on_member_update(vor, ab):
     # if vor.guild.id != 442600877434601472 or vor.bot:
     if vor.guild.id != 245674056760819712 or vor.bot:
         return
+    print(vor == ab)
     print("A")
     bef = frozenset(map(lambda x: helpers.MiniActivity(x), vor.activities))
     aft = frozenset(map(lambda x: helpers.MiniActivity(x), ab.activities))

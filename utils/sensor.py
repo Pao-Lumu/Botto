@@ -1,22 +1,24 @@
-import subprocess
 import json
 import os
+import platform
 import subprocess
 from datetime import datetime
 from os import path
 
 
-# import asyncio
-
 def get_running():
-    # ps = subprocess.Popen("/usr/bin/pwdx $(/usr/bin/netstat -tulpen | grep -P :22222 | grep -oP '\d{1,5}(?=\/)')", shell=True, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
-    # TODO REWRITE THIS!!!!
-     ps = subprocess.Popen("/usr/bin/pwdx $(/usr/bin/netstat -tulpen | grep -P :22222 | grep -oP '\d{1,5}(?=\/)')", shell=True, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
-     raw = ps.stdout.read().decode("utf-8").rstrip()
-     if raw:
-         return raw.split(": ")[1]
-     else:
-         return None
+    if platform.system() == 'Windows':
+        return None
+    else:
+        ps = subprocess.Popen("/usr/bin/pwdx $(/usr/sbin/ss -tulpn | grep -P :22222 | grep -oP '\\d{1,5}(?=/)')",
+                              shell=True, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+        raw = ps.stdout.read().decode("utf-8").rstrip()
+
+    if raw:
+        return raw.split(": ")[1]
+    else:
+        return None
+
 
 def init_game_info():
     output = get_running()
@@ -48,6 +50,7 @@ def init_game_info():
         else:
             x = root
         pass
+
 
 def fix_mc_rcon_problems(server):
     fn = os.path.join(server.folder, "server.properties")

@@ -48,9 +48,8 @@ class Game:
                 await asyncio.sleep(5)
 
     async def get_current_server_status(self):
-        await self.bot.wait_until_ready()
-        await asyncio.sleep(1)
-        await self.set_bot_status('Hello', 'There', 'Bobby')
+        await self.bot.wait_until_ready(1)
+        # await self.set_bot_status('Hello', 'There', 'Bobby')
         self.bot.game, self.bot.gwd = ("", "")
         while not self.bot.is_closed:
             d = sensor.get_running()
@@ -100,13 +99,13 @@ class Game:
         except:
             print("uh ok")
 
-    async def set_bot_status(self, game: str, status: str, player_count: str):
-        padder = [game, ''.join(list(itertools.repeat('\u3000', 40-len(game)))) + status + ''.join(list(itertools.repeat('\u3000', 40-len(status)))) + player_count]
+    async def set_bot_status(self, line1: str, line2: str, line3: str):
+        padder = [line1, ''.join(list(itertools.repeat('\u3000', 40 - len(line1)))) + line2 + ''.join(
+            list(itertools.repeat('\u3000', 40 - len(line2)))) + line3]
         await self.bot.change_presence(activity=discord.Game(f"{' '.join(padder)}"))
 
     async def send_from_server_to_discord(self):
-        await self.bot.wait_until_game_running()
-        await asyncio.sleep(1)
+        await self.bot.wait_until_game_running(20)
         while not self.bot.is_closed:
             if "minecraft" in self.bot.gwd:
                 fpath = os.path.join(self.bot.gwd, "logs", "latest.log") if os.path.exists(
@@ -155,8 +154,7 @@ class Game:
                 await asyncio.sleep(15)
 
     async def send_from_discord_to_server(self):
-        await self.bot.wait_until_game_running()
-        await asyncio.sleep(2)
+        await self.bot.wait_until_game_running(20)
         while not self.bot.is_closed:
             last_reconnect = datetime.datetime(1, 1, 1)
             password = self.bot.gameinfo["rcon"] if self.bot.gameinfo["rcon"] else "ogboxrcon"
@@ -165,32 +163,29 @@ class Game:
                 try:
                     while "minecraft" in self.bot.gwd:
                         msg = await self.bot.wait_for_message(channel=self.bot.chat_channel, timeout=5)
-                        if msg:
-                            if msg.author.bot:
-                                pass
-                            elif msg.clean_content:
-                                time_sec = (datetime.datetime.now() - last_reconnect)
-                                if time_sec.total_seconds() >= 240:
-                                    last_reconnect = datetime.datetime.now()
-                                    rcon.connect()
-                                if msg.clean_content[0] == '/' and msg.author.id == '141752316188426241':
-                                    x = rcon.command(msg.clean_content)
-                                    if x:
-                                        await self.bot.send_message(self.bot.chat_channel, f'```{x}```')
-                                else:
-                                    command = f"say §9§l{msg.author.name}§r: {msg.clean_content}"
-                                    if len(command) >= 100:
-                                        wrapped = textwrap.wrap(msg.clean_content, 100 - 14 + len(msg.author.name))
-                                        for r in wrapped:
-                                            rcon.command(f"say §9§l{msg.author.name}§r: {r}")
-                                    else:
-                                        rcon.command(command)
-                                        self.bot.bprint(f"Discord | <{msg.author.name}>: {msg.clean_content}")
-                                if msg.attachments:
-                                    rcon.command(f"say §l{msg.author.name}§r: Image {msg.attachments[0]['filename']}")
-                                    self.bot.bprint(f"Discord | {msg.author.name}: Image {msg.attachments[0]['filename']}")
-                        else:
+                        if not hasattr(msg, 'author') or (hasattr(msg, 'author') and msg.author.bot):
                             pass
+                        elif msg.clean_content:
+                            time_sec = (datetime.datetime.now() - last_reconnect)
+                            if time_sec.total_seconds() >= 240:
+                                last_reconnect = datetime.datetime.now()
+                                rcon.connect()
+                            if msg.clean_content[0] == '/' and msg.author.id == '141752316188426241':
+                                x = rcon.command(msg.clean_content)
+                                if x:
+                                    await self.bot.chat_channel.send(f'```{x}```')
+                            else:
+                                command = f"say §9§l{msg.author.name}§r: {msg.clean_content}"
+                                if len(command) >= 100:
+                                    wrapped = textwrap.wrap(msg.clean_content, 100 - 14 + len(msg.author.name))
+                                    for r in wrapped:
+                                        rcon.command(f"say §9§l{msg.author.name}§r: {r}")
+                                else:
+                                    rcon.command(command)
+                                    self.bot.bprint(f"Discord | <{msg.author.name}>: {msg.clean_content}")
+                        if msg.attachments:
+                            rcon.command(f"say §l{msg.author.name}§r: Image {msg.attachments[0]['filename']}")
+                            self.bot.bprint(f"Discord | {msg.author.name}: Image {msg.attachments[0]['filename']}")
                 except socket.error as e:
                     rcon.disconnect()
                     self.bot.bprint(f"Socket error: {e}")
@@ -199,27 +194,26 @@ class Game:
                 with valve.rcon.RCON(("192.168.25.40", 22222), password) as rcon:
                     while "gmod" in self.bot.gwd:
                         msg = await self.bot.wait_for_message(channel=self.bot.chat_channel, timeout=5)
-                        if msg:
-                            if not msg.author.bot:
-                                if msg.clean_content:
-                                    i = len(msg.author.name)
-                                    if len(msg.clean_content) + i > 243:
-                                        wrapped = textwrap.wrap(msg.clean_content, 243 - i)
-                                        for r in wrapped:
-                                            rcon(f"say {msg.author.name}: {msg.clean_content}")
-                                    else:
-                                        rcon(f"say {msg.author.name}: {msg.clean_content}")
-                                    self.bot.bprint(f"Discord | <{msg.author.name}>: {msg.clean_content}")
-                                if msg.attachments:
-                                    rcon.command(f"say §l{msg.author.name}§r: Image {msg.attachments[0]['filename']}")
-                                    self.bot.bprint(
-                                        f"Discord | {msg.author.name}: Image {msg.attachments[0]['filename']}")
+                        if not hasattr(msg, 'author') or (hasattr(msg, 'author') and msg.author.bot):
+                            pass
+                        elif msg.clean_content:
+                            i = len(msg.author.name)
+                            if len(msg.clean_content) + i > 243:
+                                wrapped = textwrap.wrap(msg.clean_content, 243 - i)
+                                for r in wrapped:
+                                    rcon(f"say {msg.author.name}: {msg.clean_content}")
+                            else:
+                                rcon(f"say {msg.author.name}: {msg.clean_content}")
+                            self.bot.bprint(f"Discord | <{msg.author.name}>: {msg.clean_content}")
+                        if msg.attachments:
+                            rcon.command(f"say §l{msg.author.name}§r: Image {msg.attachments[0]['filename']}")
+                            self.bot.bprint(
+                                f"Discord | {msg.author.name}: Image {msg.attachments[0]['filename']}")
             else:
                 await asyncio.sleep(5)
 
     async def update_server_information(self):
-        await self.bot.wait_until_ready()
-        await asyncio.sleep(3)
+        await self.bot.wait_until_ready(3)
         while not self.bot.is_closed:
             if not self.bot.game:
                 if self.bot.chat_channel.topic:
@@ -273,7 +267,8 @@ class Game:
                     except discord.Forbidden:
                         self.bot.bprint("Bot lacks permissions to edit channels. (discord.Forbidden)")
                         pass
-                    await asyncio.sleep(30)
+                    finally:
+                        await asyncio.sleep(30)
             elif "gmod" in self.bot.gwd:
                 self.bot.bprint("Game 'GMOD' detected")
                 while "gmod" in self.bot.gwd:
