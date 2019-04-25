@@ -74,7 +74,7 @@ class Game:
                 np = discord.Game(name=str(self.bot.game) + " " + version)
                 self.bot.game_version = version
                 self.bot.bprint(f"Server Status | Now Playing: {self.bot.game} {version}")
-                await self.bot.change_presence(game=np)
+                await self.set_bot_status(*[self.bot.game], '', '')
 
                 await self.bot.wait_until_game_stopped()
 
@@ -98,7 +98,7 @@ class Game:
         except:
             print("uh ok")
 
-    async def set_bot_status(self, line1: str, line2: str, line3: str):
+    async def set_bot_status(self, line1: str, line2: str, line3: str, *args, **kwargs):
         padder = [line1, ''.join(list(itertools.repeat('\u3000', 40 - len(line1)))) + line2 + ''.join(
             list(itertools.repeat('\u3000', 40 - len(line2)))) + line3]
         await self.bot.change_presence(activity=discord.Game(f"{' '.join(padder)}"))
@@ -156,7 +156,7 @@ class Game:
         await self.bot.wait_until_game_running(20)
         while not self.bot.is_closed():
             last_reconnect = datetime.datetime(1, 1, 1)
-            password = self.bot.gameinfo["rcon"] if self.bot.gameinfo["rcon"] else "ogboxrcon"
+            password = self.bot.gameinfo["rcon"] if self.bot.gameinfo["rcon"] else self.bot.cfg["default_rcon_password"]
             if "minecraft" in self.bot.gwd:
                 rcon = mcrcon.MCRcon("127.0.0.1", password, 22232)
                 try:
@@ -169,7 +169,7 @@ class Game:
                             if time_sec.total_seconds() >= 240:
                                 last_reconnect = datetime.datetime.now()
                                 rcon.connect()
-                            if msg.clean_content[0] == '/' and msg.author.id == '141752316188426241':
+                            if msg.clean_content[0] == '/' and msg.author.id == self.bot.application_info().owner.id:
                                 x = rcon.command(msg.clean_content)
                                 if x:
                                     await self.bot.chat_channel.send(f'```{x}```')

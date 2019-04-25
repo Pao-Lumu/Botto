@@ -16,11 +16,13 @@ class Comrade(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message):
-        if message.channel.id == 442600877434601475 and message.clean_content:
+        if message.channel.id == self.bot.cfg['comrade_channel'] and message.clean_content:
             if message.clean_content[0] != '#':
                 await self.auto_comrade_check(message)
 
     async def auto_comrade_check(self, msg):
+        if msg.author.bot:
+            return
         chance = (datetime.datetime.now().timestamp() - self.bot.cooldown_cyka) / 1200 - .05
         if random.random() + chance <= .95:
             return
@@ -58,9 +60,9 @@ class Comrade(commands.Cog):
                 cyka = True
 
         if cyka:
-            await msg.channel.send("*" + " ".join(raw) + "\n*Soviet Anthem Plays*")
+            await msg.channel.send("*" + "".join(raw) + "\n*Soviet Anthem Plays*")
             self.bot.cooldown_cyka = datetime.datetime.now().timestamp()
-        if msg.author.voice_channel and not msg.author.is_afk and cyka and blyat:
+        if msg.author.voice and not msg.author.is_afk and cyka and blyat:
             self.bot.cooldown_blyat = datetime.datetime.now().timestamp()
             vc = await msg.author.voice_channel.connect()
             vc.play(discord.FFmpegPCMAudio("audio/blyat.ogg"))
@@ -102,7 +104,7 @@ class Comrade(commands.Cog):
                 cyka = True
 
         if cyka:
-            await ctx.send("*" + " ".join(raw) + "\n*Soviet Anthem Plays*")
+            await ctx.send("*" + "".join(raw) + "\n*Soviet Anthem Plays*")
 
     @commands.command()
     async def russkipride(self, ctx):

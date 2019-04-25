@@ -55,7 +55,7 @@ async def on_command_error(error, ctx):
 
 @bot.event
 async def on_ready():
-    bot.chat_channel = bot.get_channel(388432640740687872)
+    bot.chat_channel = bot.get_channel(botcfg['chat_channel'])
     # bot.chat_channel = {"name": 'xd'}
     bot.bprint("Bot started!")
     bot.bprint("""------------------
@@ -87,7 +87,7 @@ def load_botconfig():
     else:
         log.warning('File "botcfg.json" not found; Generating...')
         with open('botcfg.json', 'w+') as f:
-            f.write(json.dumps({'chat_channel': '', 'default_rcon_password': ''}))
+            f.write(json.dumps({'guild_ids': [], 'chat_channel': 0, 'default_rcon_password': '', 'comrade_channel': 0}))
         print('Please input any relevant information and restart.')
 
 
@@ -101,10 +101,8 @@ async def on_resumed():
 @bot.event
 async def on_member_update(vor, ab):
     # if vor.guild.id != 442600877434601472 or vor.bot:
-    if vor.guild.id != 245674056760819712 or vor.bot:
+    if vor.guild.id not in bot.cfg['guild_ids'] or vor.bot:
         return
-    print(vor == ab)
-    print("A")
     bef = frozenset(map(lambda x: helpers.MiniActivity(x), vor.activities))
     aft = frozenset(map(lambda x: helpers.MiniActivity(x), ab.activities))
     states = {"status": {"set": "came online ({})", "update": "changed status from {} to {}",
@@ -245,6 +243,7 @@ if __name__ == '__main__':
     d = str(datetime.date.today())
     log_path = os.path.join("logs", "ogbot.log")
     if not os.path.exists(log_path):
+        os.makedirs("logs", exist_ok=True)
         with open(log_path, "x") as f:
             pass
 
