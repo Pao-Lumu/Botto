@@ -253,6 +253,7 @@ if __name__ == '__main__':
     fh.setFormatter(fmt)
     log.addHandler(fh)
 
+    bot.log = log
     gms = game.Game(bot)
     bot.loop.create_task(gms.get_current_server_status())
     bot.loop.create_task(gms.send_from_discord_to_server())
