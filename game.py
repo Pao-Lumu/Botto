@@ -246,6 +246,10 @@ class Game:
                     except ConnectionRefusedError:
                         self.bot.bprint("Server running on incorrect port. (ConnectionRefusedError)")
                         break
+                    except ConnectionResetError:
+                        self.bot.bprint("Connection to server was reset by peer. (ConnectionResetError)")
+                        failed = True
+                        pass
                     except socket.timeout:
                         self.bot.bprint("Server not responding. (socket.timeout)")
                         failed = True
