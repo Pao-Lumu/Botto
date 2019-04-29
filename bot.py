@@ -255,8 +255,8 @@ if __name__ == '__main__':
     bot.log = log
     gms = game.Game(bot)
     bot.loop.create_task(gms.get_current_server_status())
-    bot.loop.create_task(gms.send_from_discord_to_server())
-    bot.loop.create_task(gms.send_from_server_to_discord())
+    bot.loop.create_task(gms.send_from_guild_to_server())
+    bot.loop.create_task(gms.send_from_server_to_guild())
     bot.loop.create_task(gms.update_server_information())
     bot.loop.create_task(gms.check_server_running())
     bot.loop.create_task(gms.check_server_stopped())

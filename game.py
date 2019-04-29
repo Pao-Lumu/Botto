@@ -103,7 +103,7 @@ class Game:
             list(itertools.repeat('\u3000', 40 - len(line2)))) + line3]
         await self.bot.change_presence(activity=discord.Game(f"{' '.join(padder)}"))
 
-    async def send_from_server_to_discord(self):
+    async def send_from_server_to_guild(self):
         await self.bot.wait_until_game_running(20)
         while not self.bot.is_closed():
             if "minecraft" in self.bot.gwd:
@@ -138,7 +138,7 @@ class Game:
                                     else:
                                         pass
                                 except Exception as e:
-                                    print("ERROR | Server2Discord Exception caught: " + str(e))
+                                    print("ERROR | Server2Guild Exception caught: " + str(e))
                                     pass
                                 self.bot.bprint(f"{self.bot.game} | {message}")
                                 await self.bot.send_message(self.bot.chat_channel, f'{message}')
@@ -152,7 +152,10 @@ class Game:
             else:
                 await asyncio.sleep(15)
 
-    async def send_from_discord_to_server(self):
+    def check(m):
+        return m.channel == self.bot.chat_channel
+
+    async def send_from_guild_to_server(self):
         await self.bot.wait_until_game_running(20)
         while not self.bot.is_closed():
             last_reconnect = datetime.datetime(1, 1, 1)
@@ -161,7 +164,7 @@ class Game:
                 rcon = mcrcon.MCRcon("127.0.0.1", password, 22232)
                 try:
                     while "minecraft" in self.bot.gwd:
-                        msg = await self.bot.wait_for_message(channel=self.bot.chat_channel, timeout=5)
+                        msg = await self.bot.wait_for('message', check=check, timeout=5)
                         if not hasattr(msg, 'author') or (hasattr(msg, 'author') and msg.author.bot):
                             pass
                         elif msg.clean_content:
@@ -192,7 +195,7 @@ class Game:
             elif "gmod" in self.bot.gwd:
                 with valve.rcon.RCON(("192.168.25.40", 22222), password) as rcon:
                     while "gmod" in self.bot.gwd:
-                        msg = await self.bot.wait_for_message(channel=self.bot.chat_channel, timeout=5)
+                        msg = await self.bot.wait_for('message', check=check, timeout=5)
                         if not hasattr(msg, 'author') or (hasattr(msg, 'author') and msg.author.bot):
                             pass
                         elif msg.clean_content:
@@ -288,7 +291,7 @@ class Game:
                     except discord.Forbidden:
                         print("Bot lacks permission to edit channels. (discord.Forbidden)")
                     except valve.source.NoResponseError:
-                        print("No Response from server before timeout")
+                        print("No Response from server before timeout (NoResponseError)")
                     except Exception as e:
                         print(f"Error: {e} {type(e)}")
                     await asyncio.sleep(30)
