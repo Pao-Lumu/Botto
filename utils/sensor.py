@@ -20,7 +20,7 @@ def get_running():
         return None
 
 
-def init_game_info():
+def get_game_info():
     output = get_running()
     if not output:
         return None

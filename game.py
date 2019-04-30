@@ -52,15 +52,15 @@ class Game:
         self.bot.game, self.bot.gwd = ("", "")
         while not self.bot.is_closed():
             d = sensor.get_running()
-            # If no game is running:
+            # If no game is running upon instantiation:
             if not d:
                 self.bot.game, self.bot.gwd, self.bot.gameinfo = ("", "", "")
                 await self.bot.change_presence()
                 self.bot.bprint("Server Status | All Servers Offline")
                 await self.bot.wait_until_game_running()
-            # Else if game is running 
+            # Elif game is running upon instantiation
             else:
-                data = sensor.init_game_info()
+                data = sensor.get_game_info()
                 self.bot.game = data["name"] if data["name"] else "A Game"
                 self.bot.gwd = data["folder"]
                 self.bot.gameinfo = data
@@ -71,10 +71,9 @@ class Game:
                     while not version and failure_number <= 3:
                         version, failure_number = self.lookup_mc_server("localhost:22222", failure_number)
                         await asyncio.sleep(3)
-                np = discord.Game(name=str(self.bot.game) + " " + version)
-                self.bot.game_version = version
-                self.bot.bprint(f"Server Status | Now Playing: {self.bot.game} {version}")
-                await self.set_bot_status(*[self.bot.game], '', '')
+                gamename = str(self.bot.game) + " " + version
+                self.bot.bprint(f"Server Status | Now Playing: {gamename}")
+                await self.set_bot_status(gamename, '', '')
 
                 await self.bot.wait_until_game_stopped()
 
@@ -215,11 +214,11 @@ class Game:
                 await asyncio.sleep(5)
 
     async def update_server_information(self):
-        await self.bot.wait_until_ready(3)
+        await self.bot.wait_until_ready(20)
         while not self.bot.is_closed():
             if not self.bot.game:
                 if self.bot.chat_channel.topic:
-                    await self.bot.edit_channel(self.bot.chat_channel, topic="")
+                    await self.bot.chat_channel.edit(topic="")
                 await self.bot.wait_until_game_running()
                 await asyncio.sleep(5)
             elif "minecraft" in self.bot.gwd:
@@ -268,7 +267,7 @@ class Game:
                         pass
                     try:
                         cur_status = f"Playing: Minecraft {version} {player_count}"
-                        await self.bot.edit_channel(self.bot.chat_channel, topic=cur_status)
+                        await self.bot.chat_channel.edit(topic=cur_status)
                         await self.set_bot_status(f'Minecraft {version}', mod_count, player_count)
                     except discord.Forbidden:
                         self.bot.bprint("Bot lacks permissions to edit channels. (discord.Forbidden)")
@@ -286,8 +285,9 @@ class Game:
                         map = info["map"]
                         cur = info["player_count"]
                         max = info["max_players"]
-                        cur_status = f"Playing: Garry's Mod - {mode} on {map} ({cur}/{max} players)"
-                        await self.bot.edit_channel(self.bot.chat_channel, topic=cur_status)
+                        cur_status = f"Playing: Garry's Mod - {mode} on map {map} ({cur}/{max} players)"
+                        await self.bot.chat_channel.edit(topic=cur_status)
+                        await self.set_bot_status("Garry's Mod", f"{mode} on map {map}", f"({cur}/{max} players)")
                     except discord.Forbidden:
                         print("Bot lacks permission to edit channels. (discord.Forbidden)")
                     except valve.source.NoResponseError:
