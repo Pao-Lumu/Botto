@@ -18,7 +18,8 @@ class Botto(commands.Bot):
         if platform.system() == "Linux":
             asyncio.get_child_watcher().attach_loop(self.loop)
         command_prefix = kwargs.pop('command_prefix', commands.when_mentioned_or('.'))
-        self.debug = True
+        # self.debug = True
+        self.debug = False
 
         self._game_running = asyncio.Event(loop=self.loop)
         self._game_stopped = asyncio.Event(loop=self.loop)
@@ -53,13 +54,15 @@ class Botto(commands.Bot):
             print(e)
 
     async def wait_until_game_running(self, delay=0):
-        print("Waiting for the game to run...")
+        if self.debug:
+            print("Waiting for the game to run...")
         await self._game_running.wait()
         if delay:
             await asyncio.sleep(delay)
 
     async def wait_until_game_stopped(self, delay=0):
-        print("Waiting for the game to stop...")
+        if self.debug:
+            print("Waiting for the game to stop...")
         await self._game_stopped.wait()
         if delay:
             await asyncio.sleep(delay)

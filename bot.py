@@ -8,6 +8,7 @@ import sys
 import traceback
 
 import discord
+import pyfiglet
 from discord.ext import commands
 
 import game
@@ -56,14 +57,12 @@ async def on_command_error(error, ctx):
 @bot.event
 async def on_ready():
     bot.chat_channel = bot.get_channel(botcfg['chat_channel'])
-    # bot.chat_channel = {"name": 'xd'}
-    bot.bprint("Bot started!")
-    bot.bprint("""------------------
-Logged in as:
-Username: {}
-ID: {}
-Primary Chat Channel: {}
-------------------""".format(bot.user.name, bot.user.id, bot.chat_channel))
+    bot.meme_channel = bot.get_channel(botcfg['comrade_channel'])
+    bot.bprint(f"""~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+{pyfiglet.figlet_format("The OGBot", font='epic')}
+Username: {bot.user.name}  |  ID: {bot.user.id}
+Chat Channel: {bot.chat_channel}  |  Meme Channel: {bot.meme_channel}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~""")
 
     if not hasattr(bot, 'uptime'):
         bot.uptime = datetime.datetime.utcnow()
@@ -78,6 +77,7 @@ def load_credentials():
         with open('credentials.json', 'w+') as f:
             f.write(json.dumps({'token': '', 'client_id': ''}))
         bot.bprint('Please input your bot\'s credentials and restart.')
+        return False
 
 
 def load_botconfig():
@@ -89,6 +89,7 @@ def load_botconfig():
         with open('botcfg.json', 'w+') as f:
             f.write(json.dumps({'guild_ids': [], 'chat_channel': 0, 'default_rcon_password': '', 'comrade_channel': 0}))
         print('Please input any relevant information and restart.')
+        return False
 
 
 # Bot Event Overrides
@@ -220,6 +221,8 @@ async def on_message(message):
 if __name__ == '__main__':
     credentials = load_credentials()
     botcfg = load_botconfig()
+    if not credentials or not botcfg:
+        exit(0)
     token = ""
     try:
         token = credentials['token']
