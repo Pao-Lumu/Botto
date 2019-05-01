@@ -16,9 +16,11 @@ class Comrade(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message):
-        if message.channel.id == self.bot.meme_channel and message.clean_content:
-            if message.clean_content[0] != '#':
-                await self.auto_comrade_check(message)
+        if not message.author.bot:
+            if message.channel.id == self.bot.meme_channel and message.clean_content:
+                if message.clean_content[0] != '#':
+                    await self.auto_comrade_check(message)
+            await self.auto_thonk(message)
 
     async def auto_comrade_check(self, msg):
         if msg.author.bot:
@@ -126,6 +128,12 @@ class Comrade(commands.Cog):
             await ctx.send("GET IN VOICE CHAT BLYAT!")
         except:
             print("Hey lotus why don't you eat a fucking dick")
+
+    async def auto_thonk(self, msg):
+        hmm = re.compile("[Hh][Mm][Mm]+")
+        if re.search(hmm, msg.clean_content):
+            # msg.add_reaction()
+            pass
 
 
 def setup(bot):

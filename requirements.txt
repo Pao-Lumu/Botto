@@ -1,0 +1,7 @@
+discord.py[voice]>=1.0.0
+colorama
+pyfiglet
+python-valve
+mcrcon
+mcstatus
+aiofiles

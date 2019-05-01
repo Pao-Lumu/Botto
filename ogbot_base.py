@@ -3,6 +3,8 @@ import datetime
 import inspect
 import platform
 
+import colorama
+from colorama import Fore
 from discord.ext import commands
 
 from utils import checks
@@ -10,6 +12,7 @@ from utils import checks
 
 class Botto(commands.Bot):
     def __init__(self, *args, **kwargs):
+        colorama.init()
         self.loop = kwargs.pop('loop', asyncio.get_event_loop())
         self.cog_folder = kwargs.pop('cog_folder')
         self.game = ""
@@ -83,7 +86,7 @@ class Botto(commands.Bot):
                 print(f"{time} {inspect.stack()[1][3]} ~ {x}")
 
             else:
-                print(f"{time} ~ {x}")
+                print(f"{Fore.LIGHTYELLOW_EX}{time}{Fore.RESET} ~ {x}")
 
     def run(self, token):
         super().run(token)
