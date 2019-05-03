@@ -5,3 +5,4 @@ python-valve
 mcrcon
 mcstatus
 aiofiles
+aioconsole

@@ -1,7 +1,11 @@
+import ast
 import asyncio
+import cmd
 import datetime
 import inspect
+import parser
 import platform
+from pprint import pprint
 
 import colorama
 from colorama import Fore
@@ -100,3 +104,63 @@ class Botto(commands.Bot):
             tasks.exception()
         except Exception as e:
             print(e)
+
+
+class OGBotCmd(cmd.Cmd):
+    prompt = ">>>"
+
+    def __init__(self, loop, bot, *args):
+        super().__init__(self, *args)
+        self.bot = bot
+        self.loop = loop
+
+    def do_refresh(self, line):
+        pass
+
+    def do_get_methods(self, line):
+        pprint(dir(self.bot))
+
+    def do_get_line(self, line):
+        print(line)
+
+    def do_exec(self, line):
+        try:
+            zz = ast.parse(line)
+            if parser.isexpr(zz)
+
+            else:
+                b = line.split(' ')
+                func = getattr(self.bot, b[0])
+                if callable(func) and b[1:]:
+                    print(f"Calling {b[0]} with parameters {b[1:]}")
+                    result = func(b[1:])
+                    if inspect.isawaitable(result):
+                        self.loop.create_task(self._exec_async(func, parameters=b[1:]))
+                    else:
+                        print(result)
+                elif callable(func) and not b[1:]:
+                    print(f"Calling {b[0]}()")
+                    result = func()
+                    if inspect.isawaitable(result):
+                        self.loop.create_task(self._exec_async(func))
+                    else:
+                        print(result)
+                else:
+                    print(f"Variable {b[0]}: {func}")
+        except Exception as e:
+            print(e)
+
+    async def _exec_async(self, method, parameters=None):
+        try:
+            print("test")
+            if parameters:
+                result = await asyncio.wait_for(method(*parameters), timeout=10)
+            else:
+                result = await asyncio.wait_for(method(), timeout=10)
+            print(result)
+        except Exception as e:
+            print(e)
+            print("asdfasdf")
+
+    async def start(self):
+        x = await self.loop.run_in_executor(None, self.cmdloop)

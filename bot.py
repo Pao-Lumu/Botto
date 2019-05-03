@@ -67,6 +67,12 @@ Chat Channel: {bot.chat_channel}  |  Meme Channel: {bot.meme_channel}
     if not hasattr(bot, 'uptime'):
         bot.uptime = datetime.datetime.utcnow()
 
+    bot.cli = ogbot_base.OGBotCmd(bot.loop, bot)
+    bot.loop.create_task(bot.cli.start())
+    # x = await bot.get_all_members()
+    for x in bot.get_all_members():
+        print(x)
+
 
 def load_credentials():
     if os.path.isfile("credentials.json"):
