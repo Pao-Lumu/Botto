@@ -1,9 +1,7 @@
-import ast
 import asyncio
 import cmd
 import datetime
 import inspect
-import parser
 import platform
 from pprint import pprint
 
@@ -20,8 +18,8 @@ class Botto(commands.Bot):
         self.loop = kwargs.pop('loop', asyncio.get_event_loop())
         self.cog_folder = kwargs.pop('cog_folder')
         self.game = ""
-        self.cooldown_cyka = 0
-        self.cooldown_blyat = 0
+        self.gop_text_cd = 0
+        self.gop_voice_cd = 0
         if platform.system() == "Linux":
             asyncio.get_child_watcher().attach_loop(self.loop)
         command_prefix = kwargs.pop('command_prefix', commands.when_mentioned_or('.'))
@@ -113,42 +111,61 @@ class OGBotCmd(cmd.Cmd):
         super().__init__(self, *args)
         self.bot = bot
         self.loop = loop
+        self.attributes = [attr for attr in dir(self.bot) if not attr.startswith("__")]
+        self.vars = [attr for attr in dir(self.bot) if
+                     not callable(getattr(self.bot, attr)) and not attr.startswith("__")]
+        self.methods = [attr for attr in dir(self.bot) if
+                        callable(getattr(self.bot, attr)) and not attr.startswith("__")]
 
     def do_refresh(self, line):
+        """Placeholder"""
         pass
 
     def do_get_methods(self, line):
-        pprint(dir(self.bot))
+        """Print all (non-private) methods in self.bot"""
+        pprint(self.methods)
+
+    def do_get_vars(self, line):
+        """Print all vars in self.bot"""
+        pprint(self.vars)
 
     def do_get_line(self, line):
+        """Check how your input is being parsed"""
         print(line)
 
     def do_exec(self, line):
-        try:
-            zz = ast.parse(line)
-            if parser.isexpr(zz)
+        """Run methods and return their values, or get the values of variables"""
 
-            else:
-                b = line.split(' ')
-                func = getattr(self.bot, b[0])
-                if callable(func) and b[1:]:
-                    print(f"Calling {b[0]} with parameters {b[1:]}")
-                    result = func(b[1:])
-                    if inspect.isawaitable(result):
-                        self.loop.create_task(self._exec_async(func, parameters=b[1:]))
-                    else:
-                        print(result)
-                elif callable(func) and not b[1:]:
-                    print(f"Calling {b[0]}()")
-                    result = func()
-                    if inspect.isawaitable(result):
-                        self.loop.create_task(self._exec_async(func))
-                    else:
-                        print(result)
+        try:
+            b = line.split(' ')
+            func = getattr(self.bot, b[0])
+            if callable(func) and b[1:]:
+                print(f"Calling {b[0]} with parameters {b[1:]}")
+                result = func(b[1:])
+                if inspect.isawaitable(result):
+                    self.loop.create_task(self._exec_async(func, parameters=b[1:]))
                 else:
-                    print(f"Variable {b[0]}: {func}")
+                    print(result)
+            elif callable(func) and not b[1:]:
+                print(f"Calling {b[0]}()")
+                result = func()
+                if inspect.isawaitable(result):
+                    self.loop.create_task(self._exec_async(func))
+                else:
+                    pprint(result)
+            else:
+                if func is None:
+                    print(f"Variable {b[0]}: None")
+                else:
+                    print(f"Variable {b[0]}:")
+                    pprint(func)
         except Exception as e:
             print(e)
+
+    def complete_exec(self, text, line, begidx, endidx):
+        mline = line.partition(' ')[2]
+        offs = len(mline) - len(text)
+        return [s[offs:] for s in self.attributes if s.startswith(mline)]
 
     async def _exec_async(self, method, parameters=None):
         try:
@@ -161,6 +178,37 @@ class OGBotCmd(cmd.Cmd):
         except Exception as e:
             print(e)
             print("asdfasdf")
+
+    def do_set(self, line: str):
+        """
+        Set the value of a variable
+        """
+
+        x = line.split(" ", maxsplit=1)
+        if len(x) is not 2:
+            print("Please give a value to set the variable to.")
+            return
+        elif not hasattr(self.bot, x[0]):
+            setattr(self.bot, x[0], x[1])
+            print(f"Added attribute {x[0]} to {x[1]}")
+            return
+        else:
+            var = getattr(self.bot, x[0])
+            if isinstance(var, str):
+                setattr(self.bot, x[0], str(x[1]))
+            elif isinstance(var, int):
+                setattr(self.bot, x[0], int(x[1]))
+            elif isinstance(var, list):
+                var = x[1].split(',')
+                setattr(self.bot, x[0], var)
+
+            else:
+                print(f'Your variable typing is too strong! (Variable of type{type(var)}')
+
+    def complete_set(self, text, line, begidx, endidx):
+        mline = line.partition(' ')[2]
+        offs = len(mline) - len(text)
+        return [s[offs:] for s in self.vars if s.startswith(mline)]
 
     async def start(self):
         x = await self.loop.run_in_executor(None, self.cmdloop)

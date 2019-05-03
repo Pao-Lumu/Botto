@@ -25,15 +25,15 @@ class Comrade(commands.Cog):
     async def auto_comrade_check(self, msg):
         if msg.author.bot:
             return
-        chance = (datetime.datetime.now().timestamp() - self.bot.cooldown_cyka) / 1200 - .05
+        chance = (datetime.datetime.now().timestamp() - self.bot.gop_text_cd) / 1200 - .05
         if random.random() + chance <= .95:
             return
         if msg.clean_content:
             if msg.clean_content[0] == '>':
                 return
-        cyka, blyat = False, False
-        if self.bot.cooldown_blyat + 3600 < datetime.datetime.now().timestamp():
-            blyat = True
+        gopnik_text, gopnik_voice = False, False
+        if self.bot.gop_voice_cd + 3600 < datetime.datetime.now().timestamp():
+            gopnik_voice = True
 
         comrades = {"i": "we",
                     "me": "us",
@@ -46,7 +46,8 @@ class Comrade(commands.Cog):
                     "my": "our",
                     "mine": "ours",
                     'myself': 'ourselves'}
-        ptn = re.compile("""(i|me|myself|mine|my|am|was)(\\.|\\?|!|,|:|;|"|-|'m|'|\n|\\s)""", flags=re.IGNORECASE)
+        ptn = re.compile("""(?<!\\w)(i|me|myself|mine|my|am|was)(\\.|\\?|!|,|:|;|"|-|'m|'|\n|\\s)""",
+                         flags=re.IGNORECASE)
         raw = re.split(ptn, msg.clean_content)
 
         for cheeki, breeki in enumerate(raw):
@@ -59,13 +60,13 @@ class Comrade(commands.Cog):
                     raw[cheeki] = comrades[breeki.casefold()].upper()
                 else:
                     raw[cheeki] = comrades[breeki.casefold()]
-                cyka = True
+                gopnik_text = True
 
-        if cyka:
+        if gopnik_text:
             await msg.channel.send("*" + "".join(raw) + "\n*Soviet Anthem Plays*")
-            self.bot.cooldown_cyka = datetime.datetime.now().timestamp()
-        if msg.author.voice and not msg.author.is_afk and cyka and blyat:
-            self.bot.cooldown_blyat = datetime.datetime.now().timestamp()
+            self.bot.gop_text_cd = datetime.datetime.now().timestamp()
+        if msg.author.voice and not msg.author.is_afk and gopnik_text and gopnik_voice:
+            self.bot.gop_voice_cd = datetime.datetime.now().timestamp()
             vc = await msg.author.voice_channel.connect()
             vc.play(discord.FFmpegPCMAudio("audio/blyat.ogg"))
             await asyncio.sleep(25)
@@ -77,7 +78,7 @@ class Comrade(commands.Cog):
 
     @commands.command(pass_context=True)
     async def comrade(self, ctx):
-        cyka = False
+        gopnik_text = False
 
         comrades = {"i": "we",
                     "me": "us",
@@ -90,7 +91,8 @@ class Comrade(commands.Cog):
                     "my": "our",
                     "mine": "ours",
                     'myself': 'ourselves'}
-        ptn = re.compile("""(i|me|myself|mine|my|am|was)(\\.|\\?|!|,|:|;|"|-|'m|'|\n|\\s)""", flags=re.IGNORECASE)
+        ptn = re.compile("""(?<!\\w)(i|me|myself|mine|my|am|was)(\\.|\\?|!|,|:|;|"|-|'m|'|\n|\\s)""",
+                         flags=re.IGNORECASE)
         raw = re.split(ptn, ctx.message.clean_content)
 
         for cheeki, breeki in enumerate(raw):
@@ -103,21 +105,21 @@ class Comrade(commands.Cog):
                     raw[cheeki] = comrades[breeki.casefold()].upper()
                 else:
                     raw[cheeki] = comrades[breeki.casefold()].capitalize()
-                cyka = True
+                gopnik_text = True
 
-        if cyka:
+        if gopnik_text:
             await ctx.send("*" + "".join(raw) + "\n*Soviet Anthem Plays*")
 
     @commands.command()
     async def russkipride(self, ctx):
-        if self.bot.cooldown_blyat + 360 < datetime.datetime.now().timestamp():
+        if self.bot.gop_voice_cd + 360 < datetime.datetime.now().timestamp():
             pass
         else:
             # await ctx.send(":musical_note: Guess who's going to the GUUUULAG! The GUUULAG! The GUUUUUULAG! :musical_note:")
             return
         try:
             if ctx.author.voice.channel and not ctx.author.voice.afk:
-                self.bot.cooldown_blyat = datetime.datetime.now().timestamp()
+                self.bot.gop_voice_cd = datetime.datetime.now().timestamp()
                 vc = await ctx.author.voice.channel.connect()
                 vc.play(discord.FFmpegPCMAudio("audio/blyat.ogg"))
                 await asyncio.sleep(25)
@@ -130,10 +132,10 @@ class Comrade(commands.Cog):
             print("Hey lotus why don't you eat a fucking dick")
 
     async def auto_thonk(self, msg):
-        hmm = re.compile("[Hh][Mm][Mm]+")
+        hmm = re.compile("^[Hh]+[Mm][Mm]+\\.*")
         if re.search(hmm, msg.clean_content):
-            # msg.add_reaction()
-            pass
+            await asyncio.sleep(.5)
+            await msg.add_reaction('🤔')
 
 
 def setup(bot):

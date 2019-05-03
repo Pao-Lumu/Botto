@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import asyncio
 import datetime
 import json
 import logging.handlers
@@ -66,12 +67,12 @@ Chat Channel: {bot.chat_channel}  |  Meme Channel: {bot.meme_channel}
 
     if not hasattr(bot, 'uptime'):
         bot.uptime = datetime.datetime.utcnow()
-
+    await asyncio.sleep(2)
     bot.cli = ogbot_base.OGBotCmd(bot.loop, bot)
     bot.loop.create_task(bot.cli.start())
     # x = await bot.get_all_members()
-    for x in bot.get_all_members():
-        print(x)
+    # for x in bot.get_all_members():
+    #     print(x)
 
 
 def load_credentials():
