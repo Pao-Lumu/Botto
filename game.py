@@ -142,16 +142,16 @@ class Game:
                                 self.bot.bprint(f"{self.bot.game} | {message}")
                                 await self.bot.send_message(self.bot.chat_channel, f'{message}')
                                 continue
-                        else:
-                            self.bot.bprint(f"{self.bot.game} | {message}")
-                            msg = raw_servermsg[0]
-                            await self.bot.send_message(self.bot.chat_channel, f'```{msg}```')
-                            continue
+                            else:
+                                self.bot.bprint(f"{self.bot.game} | {message}")
+                                msg = raw_servermsg[0]
+                                await self.bot.send_message(self.bot.chat_channel, f'```{msg}```')
+                                continue
 
             else:
                 await asyncio.sleep(15)
 
-    def check(m):
+    def check(self, m):
         return m.channel == self.bot.chat_channel
 
     async def send_from_guild_to_server(self):
@@ -163,7 +163,7 @@ class Game:
                 rcon = mcrcon.MCRcon("127.0.0.1", password, 22232)
                 try:
                     while "minecraft" in self.bot.gwd:
-                        msg = await self.bot.wait_for('message', check=check, timeout=5)
+                        msg = await self.bot.wait_for('message', check=self.check, timeout=5)
                         if not hasattr(msg, 'author') or (hasattr(msg, 'author') and msg.author.bot):
                             pass
                         elif msg.clean_content:
