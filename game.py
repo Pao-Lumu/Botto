@@ -142,16 +142,16 @@ class Game:
                                 self.bot.bprint(f"{self.bot.game} | {message}")
                                 await self.bot.send_message(self.bot.chat_channel, f'{message}')
                                 continue
-                        else:
-                            self.bot.bprint(f"{self.bot.game} | {message}")
-                            msg = raw_servermsg[0]
-                            await self.bot.send_message(self.bot.chat_channel, f'```{msg}```')
-                            continue
+                            else:
+                                self.bot.bprint(f"{self.bot.game} | {message}")
+                                msg = raw_servermsg[0]
+                                await self.bot.send_message(self.bot.chat_channel, f'```{msg}```')
+                                continue
 
             else:
                 await asyncio.sleep(15)
 
-    def check(m):
+    def check(self, m):
         return m.channel == self.bot.chat_channel
 
     async def send_from_guild_to_server(self):
@@ -163,7 +163,7 @@ class Game:
                 rcon = mcrcon.MCRcon("127.0.0.1", password, 22232)
                 try:
                     while "minecraft" in self.bot.gwd:
-                        msg = await self.bot.wait_for('message', check=check, timeout=5)
+                        msg = await self.bot.wait_for('message', check=self.check, timeout=5)
                         if not hasattr(msg, 'author') or (hasattr(msg, 'author') and msg.author.bot):
                             pass
                         elif msg.clean_content:
@@ -191,25 +191,30 @@ class Game:
                     rcon.disconnect()
                     self.bot.bprint(f"Socket error: {e}")
                     pass
+                except TimeoutError:
+                    continue
             elif "gmod" in self.bot.gwd:
                 with valve.rcon.RCON(("192.168.25.40", 22222), password) as rcon:
                     while "gmod" in self.bot.gwd:
-                        msg = await self.bot.wait_for('message', check=check, timeout=5)
-                        if not hasattr(msg, 'author') or (hasattr(msg, 'author') and msg.author.bot):
-                            pass
-                        elif msg.clean_content:
-                            i = len(msg.author.name)
-                            if len(msg.clean_content) + i > 243:
-                                wrapped = textwrap.wrap(msg.clean_content, 243 - i)
-                                for r in wrapped:
+                        try:
+                            msg = await self.bot.wait_for('message', check=self.check, timeout=5)
+                            if not hasattr(msg, 'author') or (hasattr(msg, 'author') and msg.author.bot):
+                                pass
+                            elif msg.clean_content:
+                                i = len(msg.author.name)
+                                if len(msg.clean_content) + i > 243:
+                                    wrapped = textwrap.wrap(msg.clean_content, 243 - i)
+                                    for r in wrapped:
+                                        rcon(f"say {msg.author.name}: {msg.clean_content}")
+                                else:
                                     rcon(f"say {msg.author.name}: {msg.clean_content}")
-                            else:
-                                rcon(f"say {msg.author.name}: {msg.clean_content}")
-                            self.bot.bprint(f"Discord | <{msg.author.name}>: {msg.clean_content}")
-                        if msg.attachments:
-                            rcon.command(f"say §l{msg.author.name}§r: Image {msg.attachments[0]['filename']}")
-                            self.bot.bprint(
-                                f"Discord | {msg.author.name}: Image {msg.attachments[0]['filename']}")
+                                self.bot.bprint(f"Discord | <{msg.author.name}>: {msg.clean_content}")
+                            if msg.attachments:
+                                rcon.command(f"say §l{msg.author.name}§r: Image {msg.attachments[0]['filename']}")
+                                self.bot.bprint(
+                                    f"Discord | {msg.author.name}: Image {msg.attachments[0]['filename']}")
+                        except TimeoutError:
+                            pass
             else:
                 await asyncio.sleep(5)
 
