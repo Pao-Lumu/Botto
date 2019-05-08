@@ -112,17 +112,16 @@ class Game:
                 fpath = os.path.join(self.bot.gwd, "logs", "latest.log") if os.path.exists(
                     os.path.join(self.bot.gwd, "logs", "latest.log")) else os.path.join(self.bot.gwd, "server.log")
                 print(fpath)
+                pattern = re.compile(
+                    "INFO\]:?(?:.*DedicatedServer\]:)? (\[[^\]]*: .*\].*|(?<=]:\s).* joined the game|.* left the game)")
+                message_pattern = re.compile("INFO\]:?(?:.*DedicatedServer\]:)? (\[Server\].*|<.*>.*)")
                 async with aiofiles.open(fpath, loop=self.bot.loop) as log:
                     await log.seek(0, 2)
                     while "minecraft" in self.bot.gwd:
-                        line = ""
                         line = await log.readline()
                         if not line:
                             await asyncio.sleep(.75)
                             continue
-                        pattern = re.compile(
-                            "INFO\]:?(?:.*DedicatedServer\]:)? (\[[^\]]*: .*\].*|(?<=]:\s).* joined the game|.* left the game)")
-                        message_pattern = re.compile("INFO\]:?(?:.*DedicatedServer\]:)? (\[Server\].*|<.*>.*)")
                         raw_message = re.findall(message_pattern, str(line))
                         print(raw_message)
                         raw_servermsg = re.findall(pattern, str(line))
@@ -134,7 +133,7 @@ class Game:
                                     mention = message[index + 1:]
                                     length = len(mention) + 1
                                     for ind in range(0, length):
-                                        member = discord.utils.get(self.bot.chat_channel.server.members,
+                                        member = discord.utils.get(self.bot.chat_channel.guild.members,
                                                                    name=mention[:ind])
                                         if member:
                                             message = message.replace("@" + mention[:ind], f"<@{member.id}>")
@@ -142,15 +141,15 @@ class Game:
                                     else:
                                         pass
                                 except Exception as e:
-                                    print("ERROR | Server2Guild Exception caught: " + str(e))
+                                    self.bot.bprint("ERROR | Server2Guild Exception caught: " + str(e))
                                     pass
                                 self.bot.bprint(f"{self.bot.game} | {message}")
                                 await self.bot.chat_channel.send(f'{message}')
                                 continue
                         elif raw_servermsg:
-                            self.bot.bprint(f"{self.bot.game} | {message}")
                             msg = raw_servermsg[0]
-                            await self.bot.send_message(self.bot.chat_channel, f'```{msg}```')
+                            self.bot.bprint(f"{self.bot.game} | {message}")
+                            await self.bot.chat_channel.send(f'```{msg}```')
                             continue
                         else:
                             pass
