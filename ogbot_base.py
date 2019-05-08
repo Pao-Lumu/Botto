@@ -105,12 +105,13 @@ class Botto(commands.Bot):
 
 
 class OGBotCmd(cmd.Cmd):
-    prompt = ">>>"
+    prompt = "OGBot >>>"
 
-    def __init__(self, loop, bot, *args):
-        super().__init__(self, *args)
+    def __init__(self, loop, bot):
+        super().__init__(self)
         self.bot = bot
         self.loop = loop
+        self.completekey = 'tab'
         self.attributes = [attr for attr in dir(self.bot) if not attr.startswith("__")]
         self.vars = [attr for attr in dir(self.bot) if
                      not callable(getattr(self.bot, attr)) and not attr.startswith("__")]
@@ -162,7 +163,7 @@ class OGBotCmd(cmd.Cmd):
         except Exception as e:
             print(e)
 
-    def complete_exec(self, text, line, begidx, endidx):
+    def complete_exec(self, text, line):
         mline = line.partition(' ')[2]
         offs = len(mline) - len(text)
         return [s[offs:] for s in self.attributes if s.startswith(mline)]
@@ -205,7 +206,7 @@ class OGBotCmd(cmd.Cmd):
             else:
                 print(f'Your variable typing is too strong! (Variable of type{type(var)}')
 
-    def complete_set(self, text, line, begidx, endidx):
+    def complete_set(self, text, line):
         mline = line.partition(' ')[2]
         offs = len(mline) - len(text)
         return [s[offs:] for s in self.vars if s.startswith(mline)]
