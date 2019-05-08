@@ -5,6 +5,7 @@ import os
 import re
 import socket
 import textwrap
+from concurrent import futures
 
 import aiofiles
 import discord
@@ -191,8 +192,8 @@ class Game:
                     rcon.disconnect()
                     self.bot.bprint(f"Socket error: {e}")
                     pass
-                except TimeoutError:
-                    continue
+                except futures.TimeoutError:
+                    pass
             elif "gmod" in self.bot.gwd:
                 with valve.rcon.RCON(("192.168.25.40", 22222), password) as rcon:
                     while "gmod" in self.bot.gwd:
@@ -213,7 +214,7 @@ class Game:
                                 rcon.command(f"say §l{msg.author.name}§r: Image {msg.attachments[0]['filename']}")
                                 self.bot.bprint(
                                     f"Discord | {msg.author.name}: Image {msg.attachments[0]['filename']}")
-                        except TimeoutError:
+                        except futures.TimeoutError:
                             pass
             else:
                 await asyncio.sleep(5)
@@ -267,7 +268,7 @@ class Game:
                         failed = True
                         pass
                     except:
-                        print("Failed with unknown error")
+                        self.bot.bprint("Failed with unknown error")
                         failed = True
                         pass
                     try:
