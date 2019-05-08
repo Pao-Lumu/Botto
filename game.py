@@ -119,7 +119,7 @@ class Game:
                             continue
                         pattern = re.compile(
                             "INFO\]:?(?:.*DedicatedServer\]:)? (\[[^\]]*: .*\].*|(?<=]:\s).* joined the game|.* left the game)")
-                        message_pattern = re.compile("INFO\]:?(?:.*DedicatedServer\]:)(\[Server\].*|<.*>.*)")
+                        message_pattern = re.compile("INFO\]:?(?:.*DedicatedServer\]:)? (\[Server\].*|<.*>.*)")
                         raw_message = re.findall(message_pattern, str(line))
                         raw_servermsg = re.findall(pattern, str(line))
                         if raw_message:
