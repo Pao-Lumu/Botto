@@ -106,12 +106,9 @@ class Game:
     async def send_from_server_to_guild(self):
         await self.bot.wait_until_game_running(10)
         while not self.bot.is_closed():
-            print("Bot is not closed!")
             if "minecraft" in self.bot.gwd:
-                print("Minecraft is running!")
                 fpath = os.path.join(self.bot.gwd, "logs", "latest.log") if os.path.exists(
                     os.path.join(self.bot.gwd, "logs", "latest.log")) else os.path.join(self.bot.gwd, "server.log")
-                print(fpath)
                 server_filter = re.compile(
                     "INFO\]:?(?:.*DedicatedServer\]:)? (\[[^\]]*: .*\].*|(?<=]:\s).* joined the game|.* left the game)")
                 player_filter = re.compile("INFO\]:?(?:.*DedicatedServer\]:)? (\[Server\].*|<.*>.*)")
