@@ -112,21 +112,21 @@ class Game:
                 fpath = os.path.join(self.bot.gwd, "logs", "latest.log") if os.path.exists(
                     os.path.join(self.bot.gwd, "logs", "latest.log")) else os.path.join(self.bot.gwd, "server.log")
                 print(fpath)
-                pattern = re.compile(
+                server_filter = re.compile(
                     "INFO\]:?(?:.*DedicatedServer\]:)? (\[[^\]]*: .*\].*|(?<=]:\s).* joined the game|.* left the game)")
-                message_pattern = re.compile("INFO\]:?(?:.*DedicatedServer\]:)? (\[Server\].*|<.*>.*)")
+                player_filter = re.compile("INFO\]:?(?:.*DedicatedServer\]:)? (\[Server\].*|<.*>.*)")
                 async with aiofiles.open(fpath, loop=self.bot.loop) as log:
                     await log.seek(0, 2)
                     while "minecraft" in self.bot.gwd:
+                        line = ""
                         line = await log.readline()
                         if not line:
                             await asyncio.sleep(.75)
                             continue
-                        raw_message = re.findall(message_pattern, str(line))
-                        print(raw_message)
-                        raw_servermsg = re.findall(pattern, str(line))
-                        if raw_message:
-                            message = raw_message[0]
+                        raw_playermsg = re.findall(player_filter, line)
+                        raw_servermsg = re.findall(server_filter, line)
+                        if raw_playermsg:
+                            message = raw_playermsg[0]
                             index = message.find('@')
                             if index >= 0:
                                 try:
@@ -143,13 +143,13 @@ class Game:
                                 except Exception as e:
                                     self.bot.bprint("ERROR | Server2Guild Exception caught: " + str(e))
                                     pass
-                                self.bot.bprint(f"{self.bot.game} | {message}")
-                                await self.bot.chat_channel.send(f'{message}')
-                                continue
-                        elif raw_servermsg:
-                            msg = raw_servermsg[0]
                             self.bot.bprint(f"{self.bot.game} | {message}")
-                            await self.bot.chat_channel.send(f'```{msg}```')
+                            await self.bot.chat_channel.send(f'{message}')
+                            continue
+                        elif raw_servermsg:
+                            message = raw_servermsg[0]
+                            self.bot.bprint(f"{self.bot.game} | {message}")
+                            await self.bot.chat_channel.send(f'```{message}```')
                             continue
                         else:
                             pass

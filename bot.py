@@ -174,14 +174,14 @@ async def on_member_update(vor, ab):
 
 @bot.event
 async def on_user_update(vor, ab):
-    x = zip((vor.avatar, vor.username, vor.discriminator), (ab.avatar, ab.username, ab.discriminator))
-    key = ('avatar', 'username', 'discriminator')
+    x = zip((vor.avatar, vor.name, vor.discriminator), (ab.avatar, ab.name, ab.discriminator))
+    key = ('avatar', 'name', 'discriminator')
 
     for y, z in enumerate(x):
         if z[0] == z[1]:
             pass
         else:
-            msg = f'{vor.username} changed their {key[y]} from {z[0]} to {z[1]}.'
+            msg = f'{vor.name} changed their {key[y]} from {z[0]} to {z[1]}.'
             log.warning(f"{y} - {ab.name} {msg}")
     pass
 
