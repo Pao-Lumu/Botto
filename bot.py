@@ -69,10 +69,8 @@ Chat Channel: {bot.chat_channel}  |  Meme Channel: {bot.meme_channel}
         bot.uptime = datetime.datetime.utcnow()
     await asyncio.sleep(2)
     bot.cli = ogbot_base.OGBotCmd(bot.loop, bot)
-    bot.loop.create_task(bot.cli.start())
-    # x = await bot.get_all_members()
-    # for x in bot.get_all_members():
-    #     print(x)
+    await bot.cli.start()
+    bot.die()
 
 
 def load_credentials():

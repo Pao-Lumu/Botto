@@ -80,15 +80,15 @@ class Botto(commands.Bot):
     def is_game_stopped(self):
         return self._game_stopped.is_set()
 
-    def bprint(self, text):
+    def bprint(self, text, *args):
         time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         p = text.split("\n")
         for x in p:
             if self.debug:
-                print(f"{time} {inspect.stack()[1][3]} ~ {x}")
+                print(f"{time} {inspect.stack()[1][3]} ~ {x}", *args)
 
             else:
-                print(f"{Fore.LIGHTYELLOW_EX}{time}{Fore.RESET} ~ {x}")
+                print(f"{Fore.LIGHTYELLOW_EX}{time}{Fore.RESET} ~ {x}", *args)
 
     def run(self, token):
         super().run(token)
@@ -118,6 +118,9 @@ class OGBotCmd(cmd.Cmd):
         self.methods = [attr for attr in dir(self.bot) if
                         callable(getattr(self.bot, attr)) and not attr.startswith("__")]
 
+    def default(self, line):
+        self.do_exec(line)
+
     def do_refresh(self, line):
         """Placeholder"""
         pass
@@ -140,25 +143,39 @@ class OGBotCmd(cmd.Cmd):
         try:
             b = line.split(' ')
             func = getattr(self.bot, b[0])
+            params = tuple(inspect.signature(func).parameters)
+            print(f"Calling {b[0]}")
+            print(params) if params else False
             if callable(func) and b[1:]:
-                print(f"Calling {b[0]} with parameters {b[1:]}")
-                result = func(b[1:])
-                if inspect.isawaitable(result):
+                print(f"with parameters {b[1:]}")
+                print(params) if params else False
+                try:
+                    result = func(*b[1:])
+                    print(result) if result else False
+                except RuntimeWarning:
                     self.loop.create_task(self._exec_async(func, parameters=b[1:]))
+                except TypeError:
+                    print(f"Method {b[0]} requires {len(params)} but {len(b[1:])} were given")
+                    print(params)
                 else:
                     print(result)
             elif callable(func) and not b[1:]:
                 print(f"Calling {b[0]}()")
-                result = func()
-                if inspect.isawaitable(result):
-                    self.loop.create_task(self._exec_async(func))
-                else:
-                    pprint(result)
+                try:
+                    result = func()
+                    print(result) if result else False
+                except RuntimeWarning:
+                    self.loop.create_task(self._exec_async(func, parameters=b[1:]))
+                except TypeError:
+                    params = tuple(inspect.signature(func).parameters)
+                    print(f"Method {b[0]} requires {len(params)} but {len(b[1:])} were given")
+                    print(params)
+
             else:
                 if func is None:
-                    print(f"Variable {b[0]}: None")
+                    print(f"Var {b[0]}: None")
                 else:
-                    print(f"Variable {b[0]}:")
+                    print(f"Var {b[0]}:")
                     pprint(func)
         except Exception as e:
             print(e)
@@ -170,7 +187,6 @@ class OGBotCmd(cmd.Cmd):
 
     async def _exec_async(self, method, parameters=None):
         try:
-            print("test")
             if parameters:
                 result = await asyncio.wait_for(method(*parameters), timeout=10)
             else:
@@ -178,7 +194,6 @@ class OGBotCmd(cmd.Cmd):
             print(result)
         except Exception as e:
             print(e)
-            print("asdfasdf")
 
     def do_set(self, line: str):
         """
@@ -211,5 +226,11 @@ class OGBotCmd(cmd.Cmd):
         offs = len(mline) - len(text)
         return [s[offs:] for s in self.vars if s.startswith(mline)]
 
+    def do_exit(self, line):
+        return True
+
+    def do_stop(self, line):
+        return True
+
     async def start(self):
-        x = await self.loop.run_in_executor(None, self.cmdloop)
+        await self.loop.run_in_executor(None, self.cmdloop)

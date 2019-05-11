@@ -112,7 +112,7 @@ class Game:
                 server_filter = re.compile(
                     "INFO\]:?(?:.*DedicatedServer\]:)? (\[[^\]]*: .*\].*|(?<=]:\s).* joined the game|.* left the game)")
                 player_filter = re.compile("INFO\]:?(?:.*DedicatedServer\]:)? (\[Server\].*|<.*>.*)")
-                async with aiofiles.open(fpath, loop=self.bot.loop) as log:
+                async with aiofiles.open(fpath) as log:
                     await log.seek(0, 2)
                     while "minecraft" in self.bot.gwd:
                         line = ""
