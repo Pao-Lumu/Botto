@@ -103,7 +103,7 @@ class Game:
             list(itertools.repeat('\u3000', 40 - len(line2)))) + line3]
         await self.bot.change_presence(activity=discord.Game(f"{' '.join(padder)}"))
 
-    async def send_from_server_to_guild(self):
+    async def send_from_game_to_guild(self):
         await self.bot.wait_until_game_running(10)
         while not self.bot.is_closed():
             if "minecraft" in self.bot.gwd:
@@ -112,51 +112,60 @@ class Game:
                 server_filter = re.compile(
                     "INFO\]:?(?:.*DedicatedServer\]:)? (\[[^\]]*: .*\].*|(?<=]:\s).* joined the game|.* left the game)")
                 player_filter = re.compile("INFO\]:?(?:.*DedicatedServer\]:)? (\[Server\].*|<.*>.*)")
-                async with aiofiles.open(fpath) as log:
-                    await log.seek(0, 2)
-                    while "minecraft" in self.bot.gwd:
-                        line = ""
-                        line = await log.readline()
-                        if not line:
-                            await asyncio.sleep(.75)
-                            continue
-                        raw_playermsg = re.findall(player_filter, line)
-                        raw_servermsg = re.findall(server_filter, line)
-                        if raw_playermsg:
-                            message = raw_playermsg[0]
-                            index = message.find('@')
-                            if index >= 0:
-                                try:
-                                    mention = message[index + 1:]
-                                    length = len(mention) + 1
-                                    for ind in range(0, length):
-                                        member = discord.utils.get(self.bot.chat_channel.guild.members,
-                                                                   name=mention[:ind])
-                                        if member:
-                                            message = message.replace("@" + mention[:ind], f"<@{member.id}>")
-                                            break
-                                    else:
-                                        pass
-                                except Exception as e:
-                                    self.bot.bprint("ERROR | Server2Guild Exception caught: " + str(e))
-                                    pass
+                while "minecraft" in self.bot.gwd:
+                    size = os.stat(fpath)
+                    async with aiofiles.open(fpath) as log:
+                        await log.seek(0, 2)
+                        while "minecraft" in self.bot.gwd:
+                            line = ""
+                            line = await log.readline()
+                            if not line:
+                                await asyncio.sleep(.75)
+                                if size > os.stat(fpath):
+                                    print("breaking")
+                                    break
+                                else:
+                                    size = os.stat(fpath)
+                                continue
+                            raw_playermsg = re.findall(player_filter, line)
+                            raw_servermsg = re.findall(server_filter, line)
+                            if raw_playermsg:
+                                message = await self.check_for_mentions(raw_playermsg)
+                                await self.bot.chat_channel.send(f'{message}')
+                            elif raw_servermsg:
+                                message = raw_servermsg[0]
+                                await self.bot.chat_channel.send(f'```{message}```')
+                            else:
+                                continue
                             self.bot.bprint(f"{self.bot.game} | {message}")
-                            await self.bot.chat_channel.send(f'{message}')
                             continue
-                        elif raw_servermsg:
-                            message = raw_servermsg[0]
-                            self.bot.bprint(f"{self.bot.game} | {message}")
-                            await self.bot.chat_channel.send(f'```{message}```')
-                            continue
-                        else:
-                            pass
+
             else:
                 await asyncio.sleep(15)
+
+    async def check_for_mentions(self, raw_playermsg):
+        message = raw_playermsg[0]
+        index = message.find('@')
+        if index >= 0:
+            try:
+                mention = message[index + 1:]
+                length = len(mention) + 1
+                for ind in range(0, length):
+                    member = discord.utils.get(self.bot.chat_channel.guild.members, name=mention[:ind])
+                    if member:
+                        message = message.replace("@" + mention[:ind], f"<@{member.id}>")
+                        break
+                else:
+                    pass
+            except Exception as e:
+                self.bot.bprint("ERROR | Server2Guild Exception caught: " + str(e))
+                pass
+        return message
 
     def check(self, m):
         return m.channel == self.bot.chat_channel
 
-    async def send_from_guild_to_server(self):
+    async def send_from_guild_to_game(self):
         await self.bot.wait_until_game_running(20)
         while not self.bot.is_closed():
             last_reconnect = datetime.datetime(1, 1, 1)

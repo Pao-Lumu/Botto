@@ -94,12 +94,16 @@ class Botto(commands.Bot):
         super().run(token)
 
     def die(self):
+        self.close()
+
+    def close(self):
         try:
+            self.loop.run_until_complete(super().close())
             self.loop.stop()
             tasks = asyncio.gather(*asyncio.Task.all_tasks(), loop=self.loop)
             tasks.cancel()
-            self.loop.run_forever()
-            tasks.exception()
+            # self.loop.run_forever()
+            # tasks.exception()
         except Exception as e:
             print(e)
 
@@ -219,7 +223,7 @@ class OGBotCmd(cmd.Cmd):
                 setattr(self.bot, x[0], var)
 
             else:
-                print(f'Your variable typing is too strong! (Variable of type{type(var)}')
+                print(f'Your variable typing is too strong! (Variable of type {type(var)} couldn\'t be processed)')
 
     def complete_set(self, text, line):
         mline = line.partition(' ')[2]
