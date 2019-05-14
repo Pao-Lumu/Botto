@@ -93,23 +93,21 @@ class Botto(commands.Bot):
     def run(self, token):
         super().run(token)
 
-    def die(self):
-        self.close()
+    async def die(self):
+        await self.close()
 
-    def close(self):
+    async def close(self):
         try:
-            self.loop.run_until_complete(super().close())
+            await super().close()
             self.loop.stop()
             tasks = asyncio.gather(*asyncio.Task.all_tasks(), loop=self.loop)
             tasks.cancel()
-            # self.loop.run_forever()
-            # tasks.exception()
         except Exception as e:
             print(e)
 
 
 class OGBotCmd(cmd.Cmd):
-    prompt = "OGBot >>>"
+    prompt = f"{Fore.BLUE}OGBot >>>{Fore.RESET}"
 
     def __init__(self, loop, bot):
         super().__init__(self)
@@ -125,9 +123,10 @@ class OGBotCmd(cmd.Cmd):
     def default(self, line):
         self.do_exec(line)
 
-    def do_refresh(self, line):
-        """Placeholder"""
-        pass
+    def do_status(self, line):
+        uptime = datetime.datetime.now() - self.bot.uptime
+
+
 
     def do_get_methods(self, line):
         """Print all (non-private) methods in self.bot"""

@@ -67,10 +67,10 @@ Chat Channel: {bot.chat_channel}  |  Meme Channel: {bot.meme_channel}
 
     if not hasattr(bot, 'uptime'):
         bot.uptime = datetime.datetime.utcnow()
-    await asyncio.sleep(2)
+    await asyncio.sleep(4)
     bot.cli = ogbot_base.OGBotCmd(bot.loop, bot)
     await bot.cli.start()
-    bot.die()
+    await bot.close()
 
 
 def load_credentials():

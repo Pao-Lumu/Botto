@@ -57,23 +57,30 @@ def fix_mc_rcon_problems(server):
     fn = os.path.join(server.folder, "server.properties")
     with open(fn, "r") as p:
         l = p.readlines()
+    qp = False
+    rp = False
     for i, line in enumerate(l):
         if "motd" in line:
             l[i] = "motd=OGBox Server\n"
-        if "server-port" in line:
+        elif "server-port" in line:
             l[i] = "server-port=22222\n"
-        if "enable-rcon" in line:
+        elif "enable-rcon" in line:
             l[i] = "enable-rcon=true\n"
-        if "enable-query" in line:
+        elif "enable-query" in line:
             l[i] = "enable-query=true\n"
-        if "query.port" in line:
+        elif "query.port" in line:
             l[i] = "query.port=22222\n"
-        else:
-            l.append("query.port=22222\n")
-        if "rcon.port" in line:
+            qp = True
+        elif "rcon.port" in line:
             l[i] = "rcon.port=22232\n"
+            rp = True
         else:
-            l.append("rcon.port=22232\n")
+            pass
 
-    with open(fn, 'w'):
-        fn.writelines(l)
+    if not rp:
+        l.append("rcon.port=22232\n")
+    if not qp:
+        l.append("query.port=22222\n")
+
+    with open(fn, 'w') as f:
+        f.writelines(l)
