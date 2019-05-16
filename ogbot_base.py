@@ -13,6 +13,9 @@ from utils import checks
 
 
 class Botto(commands.Bot):
+    __slots__ = {'loop', 'cog_folder', 'game', 'gop_text_cd', 'gop_voice_cd', 'debug', '_game_stopped', '_game_running',
+                 'chat_channel', 'meme_channel'}
+
     def __init__(self, *args, **kwargs):
         colorama.init()
         self.loop = kwargs.pop('loop', asyncio.get_event_loop())
@@ -109,6 +112,8 @@ class Botto(commands.Bot):
 class OGBotCmd(cmd.Cmd):
     prompt = f"{Fore.BLUE}OGBot >>>{Fore.RESET}"
 
+    __slots__ = {'bot', 'loop', 'completekey', 'attributes', 'vars', 'methods'}
+
     def __init__(self, loop, bot):
         super().__init__(self)
         self.bot = bot
@@ -125,7 +130,8 @@ class OGBotCmd(cmd.Cmd):
 
     def do_status(self, line):
         uptime = datetime.datetime.now() - self.bot.uptime
-
+        print(f"""Name: 
+Uptime: {str(uptime)}""")
 
 
     def do_get_methods(self, line):
@@ -183,7 +189,12 @@ class OGBotCmd(cmd.Cmd):
         except Exception as e:
             print(e)
 
-    def complete_exec(self, text, line):
+    def complete_exec(self, text, line, begidx, endidx):
+        mline = line.partition(' ')[2]
+        offs = len(mline) - len(text)
+        return [s[offs:] for s in self.attributes if s.startswith(mline)]
+
+    def completedefault(self, text, line, begidx, endidx):
         mline = line.partition(' ')[2]
         offs = len(mline) - len(text)
         return [s[offs:] for s in self.attributes if s.startswith(mline)]

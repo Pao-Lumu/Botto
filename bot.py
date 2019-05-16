@@ -36,6 +36,7 @@ discord_logger.addHandler(sh)
 
 initial_extensions = [
     'modules.admin',
+    'modules.music',
     'modules.comrade'
 ]
 
@@ -213,8 +214,6 @@ async def on_voice_state_update(member, vor, ab):
 
             log.warning(f"{x.upper()} - {member.name} {msg}")
 
-
-#
 
 @bot.event
 async def on_message(message):

@@ -1,6 +1,3 @@
-import asyncio
-
-import discord
 from discord.ext import commands
 
 from utils import checks
@@ -29,22 +26,6 @@ class Admin(commands.Cog):
             await self.bot.say('{}: {}'.format(type(e).__name__, e))
         else:
             await self.bot.say('\N{OK HAND SIGN}')
-
-    @commands.command(hidden=True, pass_context=True)
-    @checks.is_owner()
-    async def status(self, ctx, *status: str):
-        if status:
-            await self.bot.change_presence(game=discord.Game(name=" ".join(status)))
-            e = await self.bot.say("Success!")
-            await asyncio.sleep(5)
-            await self.bot.delete_message(e)
-            if not ctx.message.channel.is_private:
-                await self.bot.delete_message(ctx.message)
-
-    @commands.group("roles")
-    @checks.admin_or_perm()
-    async def roles(self):
-        pass
 
 
 def setup(bot):

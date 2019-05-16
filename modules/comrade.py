@@ -7,11 +7,13 @@ import re
 import discord
 from discord.ext import commands
 
+import ogbot_base
+
 
 class Comrade(commands.Cog):
     """For the glory of the motherland, komrades!"""
 
-    def __init__(self, bot: discord.Client):
+    def __init__(self, bot: ogbot_base.Botto):
         self.bot = bot
 
     @commands.Cog.listener()
