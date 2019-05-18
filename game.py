@@ -118,7 +118,7 @@ class Game:
                         await log.seek(0, 2)
                         while "minecraft" in self.bot.gwd:
                             line = ""
-                            line = await log.readline()
+                            lines = await log.readlines()
                             if not line:
                                 await asyncio.sleep(.75)
                                 if size > os.stat(fpath):
@@ -127,18 +127,21 @@ class Game:
                                 else:
                                     size = os.stat(fpath)
                                 continue
-                            raw_playermsg = re.findall(player_filter, line)
-                            raw_servermsg = re.findall(server_filter, line)
-                            if raw_playermsg:
-                                message = await self.check_for_mentions(raw_playermsg)
-                                await self.bot.chat_channel.send(f'{message}')
-                            elif raw_servermsg:
-                                message = raw_servermsg[0]
-                                await self.bot.chat_channel.send(f'```{message}```')
-                            else:
+                            msgs = list()
+                            for line in lines:
+                                raw_playermsg = re.findall(player_filter, line)
+                                raw_servermsg = re.findall(server_filter, line)
+
+                                if raw_playermsg:
+                                    msgs.append(await self.check_for_mentions(raw_playermsg))
+                                elif raw_servermsg:
+                                    msgs.append(f'```{raw_servermsg[0]}```')
+                                else:
+                                    continue
+                            await self.bot.chat_channel.send(f'{"".join(msgs)}')
+                            for msg in msgs:
+                                self.bot.bprint(f"{self.bot.game} | {msg}")
                                 continue
-                            self.bot.bprint(f"{self.bot.game} | {message}")
-                            continue
 
             else:
                 await asyncio.sleep(15)

@@ -269,10 +269,7 @@ if __name__ == '__main__':
     bot.loop.create_task(gms.check_server_stopped())
 
     bot.cfg = botcfg
-    try:
-        bot.run(token)
-    except (KeyboardInterrupt, RuntimeError):
-        bot.die()
+    bot.run(token)
     handlers = log.handlers[:]
     for hdlr in handlers:
         hdlr.close()
