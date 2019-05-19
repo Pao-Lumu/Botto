@@ -140,7 +140,8 @@ class Game:
                                 else:
                                     continue
                             if msgs:
-                                await self.bot.chat_channel.send(f'{"".join(msgs)}')
+                                x = "\n".join(msgs)
+                                await self.bot.chat_channel.send(f'{x}')
                             for msg in msgs:
                                 self.bot.bprint(f"{self.bot.game} | {msg}")
                             continue
