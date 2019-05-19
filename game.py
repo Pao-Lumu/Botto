@@ -120,7 +120,7 @@ class Game:
                             lines = []
                             lines = await log.readlines()
                             if not lines:
-                                await asyncio.sleep(.75)
+                                await asyncio.sleep(2)
                                 if size > os.stat(fpath):
                                     print("breaking")
                                     break
