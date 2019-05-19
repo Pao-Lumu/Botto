@@ -136,10 +136,11 @@ class Game:
                                     x = self.check_for_mentions(raw_playermsg)
                                     msgs.append(x)
                                 elif raw_servermsg:
-                                    msgs.append(f'```{raw_servermsg[0]}```')
+                                    msgs.append(f'`{raw_servermsg[0].rstrip()}`')
                                 else:
                                     continue
-                            await self.bot.chat_channel.send(f'{"".join(msgs)}')
+                            if msgs:
+                                await self.bot.chat_channel.send(f'{"".join(msgs)}')
                             for msg in msgs:
                                 self.bot.bprint(f"{self.bot.game} | {msg}")
                             continue
