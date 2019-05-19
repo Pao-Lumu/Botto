@@ -129,8 +129,8 @@ class OGBotCmd(cmd.Cmd):
         self.do_exec(line)
 
     def do_status(self, line):
-        uptime = datetime.datetime.now() - self.bot.uptime
-        print(f"""Name: 
+        uptime = datetime.datetime.utcnow() - self.bot.uptime
+        print(f"""Name: {self.bot.name}
 Uptime: {str(uptime)}""")
 
 
@@ -174,7 +174,8 @@ Uptime: {str(uptime)}""")
                     result = func()
                     print(result) if result else False
                 except RuntimeWarning:
-                    self.loop.create_task(self._exec_async(func, parameters=b[1:]))
+                    self.loop.create_task(self._exec_async(func))
+                    pass
                 except TypeError:
                     params = tuple(inspect.signature(func).parameters)
                     print(f"Method {b[0]} requires {len(params)} but {len(b[1:])} were given")

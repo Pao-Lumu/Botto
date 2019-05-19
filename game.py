@@ -110,16 +110,16 @@ class Game:
                 fpath = os.path.join(self.bot.gwd, "logs", "latest.log") if os.path.exists(
                     os.path.join(self.bot.gwd, "logs", "latest.log")) else os.path.join(self.bot.gwd, "server.log")
                 server_filter = re.compile(
-                    "INFO\]:?(?:.*DedicatedServer\]:)? (\[[^\]]*: .*\].*|(?<=]:\s).* joined the game|.* left the game)")
-                player_filter = re.compile("INFO\]:?(?:.*DedicatedServer\]:)? (\[Server\].*|<.*>.*)")
+                    "FO\]:?(?:.*tedServer\]:)? (\[[^\]]*: .*\].*|(?<=]:\s).* joined the game|.* left the game|.* has made the .*)")
+                player_filter = re.compile("FO\]:?(?:.*tedServer\]:)? (\[Server\].*|<.*>.*)")
                 while "minecraft" in self.bot.gwd:
                     size = os.stat(fpath)
                     async with aiofiles.open(fpath) as log:
                         await log.seek(0, 2)
                         while "minecraft" in self.bot.gwd:
-                            line = ""
+                            lines = []
                             lines = await log.readlines()
-                            if not line:
+                            if not lines:
                                 await asyncio.sleep(.75)
                                 if size > os.stat(fpath):
                                     print("breaking")
@@ -133,7 +133,8 @@ class Game:
                                 raw_servermsg = re.findall(server_filter, line)
 
                                 if raw_playermsg:
-                                    msgs.append(await self.check_for_mentions(raw_playermsg))
+                                    x = self.check_for_mentions(raw_playermsg)
+                                    msgs.append(x)
                                 elif raw_servermsg:
                                     msgs.append(f'```{raw_servermsg[0]}```')
                                 else:
@@ -141,12 +142,12 @@ class Game:
                             await self.bot.chat_channel.send(f'{"".join(msgs)}')
                             for msg in msgs:
                                 self.bot.bprint(f"{self.bot.game} | {msg}")
-                                continue
+                            continue
 
             else:
                 await asyncio.sleep(15)
 
-    async def check_for_mentions(self, raw_playermsg):
+    def check_for_mentions(self, raw_playermsg):
         message = raw_playermsg[0]
         index = message.find('@')
         if index >= 0:
