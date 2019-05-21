@@ -113,41 +113,43 @@ class Game:
                     "FO\]:?(?:.*tedServer\]:)? (\[[^\]]*: .*\].*|(?<=]:\s).* joined the game|.* left the game|.* has made the .*)")
                 player_filter = re.compile("FO\]:?(?:.*tedServer\]:)? (\[Server\].*|<.*>.*)")
                 while "minecraft" in self.bot.gwd:
-                    size = os.stat(fpath)
-                    async with aiofiles.open(fpath) as log:
-                        await log.seek(0, 2)
-                        while "minecraft" in self.bot.gwd:
-                            lines = []
-                            lines = await log.readlines()
-                            if not lines:
-                                await asyncio.sleep(2)
-                                if size > os.stat(fpath):
-                                    print("breaking")
-                                    break
-                                else:
-                                    size = os.stat(fpath)
-                                continue
-                            msgs = list()
-                            for line in lines:
-                                raw_playermsg = re.findall(player_filter, line)
-                                raw_servermsg = re.findall(server_filter, line)
-
-                                if raw_playermsg:
-                                    x = self.check_for_mentions(raw_playermsg)
-                                    msgs.append(x)
-                                elif raw_servermsg:
-                                    msgs.append(f'`{raw_servermsg[0].rstrip()}`')
-                                else:
-                                    continue
-                            if msgs:
-                                x = "\n".join(msgs)
-                                await self.bot.chat_channel.send(f'{x}')
-                            for msg in msgs:
-                                self.bot.bprint(f"{self.bot.game} | {msg}")
-                            continue
+                    await self.read_server_log(fpath, player_filter, server_filter)
 
             else:
                 await asyncio.sleep(15)
+
+    async def read_server_log(self, fpath, player_filter, server_filter):
+        async with aiofiles.open(fpath) as log:
+            await log.seek(0, 2)
+            size = os.stat(fpath)
+            while "minecraft" in self.bot.gwd:
+                lines = []
+                lines = await log.readlines()
+                if not lines:
+                    if size > os.stat(fpath):
+                        break
+                    else:
+                        size = os.stat(fpath)
+                    await asyncio.sleep(.75)
+                    continue
+                msgs = list()
+                for line in lines:
+                    raw_playermsg = re.findall(player_filter, line)
+                    raw_servermsg = re.findall(server_filter, line)
+
+                    if raw_playermsg:
+                        x = self.check_for_mentions(raw_playermsg)
+                        msgs.append(x)
+                    elif raw_servermsg:
+                        msgs.append(f'`{raw_servermsg[0].rstrip()}`')
+                    else:
+                        continue
+                if msgs:
+                    x = "\n".join(msgs)
+                    await self.bot.chat_channel.send(f'{x}')
+                for msg in msgs:
+                    self.bot.bprint(f"{self.bot.game} | {msg}")
+                continue
 
     def check_for_mentions(self, raw_playermsg):
         message = raw_playermsg[0]
