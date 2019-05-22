@@ -2,12 +2,10 @@ import asyncio
 import cmd
 import datetime
 import inspect
-import itertools
 import platform
 from pprint import pprint
 
 import colorama
-import discord
 from colorama import Fore
 from discord.ext import commands
 
@@ -76,12 +74,6 @@ class Botto(commands.Bot):
         await self._game_stopped.wait()
         if delay:
             await asyncio.sleep(delay)
-
-    async def set_bot_status(self, line1: str, line2: str, line3: str, *args, **kwargs):
-        padder = [line1.replace(' ', '\u00a0'), ''.join(list(itertools.repeat('\u3000', 40 - len(line1))))
-                  + line2.replace(' ', '\u00a0'), ''.join(list(itertools.repeat('\u3000', 40 - len(line2))))
-                  + line3.replace(' ', '\u00a0')]
-        await self.change_presence(activity=discord.Game(f"{' '.join(padder)}"))
 
     @property
     def is_game_running(self):
@@ -164,39 +156,30 @@ Uptime: {str(uptime)}""")
             print(f"Calling {b[0]}")
             print(params) if params else False
             if callable(func) and b[1:]:
-                # x = '\u00A0'.join(b[1:]).split('|')
-                x = ' '.join(b[1:]).split('|')
-                # x = b[1:]
-                print(f"with parameters {x}")
-                if inspect.iscoroutinefunction(func):
-                    print('e')
-                    self.loop.create_task(self._exec_async(func, parameters=x))
+                print(f"with parameters {b[1:]}")
+                print(params) if params else False
+                try:
+                    result = func(*b[1:])
+                    print(result) if result else False
+                except RuntimeWarning:
+                    self.loop.create_task(self._exec_async(func, parameters=b[1:]))
+                except TypeError:
+                    print(f"Method {b[0]} requires {len(params)} but {len(b[1:])} were given")
+                    print(params)
                 else:
-                    try:
-                        result = func(*b[1:])
-                        print(result) if result else False
-                    except RuntimeWarning:
-                        pass
-                    except TypeError:
-                        print(f"Method {b[0]} requires {len(params)} but {len(x)} were given")
-                        print(params)
-                    else:
-                        print(result)
+                    print(result)
             elif callable(func) and not b[1:]:
                 print(f"Calling {b[0]}()")
-                if inspect.iscoroutinefunction(func):
-                    print('e')
+                try:
+                    result = func()
+                    print(result) if result else False
+                except RuntimeWarning:
                     self.loop.create_task(self._exec_async(func))
-                else:
-                    try:
-                        result = func()
-                        print(result) if result else False
-                    except RuntimeWarning:
-                        pass
-                    except TypeError:
-                        params = tuple(inspect.signature(func).parameters)
-                        print(f"Method {b[0]} requires {len(params)} but {len(b[1:])} were given")
-                        print(params)
+                    pass
+                except TypeError:
+                    params = tuple(inspect.signature(func).parameters)
+                    print(f"Method {b[0]} requires {len(params)} but {len(b[1:])} were given")
+                    print(params)
 
             else:
                 if func is None:
