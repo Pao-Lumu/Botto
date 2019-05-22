@@ -99,8 +99,9 @@ class Game:
             print("uh ok")
 
     async def set_bot_status(self, line1: str, line2: str, line3: str, *args, **kwargs):
-        padder = [line1, ''.join(list(itertools.repeat('\u3000', 40 - len(line1)))) + line2 + ''.join(
-            list(itertools.repeat('\u3000', 40 - len(line2)))) + line3]
+        padder = [line1.replace(' ', '\u00a0'), ''.join(list(itertools.repeat('\u3000', 40 - len(line1))))
+                  + line2.replace(' ', '\u00a0'), ''.join(list(itertools.repeat('\u3000', 40 - len(line2))))
+                  + line3.replace(' ', '\u00a0')]
         await self.bot.change_presence(activity=discord.Game(f"{' '.join(padder)}"))
 
     async def send_from_game_to_guild(self):
@@ -123,33 +124,33 @@ class Game:
             await log.seek(0, 2)
             size = os.stat(fpath)
             while "minecraft" in self.bot.gwd:
-                lines = []
-                lines = await log.readlines()
-                if not lines:
-                    if size > os.stat(fpath):
-                        break
-                    else:
+                try:
+                    lines = await log.readlines()  # Returns instantly
+                    msgs = list()
+                    for line in lines:
+                        raw_playermsg = re.findall(player_filter, line)
+                        raw_servermsg = re.findall(server_filter, line)
+
+                        if raw_playermsg:
+                            x = self.check_for_mentions(raw_playermsg)
+                            msgs.append(x)
+                        elif raw_servermsg:
+                            msgs.append(f'`{raw_servermsg[0].rstrip()}`')
+                        else:
+                            continue
+                    if msgs:
+                        x = "\n".join(msgs)
+                        await self.bot.chat_channel.send(f'{x}')
+                    for msg in msgs:
+                        self.bot.bprint(f"{self.bot.game} | {msg}")
+                    continue
+                except NameError:
+                    if size < os.stat(fpath):
                         size = os.stat(fpath)
+                    else:
+                        break
                     await asyncio.sleep(.75)
                     continue
-                msgs = list()
-                for line in lines:
-                    raw_playermsg = re.findall(player_filter, line)
-                    raw_servermsg = re.findall(server_filter, line)
-
-                    if raw_playermsg:
-                        x = self.check_for_mentions(raw_playermsg)
-                        msgs.append(x)
-                    elif raw_servermsg:
-                        msgs.append(f'`{raw_servermsg[0].rstrip()}`')
-                    else:
-                        continue
-                if msgs:
-                    x = "\n".join(msgs)
-                    await self.bot.chat_channel.send(f'{x}')
-                for msg in msgs:
-                    self.bot.bprint(f"{self.bot.game} | {msg}")
-                continue
 
     def check_for_mentions(self, raw_playermsg):
         message = raw_playermsg[0]
@@ -180,8 +181,8 @@ class Game:
             password = self.bot.gameinfo["rcon"] if self.bot.gameinfo["rcon"] else self.bot.cfg["default_rcon_password"]
             if "minecraft" in self.bot.gwd:
                 rcon = mcrcon.MCRcon("127.0.0.1", password, 22232)
-                try:
-                    while "minecraft" in self.bot.gwd:
+                while "minecraft" in self.bot.gwd:
+                    try:
                         msg = await self.bot.wait_for('message', check=self.check, timeout=5)
                         if not hasattr(msg, 'author') or (hasattr(msg, 'author') and msg.author.bot):
                             pass
@@ -193,25 +194,25 @@ class Game:
                             if msg.clean_content[0] == '/' and msg.author.id == self.bot.application_info().owner.id:
                                 x = rcon.command(msg.clean_content)
                                 if x:
-                                    await self.bot.chat_channel.send(f'```{x}```')
+                                    await self.bot.chat_channel.send(f'`{x}`')
                             else:
                                 command = f"say §9§l{msg.author.name}§r: {msg.clean_content}"
                                 if len(command) >= 100:
-                                    wrapped = textwrap.wrap(msg.clean_content, 100 - 14 + len(msg.author.name))
+                                    wrapped = textwrap.wrap(msg.clean_content, 86 + len(msg.author.name))
                                     for r in wrapped:
                                         rcon.command(f"say §9§l{msg.author.name}§r: {r}")
                                 else:
                                     rcon.command(command)
                                     self.bot.bprint(f"Discord | <{msg.author.name}>: {msg.clean_content}")
                         if msg.attachments:
-                            rcon.command(f"say §l{msg.author.name}§r: Image {msg.attachments[0]['filename']}")
-                            self.bot.bprint(f"Discord | {msg.author.name}: Image {msg.attachments[0]['filename']}")
-                except socket.error as e:
-                    rcon.disconnect()
-                    self.bot.bprint(f"Socket error: {e}")
-                    pass
-                except futures.TimeoutError:
-                    pass
+                            rcon.command(f"say §l{msg.author.name}§r: File {msg.attachments[0]['filename']}")
+                            self.bot.bprint(f"Discord | {msg.author.name}: File {msg.attachments[0]['filename']}")
+                    except socket.error as e:
+                        rcon.disconnect()
+                        self.bot.bprint(f"Socket error: {e}")
+                        pass
+                    except futures.TimeoutError:
+                        pass
             elif "gmod" in self.bot.gwd:
                 with valve.rcon.RCON(("192.168.25.40", 22222), password) as rcon:
                     while "gmod" in self.bot.gwd:
@@ -246,6 +247,7 @@ class Game:
                 await self.bot.wait_until_game_running()
                 await asyncio.sleep(5)
             elif "minecraft" in self.bot.gwd:
+                tries = 1
                 server = mc.lookup("localhost:22222")
                 failed = False
                 version = ''
@@ -265,9 +267,13 @@ class Game:
                             stats = server.query()
                             version, online, max = stats.software.version, stats.players.online, stats.players.max
                             player_count = f"({online}/{max} players)" if not failed else ""
+                        cur_status = f"Playing: Minecraft {version} {player_count}"
+                        await self.bot.chat_channel.edit(topic=cur_status)
+                        await self.set_bot_status(f'Minecraft {version}', mod_count, player_count)
                     except BrokenPipeError:
                         self.bot.bprint("Server running a MC version <1.7, or is still starting. (BrokenPipeError)")
-                        await asyncio.sleep(5)
+                        await self.sleep_with_backoff(tries)
+                        tries += 1
                         break
                     except ConnectionRefusedError:
                         self.bot.bprint("Server running on incorrect port. (ConnectionRefusedError)")
@@ -276,6 +282,11 @@ class Game:
                         self.bot.bprint("Connection to server was reset by peer. (ConnectionResetError)")
                         failed = True
                         pass
+                    except discord.Forbidden:
+                        self.bot.bprint("Bot lacks permissions to edit channels. (discord.Forbidden)")
+                        pass
+                    except ConnectionError:
+                        self.bot.bprint("General Connection Error. (ConnectionError)")
                     except socket.timeout:
                         self.bot.bprint("Server not responding. (socket.timeout)")
                         failed = True
@@ -289,17 +300,9 @@ class Game:
                         self.bot.bprint("Failed with unknown error")
                         failed = True
                         pass
-                    try:
-                        cur_status = f"Playing: Minecraft {version} {player_count}"
-                        await self.bot.chat_channel.edit(topic=cur_status)
-                        await self.set_bot_status(f'Minecraft {version}', mod_count, player_count)
-                    except discord.Forbidden:
-                        self.bot.bprint("Bot lacks permissions to edit channels. (discord.Forbidden)")
-                        pass
                     finally:
                         await asyncio.sleep(30)
             elif "gmod" in self.bot.gwd:
-                self.bot.bprint("Game 'GMOD' detected")
                 while "gmod" in self.bot.gwd:
                     try:
                         with src(('192.168.25.40', 22222)) as server:
@@ -321,3 +324,6 @@ class Game:
                     await asyncio.sleep(30)
             else:
                 await asyncio.sleep(30)
+
+    async def sleep_with_backoff(self, tries, default=5):
+        await asyncio.sleep(default * tries)
