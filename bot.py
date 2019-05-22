@@ -107,7 +107,6 @@ async def on_resumed():
 
 @bot.event
 async def on_member_update(vor, ab):
-    # if vor.guild.id != 442600877434601472 or vor.bot:
     if vor.guild.id not in bot.cfg['guild_ids'] or vor.bot:
         return
     bef = frozenset(map(lambda x: helpers.MiniActivity(x), vor.activities))
@@ -187,7 +186,6 @@ async def on_user_update(vor, ab):
 
 @bot.event
 async def on_voice_state_update(member, vor, ab):
-    # pprint(dir(member))
     if member.guild.id != 442600877434601472:
         return
     states = {"deaf": {"set": "is now server-deafened",

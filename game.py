@@ -269,7 +269,7 @@ class Game:
                             player_count = f"({online}/{max} players)" if not failed else ""
                         cur_status = f"Playing: Minecraft {version} {player_count}"
                         await self.bot.chat_channel.edit(topic=cur_status)
-                        await self.set_bot_status(f'Minecraft {version}', mod_count, player_count)
+                        await self.set_bot_status(f'{self.bot.game} {version}', mod_count, player_count)
                     except BrokenPipeError:
                         self.bot.bprint("Server running a MC version <1.7, or is still starting. (BrokenPipeError)")
                         await self.sleep_with_backoff(tries)
