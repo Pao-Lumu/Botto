@@ -107,6 +107,7 @@ class Game:
     async def send_from_game_to_guild(self):
         await self.bot.wait_until_game_running(10)
         while not self.bot.is_closed():
+            print("suka bylyat")
             if "minecraft" in self.bot.gwd:
                 fpath = os.path.join(self.bot.gwd, "logs", "latest.log") if os.path.exists(
                     os.path.join(self.bot.gwd, "logs", "latest.log")) else os.path.join(self.bot.gwd, "server.log")
@@ -120,10 +121,13 @@ class Game:
                 await asyncio.sleep(15)
 
     async def read_server_log(self, fpath, player_filter, server_filter):
+        print("asdfasdfasdf")
         async with aiofiles.open(fpath) as log:
+            print("aaaaaaa")
             await log.seek(0, 2)
             size = os.stat(fpath)
             while "minecraft" in self.bot.gwd:
+                print("asdfsdfasdfazxdfasdfasdfasgsdfghgdsfggsdfdhjfghjfgh")
                 try:
                     lines = await log.readlines()  # Returns instantly
                     msgs = list()
@@ -208,9 +212,9 @@ class Game:
                                 else:
                                     rcon.command(command)
                                     self.bot.bprint(f"Discord | <{msg.author.name}>: {msg.clean_content}")
-                        if msg.attachments:
-                            rcon.command(f"say §l{msg.author.name}§r: File {msg.attachments[0]['filename']}")
-                            self.bot.bprint(f"Discord | {msg.author.name}: File {msg.attachments[0]['filename']}")
+                        # if msg.attachments:
+                        #     rcon.command(f"say §l{msg.author.name}§r: File {msg.attachments[0]['filename']}")
+                        #     self.bot.bprint(f"Discord | {msg.author.name}: File {msg.attachments[0]['filename']}")
                     except socket.error as e:
                         rcon.disconnect()
                         self.bot.bprint(f"Socket error: {e}")
