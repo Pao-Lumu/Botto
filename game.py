@@ -151,6 +151,8 @@ class Game:
                     else:
                         break
                     continue
+                except:
+                    print("AAAAA")
 
     def check_for_mentions(self, raw_playermsg):
         message = raw_playermsg[0]
