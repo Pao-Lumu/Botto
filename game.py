@@ -151,8 +151,10 @@ class Game:
                     else:
                         break
                     continue
-                except:
+                except Exception as e:
+                    print(e)
                     print("AAAAA")
+                    await asyncio.sleep(1)
 
     def check_for_mentions(self, raw_playermsg):
         message = raw_playermsg[0]
