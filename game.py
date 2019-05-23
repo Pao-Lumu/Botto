@@ -145,11 +145,11 @@ class Game:
                         self.bot.bprint(f"{self.bot.game} | {msg}")
                     continue
                 except NameError:
+                    await asyncio.sleep(.75)
                     if size < os.stat(fpath):
                         size = os.stat(fpath)
                     else:
                         break
-                    await asyncio.sleep(.75)
                     continue
 
     def check_for_mentions(self, raw_playermsg):
