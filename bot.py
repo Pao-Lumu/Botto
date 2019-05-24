@@ -31,14 +31,14 @@ log = logging.getLogger()
 discord_logger = logging.getLogger('discord')
 discord_logger.setLevel(logging.CRITICAL)
 
-sh = logging.StreamHandler(sys.stderr)
-sh.setLevel(logging.CRITICAL)
+# sh = logging.StreamHandler(sys.stderr)
+# sh.setLevel(logging.CRITICAL)
 
 fmt = logging.Formatter('%(asctime)s - %(message)s', datefmt="%Y-%m-%d %H:%M:%S")
 
-sh.setFormatter(fmt)
-log.addHandler(sh)
-discord_logger.addHandler(sh)
+# sh.setFormatter(fmt)
+# log.addHandler(sh)
+# discord_logger.addHandler(sh)
 
 initial_extensions = [
     'modules.admin',
