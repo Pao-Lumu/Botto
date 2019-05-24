@@ -7,3 +7,4 @@ mcstatus
 aiofiles
 aioconsole
 youtube-dl
+uvloop

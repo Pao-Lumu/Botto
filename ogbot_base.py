@@ -106,15 +106,15 @@ class Botto(commands.Bot):
 
     async def die(self):
         await self.close()
-
-    async def close(self):
-        try:
-            await super().close()
-            self.loop.stop()
-            tasks = asyncio.gather(*asyncio.Task.all_tasks(), loop=self.loop)
-            tasks.cancel()
-        except Exception as e:
-            print(e)
+    #
+    # async def close(self):
+    #     try:
+    #         await super().close()
+    #         self.loop.stop()
+    #         tasks = asyncio.gather(*asyncio.Task.all_tasks(), loop=self.loop)
+    #         tasks.cancel()
+    #     except Exception as e:
+    #         print(e)
 
 
 class OGBotCmd(cmd.Cmd):
