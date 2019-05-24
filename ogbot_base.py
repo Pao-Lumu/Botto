@@ -119,8 +119,9 @@ class Botto(commands.Bot):
             tasks.exception()
             self.loop.stop()
         except Exception as e:
-            print(e)
-            print("asdfdsfdfs")
+            # print(e)
+            # print("asdfdsfdfs")
+            pass
 
 
 class OGBotCmd(cmd.Cmd):
