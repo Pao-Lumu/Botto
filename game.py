@@ -116,55 +116,21 @@ class Game:
                 while "minecraft" in self.bot.gwd:
                     try:
                         await self.read_server_log(fpath, player_filter, server_filter)
+                    except asyncio.CancelledError:
+                        break
                     except:
                         pass
 
             else:
                 await asyncio.sleep(15)
 
-    # async def read_server_log(self, fpath, player_filter, server_filter):
-    #     async with aiofiles.open(fpath) as log:
-    #         await log.seek(0, 2)
-    #         size = os.stat(fpath)
-    #         while "minecraft" in self.bot.gwd:
-    #             try:
-    #                 lines = await log.readlines()  # Returns instantly
-    #                 msgs = list()
-    #                 for line in lines:
-    #                     raw_playermsg = re.findall(player_filter, line)
-    #                     raw_servermsg = re.findall(server_filter, line)
-    #
-    #                     if raw_playermsg:
-    #                         x = self.check_for_mentions(raw_playermsg)
-    #                         msgs.append(x)
-    #                     elif raw_servermsg:
-    #                         msgs.append(f'`{raw_servermsg[0].rstrip()}`')
-    #                     else:
-    #                         continue
-    #                 if msgs:
-    #                     x = "\n".join(msgs)
-    #                     await self.bot.chat_channel.send(f'{x}')
-    #                 for msg in msgs:
-    #                     self.bot.bprint(f"{self.bot.game} | {msg}")
-    #                 continue
-    #             except NameError:
-    #                 if size < os.stat(fpath):
-    #                     size = os.stat(fpath)
-    #                 else:
-    #                     break
-    #                 continue
-    #             except Exception as e:
-    #                 print(e)
-    #             finally:
-    #                 await asyncio.sleep(.75)
-
     async def read_server_log(self, fpath, player_filter, server_filter):
-        with open(fpath) as log:
-            log.seek(0, 2)
+        async with aiofiles.open(fpath) as log:
+            await log.seek(0, 2)
             size = os.stat(fpath)
             while "minecraft" in self.bot.gwd:
                 try:
-                    lines = log.readlines()  # Returns instantly
+                    lines = await log.readlines()  # Returns instantly
                     msgs = list()
                     for line in lines:
                         raw_playermsg = re.findall(player_filter, line)
@@ -193,6 +159,42 @@ class Game:
                     print(e)
                 finally:
                     await asyncio.sleep(.75)
+
+    # async def read_server_log(self, fpath, player_filter, server_filter):
+    #     with open(fpath) as log:
+    #         log.seek(0, 2)
+    #         size = os.stat(fpath)
+    #         while "minecraft" in self.bot.gwd:
+    #             try:
+    #                 lines = log.readlines()  # Returns instantly
+    #                 msgs = list()
+    #                 for line in lines:
+    #                     raw_playermsg = re.findall(player_filter, line)
+    #                     raw_servermsg = re.findall(server_filter, line)
+    #
+    #                     if raw_playermsg:
+    #                         x = self.check_for_mentions(raw_playermsg)
+    #                         msgs.append(x)
+    #                     elif raw_servermsg:
+    #                         msgs.append(f'`{raw_servermsg[0].rstrip()}`')
+    #                     else:
+    #                         continue
+    #                 if msgs:
+    #                     x = "\n".join(msgs)
+    #                     await self.bot.chat_channel.send(f'{x}')
+    #                 for msg in msgs:
+    #                     self.bot.bprint(f"{self.bot.game} | {msg}")
+    #                 continue
+    #             except NameError:
+    #                 if size < os.stat(fpath):
+    #                     size = os.stat(fpath)
+    #                 else:
+    #                     break
+    #                 continue
+    #             except Exception as e:
+    #                 print(e)
+    #             finally:
+    #                 await asyncio.sleep(.75)
 
     def check_for_mentions(self, raw_playermsg):
         message = raw_playermsg[0]
