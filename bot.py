@@ -11,12 +11,12 @@ import traceback
 import discord
 import pyfiglet
 from discord.ext import commands
-try:
-    import uvloop
-except:
-    pass
-else:
-    asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
+# try:
+#     import uvloop
+# except:
+#     pass
+# else:
+#     asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
 import game
 import ogbot_base

@@ -214,9 +214,6 @@ class Game:
                                 else:
                                     rcon.command(command)
                                     self.bot.bprint(f"Discord | <{msg.author.name}>: {content}")
-                        # if msg.attachments:
-                        #     rcon.command(f"say §l{msg.author.name}§r: File {msg.attachments[0]['filename']}")
-                        #     self.bot.bprint(f"Discord | {msg.author.name}: File {msg.attachments[0]['filename']}")
                     except socket.error as e:
                         rcon.disconnect()
                         self.bot.bprint(f"Socket error: {e}")
