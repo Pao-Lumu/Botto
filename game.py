@@ -155,6 +155,8 @@ class Game:
                     else:
                         break
                     continue
+                except asyncio.CancelledError:
+                    break
                 except Exception as e:
                     print(e)
                 finally:
