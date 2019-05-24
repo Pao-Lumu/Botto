@@ -201,7 +201,7 @@ class Game:
                                 if x:
                                     await self.bot.chat_channel.send(f'`{x}`')
                             else:
-                                content = re.sub(r'<(:\w+:)\d+:>', r'\1', msg.clean_content)
+                                content = re.sub(r'<(:\w+:)\d+>', r'\1', msg.clean_content)
                                 print(content)
                                 command = f"say §9§l{msg.author.name}§r: {content}"
                                 if len(command) >= 100:
