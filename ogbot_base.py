@@ -114,12 +114,13 @@ class Botto(commands.Bot):
             #     hdlr.close()
             #     self.log.removeHandler(hdlr)
             await super().close()
-        #     tasks = asyncio.gather(*asyncio.Task.all_tasks(), loop=self.loop)
-        #     tasks.cancel()
-        #     tasks.exception()
-        #     self.loop.stop()
+            tasks = asyncio.gather(*asyncio.Task.all_tasks(), loop=self.loop)
+            tasks.cancel()
+            tasks.exception()
+            self.loop.stop()
         except Exception as e:
             print(e)
+            print("asdfdsfdfs")
 
 
 class OGBotCmd(cmd.Cmd):
