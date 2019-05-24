@@ -268,7 +268,7 @@ if __name__ == '__main__':
 
     bot.cfg = botcfg
     bot.run(token)
-    handlers = log.handlers[:]
-    for hdlr in handlers:
-        hdlr.close()
-        log.removeHandler(hdlr)
+    # handlers = log.handlers[:]
+    # for hdlr in handlers:
+    #     hdlr.close()
+    #     log.removeHandler(hdlr)
