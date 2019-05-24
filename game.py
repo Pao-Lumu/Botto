@@ -145,7 +145,6 @@ class Game:
                         self.bot.bprint(f"{self.bot.game} | {msg}")
                     continue
                 except NameError:
-                    await asyncio.sleep(.75)
                     if size < os.stat(fpath):
                         size = os.stat(fpath)
                     else:
@@ -153,9 +152,8 @@ class Game:
                     continue
                 except Exception as e:
                     print(e)
-                    await asyncio.sleep(1)
                 finally:
-                    await asyncio.sleep(0.25)
+                    await asyncio.sleep(.75)
 
     def check_for_mentions(self, raw_playermsg):
         message = raw_playermsg[0]
@@ -169,6 +167,8 @@ class Game:
                     if member:
                         message = message.replace("@" + mention[:ind], f"<@{member.id}>")
                         break
+                    elif mention[:ind].lower() == 'here' or mention[:ind].lower() == 'everyone':
+                        message = message.replace("@" + mention[:ind], f"{discord.utils.escape_mentions('@'+ mention[:ind])}")
                 else:
                     pass
             except Exception as e:
@@ -201,14 +201,15 @@ class Game:
                                 if x:
                                     await self.bot.chat_channel.send(f'`{x}`')
                             else:
-                                command = f"say §9§l{msg.author.name}§r: {msg.clean_content}"
+                                content = re.sub('<(:\w+:)\d+:>', '\\1', msg.clean_content.rstrip())
+                                command = f"say §9§l{msg.author.name}§r: {content}"
                                 if len(command) >= 100:
                                     wrapped = textwrap.wrap(msg.clean_content, 86 + len(msg.author.name))
                                     for r in wrapped:
                                         rcon.command(f"say §9§l{msg.author.name}§r: {r}")
                                 else:
                                     rcon.command(command)
-                                    self.bot.bprint(f"Discord | <{msg.author.name}>: {msg.clean_content}")
+                                    self.bot.bprint(f"Discord | <{msg.author.name}>: {content}")
                         # if msg.attachments:
                         #     rcon.command(f"say §l{msg.author.name}§r: File {msg.attachments[0]['filename']}")
                         #     self.bot.bprint(f"Discord | {msg.author.name}: File {msg.attachments[0]['filename']}")
@@ -242,6 +243,7 @@ class Game:
                             pass
             else:
                 await asyncio.sleep(5)
+
 
     async def update_server_information(self):
         await self.bot.wait_until_ready(20)
