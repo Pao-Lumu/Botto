@@ -159,7 +159,7 @@ class Game:
     #                 await asyncio.sleep(.75)
 
     async def read_server_log(self, fpath, player_filter, server_filter):
-        with aiofiles.open(fpath) as log:
+        with open(fpath) as log:
             log.seek(0, 2)
             size = os.stat(fpath)
             while "minecraft" in self.bot.gwd:
