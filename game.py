@@ -114,7 +114,10 @@ class Game:
                     "FO\]:?(?:.*tedServer\]:)? (\[[^\]]*: .*\].*|(?<=]:\s).* joined the game|.* left the game|.* has made the .*)")
                 player_filter = re.compile("FO\]:?(?:.*tedServer\]:)? (\[Server\].*|<.*>.*)")
                 while "minecraft" in self.bot.gwd:
-                    await self.read_server_log(fpath, player_filter, server_filter)
+                    try:
+                        await self.read_server_log(fpath, player_filter, server_filter)
+                    except:
+                        pass
 
             else:
                 await asyncio.sleep(15)
