@@ -109,14 +109,15 @@ class Botto(commands.Bot):
 
     async def close(self):
         try:
-            handlers = self.log.handlers[:]
-            for hdlr in handlers:
-                hdlr.close()
-                self.log.removeHandler(hdlr)
+            # handlers = self.log.handlers[:]
+            # for hdlr in handlers:
+            #     hdlr.close()
+            #     self.log.removeHandler(hdlr)
             await super().close()
-            tasks = asyncio.gather(*asyncio.Task.all_tasks(), loop=self.loop)
-            tasks.cancel()
-            self.loop.stop()
+        #     tasks = asyncio.gather(*asyncio.Task.all_tasks(), loop=self.loop)
+        #     tasks.cancel()
+        #     tasks.exception()
+        #     self.loop.stop()
         except Exception as e:
             print(e)
 
