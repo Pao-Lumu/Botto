@@ -6,11 +6,16 @@ import json
 import logging.handlers
 import os
 import sys
-import traceback
 
 import discord
 import pyfiglet
-from discord.ext import commands
+
+import game
+import ogbot_base
+from utils import helpers
+
+# import traceback
+# from discord.ext import commands
 # try:
 #     import uvloop
 # except:
@@ -18,9 +23,6 @@ from discord.ext import commands
 # else:
 #     asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
-import game
-import ogbot_base
-from utils import helpers
 
 if len(sys.argv) > 1:
     os.chdir(sys.argv[1])
@@ -49,17 +51,17 @@ initial_extensions = [
 bot = ogbot_base.Botto(command_prefix=">", cog_folder="modules")
 
 
-@bot.event
-async def on_command_error(error, ctx):
-    if isinstance(error, commands.NoPrivateMessage):
-        await ctx.message.author.send('This command cannot be used in private messages.')
-    elif isinstance(error, commands.DisabledCommand):
-        await ctx.message.author.send('Sorry. This command is disabled and cannot be used.')
-    elif isinstance(error, commands.CommandInvokeError):
-        print('In {0.command.qualified_name}:'.format(ctx), file=sys.stderr)
-        traceback.print_tb(error.original.__traceback__)
-        print('{0.__class__.__name__}: {0}'.format(
-            error.original), file=sys.stderr)
+# @bot.event
+# async def on_command_error(error, ctx):
+#     if isinstance(error, commands.NoPrivateMessage):
+#         await ctx.message.author.send('This command cannot be used in private messages.')
+#     elif isinstance(error, commands.DisabledCommand):
+#         await ctx.message.author.send('Sorry. This command is disabled and cannot be used.')
+#     elif isinstance(error, commands.CommandInvokeError):
+#         print('In {0.command.qualified_name}:'.format(ctx), file=sys.stderr)
+#         traceback.print_tb(error.original.__traceback__)
+#         print('{0.__class__.__name__}: {0}'.format(
+#             error.original), file=sys.stderr)
 
 
 @bot.event
@@ -251,7 +253,6 @@ if __name__ == '__main__':
             log.error('Failed to load extension {}\n{}: {}'.format(
                 extension, type(e).__name__, e))
 
-    d = str(datetime.date.today())
     log_path = os.path.join("logs", "ogbot.log")
     if not os.path.exists(log_path):
         os.makedirs("logs", exist_ok=True)

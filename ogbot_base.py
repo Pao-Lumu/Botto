@@ -3,7 +3,7 @@ import cmd
 import datetime
 import inspect
 import itertools
-import platform
+import tracemalloc
 from pprint import pprint
 
 import colorama
@@ -11,14 +11,13 @@ import discord
 from colorama import Fore
 from discord.ext import commands
 
-from utils import checks
-
 
 class Botto(commands.Bot):
     __slots__ = {'loop', 'cog_folder', 'game', 'gop_text_cd', 'gop_voice_cd', 'debug', '_game_stopped', '_game_running',
                  'chat_channel', 'meme_channel'}
 
     def __init__(self, *args, **kwargs):
+        tracemalloc.start()
         colorama.init()
         self.loop = kwargs.pop('loop', asyncio.get_event_loop())
         self.cog_folder = kwargs.pop('cog_folder')
@@ -42,26 +41,6 @@ class Botto(commands.Bot):
         await super().wait_until_ready()
         if delay:
             await asyncio.sleep(delay)
-
-    async def on_command_error(self, e, ctx):
-        try:
-            if isinstance(e, checks.No_Perms):
-                await ctx.message.channel.send(":no_entry: `You don't have permission to use this command.`")
-            elif isinstance(e, checks.No_Owner):
-                await ctx.message.channel.send(":no_entry: `Bot Owner Only`")
-            elif isinstance(e, checks.No_Mod):
-                await ctx.message.channel.send(":no_entry: `Only Server Moderators or Above can use this command`")
-            elif isinstance(e, checks.No_Admin):
-                await ctx.message.channel.send(":no_entry: `Administrator Only`")
-            elif isinstance(e, checks.No_Role):
-                await ctx.message.channel.send(":no_entry: `No Custom Role or Specific Permission`")
-            elif isinstance(e, checks.No_ServerandPerm):
-                await ctx.message.channel.send(":no_entry: `Server specific command or no permission`")
-            else:
-                if isinstance(e, commands.CommandNotFound):
-                    return
-        except Exception as e:
-            print(e)
 
     async def wait_until_game_running(self, delay=0):
         if self.debug:
@@ -93,13 +72,13 @@ class Botto(commands.Bot):
 
     def bprint(self, text, *args):
         time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        p = text.split("\n")
-        for x in p:
+        lines = text.split("\n")
+        for line in lines:
             if self.debug:
-                print(f"{time} {inspect.stack()[1][3]} ~ {x}", *args)
+                print(f"{time} {inspect.stack()[1][3]} ~ {line}", *args)
 
             else:
-                print(f"{Fore.LIGHTYELLOW_EX}{time}{Fore.RESET} ~ {x}", *args)
+                print(f"{Fore.LIGHTYELLOW_EX}{time}{Fore.RESET} ~ {line}", *args)
 
     def run(self, token):
         super().run(token)
@@ -109,18 +88,12 @@ class Botto(commands.Bot):
 
     async def close(self):
         try:
-            # handlers = self.log.handlers[:]
-            # for hdlr in handlers:
-            #     hdlr.close()
-            #     self.log.removeHandler(hdlr)
             await super().close()
             tasks = asyncio.gather(*asyncio.Task.all_tasks(), loop=self.loop)
             tasks.cancel()
             tasks.exception()
             self.loop.stop()
         except Exception as e:
-            # print(e)
-            # print("asdfdsfdfs")
             pass
 
 
@@ -148,7 +121,6 @@ class OGBotCmd(cmd.Cmd):
         print(f"""Name: {self.bot.name}
 Uptime: {str(uptime)}""")
 
-
     def do_get_methods(self, line):
         """Print all (non-private) methods in self.bot"""
         pprint(self.methods)
@@ -160,6 +132,15 @@ Uptime: {str(uptime)}""")
     def do_get_line(self, line):
         """Check how your input is being parsed"""
         print(line)
+
+    def do_memory(self, line):
+        snapshot = tracemalloc.take_snapshot()
+        top_stats = snapshot.statistics('traceback')
+
+        stat = top_stats[0]
+        print("%s memory blocks: %.1f KiB" % (stat.count, stat.size / 1024))
+        for line in stat.traceback.format():
+            print(line)
 
     def do_exec(self, line):
         """Run methods and return their values, or get the values of variables"""

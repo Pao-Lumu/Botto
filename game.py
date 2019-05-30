@@ -1,6 +1,6 @@
 import asyncio
 import datetime
-import itertools
+# import itertools
 import os
 import re
 import socket
@@ -65,44 +65,13 @@ class Game:
                 self.bot.game = data["name"] if data["name"] else "A Game"
                 self.bot.gwd = data["folder"]
                 self.bot.gameinfo = data
-                version = ""
-                if "minecraft" in self.bot.gwd:
-                    version = data["version"]
-                    failure_number = 0
-                    while not version and failure_number <= 3:
-                        version, failure_number = self.lookup_mc_server("localhost:22222", failure_number)
-                        await asyncio.sleep(3)
-                gamename = str(self.bot.game) + " " + version
-                self.bot.bprint(f"Server Status | Now Playing: {gamename}")
-                await self.set_bot_status(gamename, '', '')
-
                 await self.bot.wait_until_game_stopped()
 
-    def lookup_mc_server(self, address, fails):
-        try:
-            server = mc.lookup(address)
-            status = server.query()
-            return " " + status.software.version, 0
-        except socket.timeout:
-            print("Minecraft | Connection To Server Reached Timeout Without Response")
-            return "", False
-            pass
-        except ConnectionRefusedError:
-            print("Minecraft | Query Connection Refused")
-            return " ", fails + 1
-            pass
-        except Exception as e:
-            print("Minecraft | Server Status Query Exception caught: " + str(e))
-            return None, fails + 1
-            pass
-        except:
-            print("uh ok")
-
-    async def set_bot_status(self, line1: str, line2: str, line3: str, *args, **kwargs):
-        padder = [line1.replace(' ', '\u00a0'), ''.join(list(itertools.repeat('\u3000', 40 - len(line1))))
-                  + line2.replace(' ', '\u00a0'), ''.join(list(itertools.repeat('\u3000', 40 - len(line2))))
-                  + line3.replace(' ', '\u00a0')]
-        await self.bot.change_presence(activity=discord.Game(f"{' '.join(padder)}"))
+    # async def set_bot_status(self, line1: str, line2: str, line3: str, *args, **kwargs):
+    #     padder = [line1.replace(' ', '\u00a0'), ''.join(list(itertools.repeat('\u3000', 40 - len(line1))))
+    #               + line2.replace(' ', '\u00a0'), ''.join(list(itertools.repeat('\u3000', 40 - len(line2))))
+    #               + line3.replace(' ', '\u00a0')]
+    #     await self.bot.change_presence(activity=discord.Game(f"{' '.join(padder)}"))
 
     async def send_from_game_to_guild(self):
         await self.bot.wait_until_game_running(10)
@@ -120,7 +89,6 @@ class Game:
                         break
                     except:
                         pass
-
             else:
                 await asyncio.sleep(15)
 
@@ -175,7 +143,8 @@ class Game:
                         message = message.replace("@" + mention[:ind], f"<@{member.id}>")
                         break
                     elif mention[:ind].lower() == 'here' or mention[:ind].lower() == 'everyone':
-                        message = message.replace("@" + mention[:ind], f"{discord.utils.escape_mentions('@'+ mention[:ind])}")
+                        message = message.replace("@" + mention[:ind],
+                                                  f"{discord.utils.escape_mentions('@' + mention[:ind])}")
                 else:
                     pass
             except Exception as e:
@@ -249,15 +218,13 @@ class Game:
             else:
                 await asyncio.sleep(5)
 
-
     async def update_server_information(self):
-        await self.bot.wait_until_ready(20)
+        await self.bot.wait_until_ready(15)
         while not self.bot.is_closed():
             if not self.bot.game:
                 if self.bot.chat_channel.topic:
                     await self.bot.chat_channel.edit(topic="")
-                await self.bot.wait_until_game_running()
-                await asyncio.sleep(5)
+                await self.bot.wait_until_game_running(5)
             elif "minecraft" in self.bot.gwd:
                 tries = 1
                 server = mc.lookup("localhost:22222")
@@ -281,7 +248,7 @@ class Game:
                             player_count = f"({online}/{max} players)" if not failed else ""
                         cur_status = f"Playing: Minecraft {version} {player_count}"
                         await self.bot.chat_channel.edit(topic=cur_status)
-                        await self.set_bot_status(f'{self.bot.game} {version}', mod_count, player_count)
+                        await self.bot.set_bot_status(f'{self.bot.game} {version}', mod_count, player_count)
                     except BrokenPipeError:
                         self.bot.bprint("Server running a MC version <1.7, or is still starting. (BrokenPipeError)")
                         await self.sleep_with_backoff(tries)
@@ -326,7 +293,7 @@ class Game:
                         max = info["max_players"]
                         cur_status = f"Playing: Garry's Mod - {mode} on map {map} ({cur}/{max} players)"
                         await self.bot.chat_channel.edit(topic=cur_status)
-                        await self.set_bot_status("Garry's Mod", f"{mode} on map {map}", f"({cur}/{max} players)")
+                        await self.bot.set_bot_status("Garry's Mod", f"{mode} on map {map}", f"({cur}/{max} players)")
                     except discord.Forbidden:
                         print("Bot lacks permission to edit channels. (discord.Forbidden)")
                     except valve.source.NoResponseError:
