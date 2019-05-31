@@ -119,27 +119,33 @@ async def on_member_update(vor, ab):
         return
     bef = frozenset(map(lambda x: helpers.MiniActivity(x), vor.activities))
     aft = frozenset(map(lambda x: helpers.MiniActivity(x), ab.activities))
-    states = {"status": {"set": "came online ({})", "update": "changed status from {} to {}",
-                         "unset": "went offline"},
-              "activities": {'playing': {"set": "started playing {}",
-                                         "unset": "stopped playing {}"},
-                             'streaming': {"set": "is streaming {}",
-                                           "unset": "stopped streaming {}"},
-                             'listening': {"set": "is listening to {} by {} on Spotify",
-                                           "unset": "stopped listening to {}"}},
-              "nick": {"set": "Nickname set to {}", "update": "Nickname changed to {}",
-                       "unset": "Nickname was deleted"}}
+    # states = {"status": {"set": "came online ({})", "update": "changed status from {} to {}",
+    #                      "unset": "went offline"},
+    #           "activities": {'playing': {"set": "started playing {}",
+    #                                      "unset": "stopped playing {}"},
+    #                          'streaming': {"set": "is streaming {}",
+    #                                        "unset": "stopped streaming {}"},
+    #                          'listening': {"set": "is listening to {} by {} on Spotify",
+    #                                        "unset": "stopped listening to {}"}},
+    #           "nick": {"set": "Nickname set to {}", "update": "Nickname changed to {}",
+    #                    "unset": "Nickname was deleted"}}
+    # 0 = set, 1 = unset, 2 = updated
+    states = {"status": ["came online ({})", "went offline", "changed status from {} to {}"],
+              "activities": {'playing': ["started playing {}", "stopped playing {}"],
+                             'streaming': ["is streaming {}", "stopped streaming {}"],
+                             'listening': ["is listening to {} by {} on Spotify", "stopped listening to {}"]},
+              "nick": ["Nickname set to {}", "Nickname was deleted", "Nickname changed to {}"]}
     changes = []
     if vor.status == ab.status:
         pass
     else:
         x = 'status'
         if ab.status is discord.Status.offline:
-            changes.append((x, states[x]['unset']))
+            changes.append((x, states[x][1]))
         elif vor.status is discord.Status.offline:
-            changes.append((x, states[x]['set'].format(ab.status)))
+            changes.append((x, states[x][0].format(ab.status)))
         else:
-            changes.append((x, states[x]['update'].format(vor.status, ab.status)))
+            changes.append((x, states[x][2].format(vor.status, ab.status)))
 
     if bef == aft:
         pass
@@ -149,15 +155,15 @@ async def on_member_update(vor, ab):
         for a in diff:
             if a.type == discord.ActivityType.listening:
                 if a in aft:
-                    changes.append((x, states['activities'][a.type.name]['set'].format(
+                    changes.append((x, states['activities'][a.type.name][0].format(
                         *[a.title, a.artist] if hasattr(a, 'title') else [a.name])))
                 elif len(diff) % 2 == 1:
-                    changes.append((x, states[x][a.type.name]['unset'].format(a.name)))
+                    changes.append((x, states[x][a.type.name][1].format(a.name)))
 
             elif a.ob in vor.activities:
-                changes.append((x, states[x][a.type.name]['unset'].format(a.name)))
+                changes.append((x, states[x][a.type.name][1].format(a.name)))
             elif a.ob in ab.activities:
-                changes.append((x, states['activities'][a.type.name]['set'].format(
+                changes.append((x, states['activities'][a.type.name][0].format(
                     *[a.title, a.artist] if hasattr(a, 'title') else [a.name])))
             else:
                 bot.bprint('evan you should fix your status code')
@@ -168,11 +174,11 @@ async def on_member_update(vor, ab):
         pass
     else:
         if not vor.nick:
-            changes.append(states['nick']['set'].format(ab.nick))
+            changes.append(states['nick'][0].format(ab.nick))
         elif not ab.nick:
-            changes.append(states['nick']['unset'])
+            changes.append(states['nick'][1])
         else:
-            changes.append(states['nick']['update'].format(ab.nick))
+            changes.append(states['nick'][2].format(ab.nick))
 
     for x, msg in changes:
         log.warning(f"{x.upper()} - {ab.name} {msg}")

@@ -3,6 +3,7 @@ import cmd
 import datetime
 import inspect
 import itertools
+import time
 import tracemalloc
 from pprint import pprint
 
@@ -104,6 +105,7 @@ class OGBotCmd(cmd.Cmd):
 
     def __init__(self, loop, bot):
         super().__init__(self)
+        self.returns = []
         self.bot = bot
         self.loop = loop
         self.completekey = 'tab'
@@ -133,6 +135,20 @@ Uptime: {str(uptime)}""")
         """Check how your input is being parsed"""
         print(line)
 
+    def do_get_user_info(self, line):
+        print(line)
+        print(type(line))
+        # x = self.bot.fetch_user(int(line))
+        x = self.loop.create_task(
+            self._exec_async(self.bot.fetch_user, parameters=[int(line)], callback=self._bad_practice))
+        while not x.done():
+            time.sleep(1)
+        time.sleep(.5)
+        z = self.returns.pop()
+        data = """Name: {} | ID: {}
+is_bot: {} | Avatar: {}""".format(z.name, z.id, z.bot, z.avatar_url)
+        print(data)
+
     def do_memory(self, line):
         snapshot = tracemalloc.take_snapshot()
         top_stats = snapshot.statistics('traceback')
@@ -152,12 +168,9 @@ Uptime: {str(uptime)}""")
             print(f"Calling {b[0]}")
             print(params) if params else False
             if callable(func) and b[1:]:
-                # x = '\u00A0'.join(b[1:]).split('|')
                 x = ' '.join(b[1:]).split('|')
-                # x = b[1:]
                 print(f"with parameters {x}")
                 if inspect.iscoroutinefunction(func):
-                    print('e')
                     self.loop.create_task(self._exec_async(func, parameters=x))
                 else:
                     try:
@@ -205,15 +218,20 @@ Uptime: {str(uptime)}""")
         offs = len(mline) - len(text)
         return [s[offs:] for s in self.attributes if s.startswith(mline)]
 
-    async def _exec_async(self, method, parameters=None):
+    async def _exec_async(self, method, parameters=None, callback=None):
         try:
             if parameters:
                 result = await asyncio.wait_for(method(*parameters), timeout=10)
             else:
                 result = await asyncio.wait_for(method(), timeout=10)
             print(result)
+            if callback:
+                callback(result)
         except Exception as e:
             print(e)
+
+    def _bad_practice(self, result):
+        self.returns.append(result)
 
     def do_set(self, line: str):
         """
