@@ -6,11 +6,14 @@ import itertools
 import time
 import tracemalloc
 from pprint import pprint
+import platform
 
 import colorama
 import discord
 from colorama import Fore
 from discord.ext import commands
+
+from utils import checks
 
 
 class Botto(commands.Bot):
@@ -25,8 +28,8 @@ class Botto(commands.Bot):
         self.game = ""
         self.gop_text_cd = 0
         self.gop_voice_cd = 0
-        # if platform.system() == "Linux":
-        #     asyncio.get_child_watcher().attach_loop(self.loop)
+        if platform.system() == "Linux":
+            asyncio.get_child_watcher().attach_loop(self.loop)
         command_prefix = kwargs.pop('command_prefix', commands.when_mentioned_or('.'))
         # self.debug = True
         self.debug = False
@@ -94,7 +97,7 @@ class Botto(commands.Bot):
             tasks.cancel()
             tasks.exception()
             self.loop.stop()
-        except Exception as e:
+        except:
             pass
 
 

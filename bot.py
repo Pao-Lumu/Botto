@@ -45,7 +45,8 @@ fmt = logging.Formatter('%(asctime)s - %(message)s', datefmt="%Y-%m-%d %H:%M:%S"
 initial_extensions = [
     'modules.admin',
     'modules.music',
-    'modules.comrade'
+    'modules.comrade',
+    'modules.server_ctl'
 ]
 
 bot = ogbot_base.Botto(command_prefix=">", cog_folder="modules")

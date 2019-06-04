@@ -1,39 +1,97 @@
 from discord.ext import commands
 import utils.utilities as utilities
 import discord
+import os
+from collections import defaultdict
+from concurrent import futures
 
-class ServerControl:
+class ServerControl(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(pass_context=True, aliases=['stats'])
-    async def status(self, ctx):
-        # Insert server detection code here
-        s = False
-        e = discord.Embed()
-        e.color = color
-        if s.online:
-            e.set_author(name="Currently Running: ")
-            e.add_field(name="Players Online: ", value="")
-            e.add_field(name="Uptime", value=user.nick)
-            e.add_field(name="", value=user.id)
-            e.add_field(name="Status", value=status_text + str(status))
-#             e.add_field(name="Roles", value=rolelist)
-#             e.add_field(name="", value=str(user.created_at))
-        else:
-            e.set_author(name="No server is currently running")
-        await self.bot.say(embed=e)
 
-    @commands.command(pass_context=True, aliases=['about'])
-    async def info(self, ctx):
-        """
-        Returns information about the bot
-        """
-        e = discord.Embed()
-        e.set_author(name="About {}".format(self.bot.user.name))
-        e.add_field(name = "Links", value = "`Server add link:` [click here](https://discordapp.com/api/oauth2/authorize?client_id=370679673904168975&permissions=0&scope=bot)\n`Bug tracker and source code:` [github](https://github.com/TheGrammarJew/Botto)")
-        await self.bot.say(embed=e)
+    @commands.group(aliases=['mc'])
+    async def minecraft(self, ctx):
+        if not ctx.subcommand_passed:
+            pass
+
+    @commands.is_owner()
+    @minecraft.command(aliases=['opt', 'option', 'opts'])
+    async def options(self, ctx, *, setting: str = None):
+        config = self.parse_config_file()
+        try:
+            if not setting:
+                e = discord.Embed()
+                for k, v in config.items():
+                    e.add_field(name=f"{k}: {v}", value="-----------------------------")
+                await ctx.send("List of current config options:", embed=e)
+            else:
+                x = setting.split(" ", maxsplit=1)
+                if len(x) == 1:
+                    await ctx.send(f"{setting}: {config.get(setting.lower())}")
+                else:
+                    if x[0].lower() not in config.keys():
+                        try:
+                            await ctx.send(f"Option `{x[0]}` is not found.\nAdd it anyway? (y/n)", delete_after=15)
+                            unpythonic = lambda bad: True if bad.author.id == ctx.message.author.id and bad.channel.id == ctx.message.channel.id else False
+                            msg = await self.bot.wait_for('message', check=unpythonic, timeout=10)
+                            if "n" in msg.clean_content:
+                                await msg.add_reaction('\N{OK HAND SIGN}')
+                            elif "y" in msg.clean_content:
+                                await ctx.send(f"{x[0]}: `{config.get(x[0])}` --> `{x[1]}`")
+                                config[x[0]] = x[1]
+                                self.write_config_file(config)
+                            else:
+                                pass
+                        except futures.TimeoutError:
+                            pass
+                        except NameError:
+                            pass
+                        except Exception as e:
+                            print(e)
+                    else:
+                        await ctx.send(f"*{x[0]}*: `{config.get(x[0])}` --> `{x[1]}`")
+                        config[x[0]] = x[1]
+                        self.write_config_file(config)
+
+        except:
+            pass
+
+    def parse_config_file(self):
+        config = defaultdict(lambda: "")
+        try:
+            p = os.path.join(self.bot.gwd, "server.properties")
+            with open(p) as readprop:
+                lines = readprop.readlines()
+            lines.sort()
+            for line in lines:
+                if line[0] == "#":
+                    continue
+                k, v = line.rstrip().split("=")
+                if k == "rcon.password":
+                    v = "SET" if v else "NOT SET"
+                config[k] = v if v else "NONE"
+            return config
+        except TypeError:
+            return False
+
+    def write_config_file(self, config):
+        p = os.path.join(self.bot.gwd, "server.properties")
+
+        with open(p, "w") as writeprop:
+            for k, v in config.items():
+                print(f"{k}={v}\n")
+                writeprop.write(f"{k}={v}\n")
+
+    def is_forcing(self, m):
+        # I want this to specifically fail safe, which requires checking for an N before a Y
+        if "n" in m.clean_content.lower():
+            return True
+        elif "y" in m.clean_content.lower():
+            return True
+        else:
+            return False
 
 
 def setup(bot):

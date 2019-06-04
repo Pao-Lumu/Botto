@@ -304,5 +304,5 @@ class Game:
             else:
                 await asyncio.sleep(30)
 
-    async def sleep_with_backoff(self, tries, default=5):
-        await asyncio.sleep(default * tries)
+    async def sleep_with_backoff(self, tries, wait_time=5):
+        await asyncio.sleep(wait_time * tries)

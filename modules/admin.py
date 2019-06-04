@@ -10,8 +10,8 @@ class Admin(commands.Cog):
         self.bot = bot
 
     @commands.command(hidden=True)
-    @checks.is_owner()
-    async def reload(self, *, mdl: str):
+    @commands.is_owner()
+    async def reload(self, ctx, *, mdl: str):
         """Reloads a module."""
         folder = self.bot.cog_folder
         try:
@@ -22,10 +22,10 @@ class Admin(commands.Cog):
                 self.bot.unload_extension(mdl)
                 self.bot.load_extension(mdl)
         except Exception as e:
-            await self.bot.say('\N{PISTOL}')
-            await self.bot.say('{}: {}'.format(type(e).__name__, e))
+            await ctx.send('\N{PISTOL}')
+            await ctx.send('{}: {}'.format(type(e).__name__, e))
         else:
-            await self.bot.say('\N{OK HAND SIGN}')
+            await ctx.send('\N{OK HAND SIGN}')
 
 
 def setup(bot):
