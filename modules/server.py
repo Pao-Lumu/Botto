@@ -1,15 +1,15 @@
-from discord.ext import commands
-import utils.utilities as utilities
-import discord
 import os
 from collections import defaultdict
 from concurrent import futures
+
+import discord
+from discord.ext import commands
+
 
 class ServerControl(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
-
 
     @commands.group(aliases=['mc'])
     async def minecraft(self, ctx):
@@ -34,7 +34,13 @@ class ServerControl(commands.Cog):
                     if x[0].lower() not in config.keys():
                         try:
                             await ctx.send(f"Option `{x[0]}` is not found.\nAdd it anyway? (y/n)", delete_after=15)
-                            unpythonic = lambda bad: True if bad.author.id == ctx.message.author.id and bad.channel.id == ctx.message.channel.id else False
+
+                            def unpythonic(mess, bad):
+                                if bad.author.id == mess.author.id and bad.channel.id == mess.channel.id:
+                                    return True
+                                else:
+                                    return False
+
                             msg = await self.bot.wait_for('message', check=unpythonic, timeout=10)
                             if "n" in msg.clean_content:
                                 await msg.add_reaction('\N{OK HAND SIGN}')
@@ -55,7 +61,7 @@ class ServerControl(commands.Cog):
                         config[x[0]] = x[1]
                         self.write_config_file(config)
 
-        except:
+        except TypeError:
             pass
 
     def parse_config_file(self):
@@ -84,7 +90,8 @@ class ServerControl(commands.Cog):
                 print(f"{k}={v}\n")
                 writeprop.write(f"{k}={v}\n")
 
-    def is_forcing(self, m):
+    @staticmethod
+    def is_forcing(m):
         # I want this to specifically fail safe, which requires checking for an N before a Y
         if "n" in m.clean_content.lower():
             return True

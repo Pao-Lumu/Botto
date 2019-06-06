@@ -3,21 +3,22 @@ import cmd
 import datetime
 import inspect
 import itertools
+import platform
 import time
 import tracemalloc
 from pprint import pprint
-import platform
 
 import colorama
 import discord
 from colorama import Fore
 from discord.ext import commands
 
-from utils import checks
+
+# from utils import checks
 
 
 class Botto(commands.Bot):
-    __slots__ = {'loop', 'cog_folder', 'game', 'gop_text_cd', 'gop_voice_cd', 'debug', '_game_stopped', '_game_running',
+    __slots__ = {'loop', 'cog_folder', 'game', 'gop_text_cd', 'gop_voice_cd', 'debug', 'game_stopped', 'game_running',
                  'chat_channel', 'meme_channel'}
 
     def __init__(self, *args, **kwargs):
@@ -34,8 +35,8 @@ class Botto(commands.Bot):
         # self.debug = True
         self.debug = False
 
-        self._game_running = asyncio.Event(loop=self.loop)
-        self._game_stopped = asyncio.Event(loop=self.loop)
+        self.game_running = asyncio.Event(loop=self.loop)
+        self.game_stopped = asyncio.Event(loop=self.loop)
 
         super().__init__(command_prefix=command_prefix, *args, **kwargs)
 
@@ -49,14 +50,14 @@ class Botto(commands.Bot):
     async def wait_until_game_running(self, delay=0):
         if self.debug:
             print("Waiting for the game to run...")
-        await self._game_running.wait()
+        await self.game_running.wait()
         if delay:
             await asyncio.sleep(delay)
 
     async def wait_until_game_stopped(self, delay=0):
         if self.debug:
             print("Waiting for the game to stop...")
-        await self._game_stopped.wait()
+        await self.game_stopped.wait()
         if delay:
             await asyncio.sleep(delay)
 
@@ -66,23 +67,27 @@ class Botto(commands.Bot):
                   + line3.replace(' ', '\u00a0')]
         await self.change_presence(activity=discord.Game(f"{' '.join(padder)}"))
 
+    async def get_loaded_cogs(self):
+        return self.cogs
+        # pass
+
     @property
     def is_game_running(self):
-        return self._game_running.is_set()
+        return self.game_running.is_set()
 
     @property
     def is_game_stopped(self):
-        return self._game_stopped.is_set()
+        return self.game_stopped.is_set()
 
     def bprint(self, text, *args):
-        time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        cur_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         lines = text.split("\n")
         for line in lines:
             if self.debug:
-                print(f"{time} {inspect.stack()[1][3]} ~ {line}", *args)
+                print(f"{cur_time} {inspect.stack()[1][3]} ~ {line}", *args)
 
             else:
-                print(f"{Fore.LIGHTYELLOW_EX}{time}{Fore.RESET} ~ {line}", *args)
+                print(f"{Fore.LIGHTYELLOW_EX}{cur_time}{Fore.RESET} ~ {line}", *args)
 
     def run(self, token):
         super().run(token)
@@ -101,6 +106,7 @@ class Botto(commands.Bot):
             pass
 
 
+# noinspection PyUnusedLocal,PyUnusedLocal
 class OGBotCmd(cmd.Cmd):
     prompt = f"{Fore.BLUE}OGBot >>>{Fore.RESET}"
 
@@ -121,10 +127,37 @@ class OGBotCmd(cmd.Cmd):
     def default(self, line):
         self.do_exec(line)
 
+    # noinspection PyUnusedLocal
     def do_status(self, line):
+        """Prints name, uptime, loaded cogs, etc. of the bot."""
         uptime = datetime.datetime.utcnow() - self.bot.uptime
-        print(f"""Name: {self.bot.name}
-Uptime: {str(uptime)}""")
+        print(f"""Name: {self.bot.user.name}
+Uptime: {str(uptime)}
+Loaded cogs: {", ".join(self.bot.cogs.keys())}""")
+
+    def do_reload_cog(self, line):
+        """Reloads a module."""
+        folder = self.bot.cog_folder
+        try:
+            if line.find(".") == -1:
+                self.bot.unload_extension("{}.{}".format(folder, line))
+                self.bot.load_extension("{}.{}".format(folder, line))
+            else:
+                self.bot.unload_extension(line)
+                self.bot.load_extension(line)
+        except Exception as e:
+            self.bot.bprint('\N{PISTOL}')
+            self.bot.bprint('{}: {}'.format(type(e).__name__, e))
+        else:
+            self.bot.bprint('\N{OK HAND SIGN}')
+
+    def do_reload_all_cogs(self, line):
+        """Reloads all modules."""
+        temp = self.bot.extensions.keys()
+        for ex in temp:
+            self.bot.unload_extension(ex)
+            self.bot.load_extension(ex)
+            pass
 
     def do_get_methods(self, line):
         """Print all (non-private) methods in self.bot"""
@@ -136,6 +169,7 @@ Uptime: {str(uptime)}""")
 
     def do_get_line(self, line):
         """Check how your input is being parsed"""
+        print(type(line))
         print(line)
 
     def do_get_user_info(self, line):
@@ -153,8 +187,9 @@ is_bot: {} | Avatar: {}""".format(z.name, z.id, z.bot, z.avatar_url)
         print(data)
 
     def do_memory(self, line):
+
         snapshot = tracemalloc.take_snapshot()
-        top_stats = snapshot.statistics('traceback')
+        top_stats = snapshot.statistics('size')
 
         stat = top_stats[0]
         print("%s memory blocks: %.1f KiB" % (stat.count, stat.size / 1024))
@@ -167,10 +202,8 @@ is_bot: {} | Avatar: {}""".format(z.name, z.id, z.bot, z.avatar_url)
         try:
             b = line.split(' ')
             func = getattr(self.bot, b[0])
-            params = tuple(inspect.signature(func).parameters)
-            print(f"Calling {b[0]}")
-            print(params) if params else False
             if callable(func) and b[1:]:
+                params = tuple(inspect.signature(func).parameters)
                 x = ' '.join(b[1:]).split('|')
                 print(f"with parameters {x}")
                 if inspect.iscoroutinefunction(func):
@@ -200,7 +233,7 @@ is_bot: {} | Avatar: {}""".format(z.name, z.id, z.bot, z.avatar_url)
                     except TypeError:
                         params = tuple(inspect.signature(func).parameters)
                         print(f"Method {b[0]} requires {len(params)} but {len(b[1:])} were given")
-                        print(params)
+                        print([params])
 
             else:
                 if func is None:

@@ -10,7 +10,7 @@ def get_running():
     if platform.system() == 'Windows':
         return None
     else:
-        ps = subprocess.Popen("/usr/bin/pwdx $(/usr/sbin/ss -tulpn | grep -P :22222 | grep -oP '(?<=pid\=)(\d+)')",
+        ps = subprocess.Popen(r"/usr/bin/pwdx $(/usr/sbin/ss -tulpn | grep -P :22222 | grep -oP '(?<=pid\=)(\d+)')",
                               shell=True, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
         raw = ps.stdout.read().decode("utf-8").rstrip()
 
@@ -41,46 +41,42 @@ def get_game_info():
         elif "serverfiles" in x:
             x = root
             pass
-        elif not "serverfiles" in x:
-            z = False
+        elif "serverfiles" not in x:
             lr = str(datetime.now().timestamp())
             with open(path.join(x, ".gameinfo.json"), "w+") as file:
                 basic = {"name": current.title(), "folder": x, "last_run": lr, "rcon": "", "version": ""}
                 json.dump(basic, file)
                 return basic
-        else:
-            x = root
-        pass
 
 
 def fix_mc_rcon_problems(server):
     fn = os.path.join(server.folder, "server.properties")
     with open(fn, "r") as p:
-        l = p.readlines()
+        lines = p.readlines()
     qp = False
     rp = False
-    for i, line in enumerate(l):
+    for i, line in enumerate(lines):
         if "motd" in line:
-            l[i] = "motd=OGBox Server\n"
+            lines[i] = "motd=OGBox Server\n"
         elif "server-port" in line:
-            l[i] = "server-port=22222\n"
+            lines[i] = "server-port=22222\n"
         elif "enable-rcon" in line:
-            l[i] = "enable-rcon=true\n"
+            lines[i] = "enable-rcon=true\n"
         elif "enable-query" in line:
-            l[i] = "enable-query=true\n"
+            lines[i] = "enable-query=true\n"
         elif "query.port" in line:
-            l[i] = "query.port=22222\n"
+            lines[i] = "query.port=22222\n"
             qp = True
         elif "rcon.port" in line:
-            l[i] = "rcon.port=22232\n"
+            lines[i] = "rcon.port=22232\n"
             rp = True
         else:
             pass
 
     if not rp:
-        l.append("rcon.port=22232\n")
+        lines.append("rcon.port=22232\n")
     if not qp:
-        l.append("query.port=22222\n")
+        lines.append("query.port=22222\n")
 
     with open(fn, 'w') as f:
-        f.writelines(l)
+        f.writelines(lines)

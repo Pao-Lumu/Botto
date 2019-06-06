@@ -161,6 +161,7 @@ class MusicPlayer:
         return self.bot.loop.create_task(self._cog.cleanup(guild))
 
 
+# noinspection PyProtectedMember,PyIncorrectDocstring,PyMethodMayBeStatic,PyUnresolvedReferences
 class Music(commands.Cog):
     """Music related commands."""
 
@@ -216,6 +217,7 @@ class Music(commands.Cog):
         """Connect to voice.
         Parameters
         ------------
+        ctx: discord.ext.Context
         channel: discord.VoiceChannel [Optional]
             The channel to connect to. If a channel is not specified, an attempt to join the voice channel you are in
             will be made.
@@ -251,8 +253,10 @@ class Music(commands.Cog):
         Uses YTDL to automatically search and retrieve a song.
         Parameters
         ------------
+        ctx: discord.ext.Context
         search: str [Required]
             The song to search and retrieve using YTDL. This could be a simple search, an ID or URL.
+            :param ctx:
         """
         await ctx.trigger_typing()
 
@@ -311,6 +315,7 @@ class Music(commands.Cog):
         vc.stop()
         await ctx.send(f'**`{ctx.author}`**: Skipped the song!')
 
+    # noinspection PyProtectedMember
     @commands.command(name='queue', aliases=['q', 'playlist'])
     async def queue_info(self, ctx):
         """Retrieve a basic queue of upcoming songs."""
@@ -357,7 +362,8 @@ class Music(commands.Cog):
         """Change the player volume.
         Parameters
         ------------
-        volume: float or int [Required]
+        ctx: discord.ext.Context
+        vol: float or int [Required]
             The volume to set the player to in percentage. This must be between 1 and 100.
         """
         vc = ctx.voice_client

@@ -23,7 +23,7 @@ class MiniActivity:
                     return False
             else:
                 return True
-        except:
+        except TypeError:
             print("FAIL")
             return False
 

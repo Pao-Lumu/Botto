@@ -66,6 +66,7 @@ class Santana:
 
     def va(self, local_gifts, exclusions):
         failed = True
+        assignment = ""
         while failed:
             assignment = local_gifts[random.randint(0, len(local_gifts) - 1)]
             if assignment not in exclusions:

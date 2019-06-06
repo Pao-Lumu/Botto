@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+
 import asyncio
 import datetime
 import json
@@ -7,6 +8,7 @@ import logging.handlers
 import os
 import sys
 
+# noinspection PyPackageRequirements
 import discord
 import pyfiglet
 
@@ -33,36 +35,23 @@ log = logging.getLogger()
 discord_logger = logging.getLogger('discord')
 discord_logger.setLevel(logging.CRITICAL)
 
-# sh = logging.StreamHandler(sys.stderr)
-# sh.setLevel(logging.CRITICAL)
+sh = logging.StreamHandler(sys.stderr)
+sh.setLevel(logging.CRITICAL)
 
 fmt = logging.Formatter('%(asctime)s - %(message)s', datefmt="%Y-%m-%d %H:%M:%S")
 
-# sh.setFormatter(fmt)
-# log.addHandler(sh)
-# discord_logger.addHandler(sh)
+sh.setFormatter(fmt)
+log.addHandler(sh)
+discord_logger.addHandler(sh)
 
 initial_extensions = [
     'modules.admin',
     'modules.music',
     'modules.comrade',
-    'modules.server_ctl'
+    'modules.server'
 ]
 
 bot = ogbot_base.Botto(command_prefix=">", cog_folder="modules")
-
-
-# @bot.event
-# async def on_command_error(error, ctx):
-#     if isinstance(error, commands.NoPrivateMessage):
-#         await ctx.message.author.send('This command cannot be used in private messages.')
-#     elif isinstance(error, commands.DisabledCommand):
-#         await ctx.message.author.send('Sorry. This command is disabled and cannot be used.')
-#     elif isinstance(error, commands.CommandInvokeError):
-#         print('In {0.command.qualified_name}:'.format(ctx), file=sys.stderr)
-#         traceback.print_tb(error.original.__traceback__)
-#         print('{0.__class__.__name__}: {0}'.format(
-#             error.original), file=sys.stderr)
 
 
 @bot.event
@@ -85,25 +74,29 @@ Chat Channel: {bot.chat_channel}  |  Meme Channel: {bot.meme_channel}
 
 def load_credentials():
     if os.path.isfile("credentials.json"):
-        with open('credentials.json') as f:
-            return json.load(f)
+        with open('credentials.json') as creds:
+            return json.load(creds)
     else:
-        log.warning('file "credentials.json" not found; Generating...')
-        with open('credentials.json', 'w+') as f:
-            f.write(json.dumps({'token': '', 'client_id': ''}))
+        log.warning('File "credentials.json" not found; Generating...')
+        with open('credentials.json', 'w+') as creds:
+            default = {'token': '', 'client_id': ''}
+            json.dump(default, creds)
+        bot.bprint('File "credentials.json" not found; Generating...')
         bot.bprint('Please input your bot\'s credentials and restart.')
         return False
 
 
 def load_botconfig():
     if os.path.isfile("botcfg.json"):
-        with open('botcfg.json') as f:
-            return json.load(f)
+        with open('botcfg.json') as bcfg:
+            return json.load(bcfg)
     else:
         log.warning('File "botcfg.json" not found; Generating...')
-        with open('botcfg.json', 'w+') as f:
-            f.write(json.dumps({'guild_ids': [], 'chat_channel': 0, 'default_rcon_password': '', 'comrade_channel': 0}))
-        print('Please input any relevant information and restart.')
+        with open('botcfg.json', 'w+') as bcfg:
+            default = {'guild_ids': [], 'chat_channel': 0, 'default_rcon_password': '', 'comrade_channel': 0}
+            json.dump(default, bcfg)
+        bot.bprint('File "botcfg.json" not found; Generating...')
+        bot.bprint('Please input any relevant information and restart.')
         return False
 
 
@@ -120,51 +113,42 @@ async def on_member_update(vor, ab):
         return
     bef = frozenset(map(lambda x: helpers.MiniActivity(x), vor.activities))
     aft = frozenset(map(lambda x: helpers.MiniActivity(x), ab.activities))
-    # states = {"status": {"set": "came online ({})", "update": "changed status from {} to {}",
-    #                      "unset": "went offline"},
-    #           "activities": {'playing': {"set": "started playing {}",
-    #                                      "unset": "stopped playing {}"},
-    #                          'streaming': {"set": "is streaming {}",
-    #                                        "unset": "stopped streaming {}"},
-    #                          'listening': {"set": "is listening to {} by {} on Spotify",
-    #                                        "unset": "stopped listening to {}"}},
-    #           "nick": {"set": "Nickname set to {}", "update": "Nickname changed to {}",
-    #                    "unset": "Nickname was deleted"}}
     # 0 = set, 1 = unset, 2 = updated
     states = {"status": ["came online ({})", "went offline", "changed status from {} to {}"],
+              "nick": ["Nickname set to {}", "Nickname was deleted", "Nickname changed to {}"],
               "activities": {'playing': ["started playing {}", "stopped playing {}"],
                              'streaming': ["is streaming {}", "stopped streaming {}"],
-                             'listening': ["is listening to {} by {} on Spotify", "stopped listening to {}"]},
-              "nick": ["Nickname set to {}", "Nickname was deleted", "Nickname changed to {}"]}
+                             'listening': ["is listening to {} by {} on Spotify", "stopped listening to {}"]}}
+
     changes = []
     if vor.status == ab.status:
         pass
     else:
-        x = 'status'
+        ctype = 'status'
         if ab.status is discord.Status.offline:
-            changes.append((x, states[x][1]))
+            changes.append((ctype, states[ctype][1]))
         elif vor.status is discord.Status.offline:
-            changes.append((x, states[x][0].format(ab.status)))
+            changes.append((ctype, states[ctype][0].format(ab.status)))
         else:
-            changes.append((x, states[x][2].format(vor.status, ab.status)))
+            changes.append((ctype, states[ctype][2].format(vor.status, ab.status)))
 
     if bef == aft:
         pass
     else:
-        x = 'activities'
+        ctype = 'activities'
         diff = aft.symmetric_difference(bef)
         for a in diff:
             if a.type == discord.ActivityType.listening:
                 if a in aft:
-                    changes.append((x, states['activities'][a.type.name][0].format(
+                    changes.append((ctype, states['activities'][a.type.name][0].format(
                         *[a.title, a.artist] if hasattr(a, 'title') else [a.name])))
                 elif len(diff) % 2 == 1:
-                    changes.append((x, states[x][a.type.name][1].format(a.name)))
+                    changes.append((ctype, states[ctype][a.type.name][1].format(a.name)))
 
             elif a.ob in vor.activities:
-                changes.append((x, states[x][a.type.name][1].format(a.name)))
+                changes.append((ctype, states[ctype][a.type.name][1].format(a.name)))
             elif a.ob in ab.activities:
-                changes.append((x, states['activities'][a.type.name][0].format(
+                changes.append((ctype, states['activities'][a.type.name][0].format(
                     *[a.title, a.artist] if hasattr(a, 'title') else [a.name])))
             else:
                 bot.bprint('evan you should fix your status code')
@@ -181,8 +165,8 @@ async def on_member_update(vor, ab):
         else:
             changes.append(states['nick'][2].format(ab.nick))
 
-    for x, msg in changes:
-        log.warning(f"{x.upper()} - {ab.name} {msg}")
+    for ctype, msg in changes:
+        log.warning(f"{ctype.upper()} - {ab.name} {msg}")
 
 
 @bot.event
@@ -214,18 +198,18 @@ async def on_voice_state_update(member, vor, ab):
               "channel": {"set": "joined {}", "update": "moved from {} to {}",
                           "unset": "left {}"}}
 
-    for x, y in states.items():
-        before = getattr(vor, x)
-        after = getattr(ab, x)
+    for key, value in states.items():
+        before = getattr(vor, key)
+        after = getattr(ab, key)
         if before != after:
             if not before:
-                msg = y["set"].format(after)
+                msg = value["set"].format(after)
             elif not after:
-                msg = y["unset"].format(before)
+                msg = value["unset"].format(before)
             else:
-                msg = y["update"].format(before, after)
+                msg = value["update"].format(before, after)
 
-            log.warning(f"{x.upper()} - {member.name} {msg}")
+            log.warning(f"{key.upper()} - {member.name} {msg}")
 
 
 @bot.event
@@ -282,7 +266,3 @@ if __name__ == '__main__':
 
     bot.cfg = botcfg
     bot.run(token)
-    # handlers = log.handlers[:]
-    # for hdlr in handlers:
-    #     hdlr.close()
-    #     log.removeHandler(hdlr)

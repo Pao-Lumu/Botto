@@ -1,6 +1,5 @@
 import asyncio
 import datetime
-# import itertools
 import os
 import re
 import socket
@@ -11,9 +10,10 @@ import aiofiles
 import discord
 import mcrcon
 import valve
+# noinspection PyPackageRequirements
 import valve.source
 from mcstatus import MinecraftServer as mc
-from valve import rcon
+from valve import rcon as valvercon
 from valve.source.a2s import ServerQuerier as src
 
 from utils import sensor as sensor
@@ -27,11 +27,12 @@ class Game:
     async def check_server_running(self):
         await self.bot.wait_until_ready()
         while not self.bot.is_closed():
-            data = sensor.get_running()
+            data = sensor.get_game_info()
             if data:
-                self.bot._game_stopped.clear()
+                self.bot.game_stopped.clear()
                 await asyncio.sleep(2)
-                self.bot._game_running.set()
+                self.bot.game_running.set()
+                self.bot.bprint(f"Server Status | Now Playing: {data['name']} {data['version']}")
                 await self.bot.wait_until_game_stopped()
             else:
                 await asyncio.sleep(5)
@@ -39,11 +40,12 @@ class Game:
     async def check_server_stopped(self):
         await self.bot.wait_until_ready()
         while not self.bot.is_closed():
-            data = sensor.get_running()
+            data = sensor.get_game_info()
             if not data:
-                self.bot._game_running.clear()
+                self.bot.game_running.clear()
                 await asyncio.sleep(2)
-                self.bot._game_stopped.set()
+                self.bot.game_stopped.set()
+                self.bot.bprint("Server Status | All Servers Offline")
                 await self.bot.wait_until_game_running()
             else:
                 await asyncio.sleep(5)
@@ -57,7 +59,6 @@ class Game:
             if not d:
                 self.bot.game, self.bot.gwd, self.bot.gameinfo = ("", "", "")
                 await self.bot.change_presence()
-                self.bot.bprint("Server Status | All Servers Offline")
                 await self.bot.wait_until_game_running()
             # Elif game is running upon instantiation
             else:
@@ -67,12 +68,6 @@ class Game:
                 self.bot.gameinfo = data
                 await self.bot.wait_until_game_stopped()
 
-    # async def set_bot_status(self, line1: str, line2: str, line3: str, *args, **kwargs):
-    #     padder = [line1.replace(' ', '\u00a0'), ''.join(list(itertools.repeat('\u3000', 40 - len(line1))))
-    #               + line2.replace(' ', '\u00a0'), ''.join(list(itertools.repeat('\u3000', 40 - len(line2))))
-    #               + line3.replace(' ', '\u00a0')]
-    #     await self.bot.change_presence(activity=discord.Game(f"{' '.join(padder)}"))
-
     async def send_from_game_to_guild(self):
         await self.bot.wait_until_game_running(10)
         while not self.bot.is_closed():
@@ -80,15 +75,13 @@ class Game:
                 fpath = os.path.join(self.bot.gwd, "logs", "latest.log") if os.path.exists(
                     os.path.join(self.bot.gwd, "logs", "latest.log")) else os.path.join(self.bot.gwd, "server.log")
                 server_filter = re.compile(
-                    "FO\]:?(?:.*tedServer\]:)? (\[[^\]]*: .*\].*|(?<=]:\s).* joined the game|.* left the game|.* has made the .*)")
-                player_filter = re.compile("FO\]:?(?:.*tedServer\]:)? (\[Server\].*|<.*>.*)")
+                    r"FO\]:?(?:.*tedServer\]:)? (\[[^\]]*: .*\].*|(?<=]:\s).* the game|.* has made the .*)")
+                player_filter = re.compile(r"FO\]:?(?:.*tedServer\]:)? (\[Server\].*|<.*>.*)")
                 while "minecraft" in self.bot.gwd:
                     try:
                         await self.read_server_log(fpath, player_filter, server_filter)
                     except asyncio.CancelledError:
                         break
-                    except:
-                        pass
             else:
                 await asyncio.sleep(15)
 
@@ -182,8 +175,8 @@ class Game:
                                 command = f"say §9§l{msg.author.name}§r: {content}"
                                 if len(command) >= 100:
                                     wrapped = textwrap.wrap(msg.clean_content, 86 + len(msg.author.name))
-                                    for r in wrapped:
-                                        rcon.command(f"say §9§l{msg.author.name}§r: {r}")
+                                    for wrapped_line in wrapped:
+                                        rcon.command(f"say §9§l{msg.author.name}§r: {wrapped_line}")
                                 else:
                                     rcon.command(command)
                                     self.bot.bprint(f"Discord | <{msg.author.name}>: {content}")
@@ -194,7 +187,7 @@ class Game:
                     except futures.TimeoutError:
                         pass
             elif "gmod" in self.bot.gwd:
-                with valve.rcon.RCON(("192.168.25.40", 22222), password) as rcon:
+                with valvercon.RCON(("192.168.25.40", 22222), password) as rcon:
                     while "gmod" in self.bot.gwd:
                         try:
                             msg = await self.bot.wait_for('message', check=self.check, timeout=5)
@@ -204,8 +197,8 @@ class Game:
                                 i = len(msg.author.name)
                                 if len(msg.clean_content) + i > 243:
                                     wrapped = textwrap.wrap(msg.clean_content, 243 - i)
-                                    for r in wrapped:
-                                        rcon(f"say {msg.author.name}: {msg.clean_content}")
+                                    for wrapped_line in wrapped:
+                                        rcon(f"say {msg.author.name}: {wrapped_line}")
                                 else:
                                     rcon(f"say {msg.author.name}: {msg.clean_content}")
                                 self.bot.bprint(f"Discord | <{msg.author.name}>: {msg.clean_content}")
@@ -229,23 +222,18 @@ class Game:
                 tries = 1
                 server = mc.lookup("localhost:22222")
                 failed = False
-                version = ''
-                mod_count = ''
-                player_count = ''
                 while "minecraft" in self.bot.gwd:
                     try:
                         stats = server.status()
-                        version, online, max = stats.version.name, stats.players.online, stats.players.max
+                        version, online, max_p = stats.version.name, stats.players.online, stats.players.max
                         if 'modinfo' in stats.raw:
                             mod_count = f"{len(stats.raw['modinfo']['modList'])} mods installed"
                         else:
                             mod_count = 'Vanilla'
-
-                        player_count = f"({online}/{max} players)" if not failed else ""
                         if failed:
                             stats = server.query()
-                            version, online, max = stats.software.version, stats.players.online, stats.players.max
-                            player_count = f"({online}/{max} players)" if not failed else ""
+                            version, online, max_p = stats.software.version, stats.players.online, stats.players.max
+                        player_count = f"({online}/{max_p} players)" if not failed else ""
                         cur_status = f"Playing: Minecraft {version} {player_count}"
                         await self.bot.chat_channel.edit(topic=cur_status)
                         await self.bot.set_bot_status(f'{self.bot.game} {version}', mod_count, player_count)
@@ -275,10 +263,6 @@ class Game:
                         self.bot.bprint(f"Failed with Exception {e}")
                         failed = True
                         pass
-                    except:
-                        self.bot.bprint("Failed with unknown error")
-                        failed = True
-                        pass
                     finally:
                         await asyncio.sleep(30)
             elif "gmod" in self.bot.gwd:
@@ -287,13 +271,15 @@ class Game:
                         with src(('192.168.25.40', 22222)) as server:
                             info = server.info()
                             players = server.players()
+                            print(players)
                         mode = info["game"]
-                        map = info["map"]
-                        cur = info["player_count"]
-                        max = info["max_players"]
-                        cur_status = f"Playing: Garry's Mod - {mode} on map {map} ({cur}/{max} players)"
+                        cur_map = info["map"]
+                        cur_p = info["player_count"]
+                        max_p = info["max_players"]
+                        cur_status = f"Playing: Garry's Mod - {mode} on map {cur_map} ({cur_p}/{max_p} players)"
                         await self.bot.chat_channel.edit(topic=cur_status)
-                        await self.bot.set_bot_status("Garry's Mod", f"{mode} on map {map}", f"({cur}/{max} players)")
+                        await self.bot.set_bot_status("Garry's Mod", f"{mode} on map {cur_map}",
+                                                      f"({cur_p}/{max_p} players)")
                     except discord.Forbidden:
                         print("Bot lacks permission to edit channels. (discord.Forbidden)")
                     except valve.source.NoResponseError:
@@ -304,5 +290,6 @@ class Game:
             else:
                 await asyncio.sleep(30)
 
-    async def sleep_with_backoff(self, tries, wait_time=5):
+    @staticmethod
+    async def sleep_with_backoff(tries, wait_time=5):
         await asyncio.sleep(wait_time * tries)
