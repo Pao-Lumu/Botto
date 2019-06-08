@@ -271,7 +271,7 @@ class Game:
                         with src(('192.168.25.40', 22222)) as server:
                             info = server.info()
                             players = server.players()
-                            print(players)
+                            # print(players)
                         mode = info["game"]
                         cur_map = info["map"]
                         cur_p = info["player_count"]
