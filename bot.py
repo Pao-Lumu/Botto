@@ -72,7 +72,7 @@ Chat Channel: {bot.chat_channel}  |  Meme Channel: {bot.meme_channel}
     await bot.close()
 
 
-def load_credentials():
+def load_credentials() -> dict:
     if os.path.isfile("credentials.json"):
         with open('credentials.json') as creds:
             return json.load(creds)
@@ -83,10 +83,10 @@ def load_credentials():
             json.dump(default, creds)
         bot.bprint('File "credentials.json" not found; Generating...')
         bot.bprint('Please input your bot\'s credentials and restart.')
-        return False
+        return {}
 
 
-def load_botconfig():
+def load_botconfig() -> dict:
     if os.path.isfile("botcfg.json"):
         with open('botcfg.json') as bcfg:
             return json.load(bcfg)
@@ -97,7 +97,7 @@ def load_botconfig():
             json.dump(default, bcfg)
         bot.bprint('File "botcfg.json" not found; Generating...')
         bot.bprint('Please input any relevant information and restart.')
-        return False
+        return {}
 
 
 # Bot Event Overrides
@@ -220,6 +220,19 @@ async def on_message(message):
 
 
 if __name__ == '__main__':
+    # TODO: Get TMUX availablity and do stuff accordingly
+    try:
+        import libtmux
+
+        if os.environ['TMUX']:
+            # ...AND IN TMUX, RENAME WINDOW TO SOMETHING
+            pass
+        else:
+            # ...BUT NOT IN TMUX, RELAUNCH IN TMUX
+            pass
+    except ImportError:
+        # ELSE IF WINDOWS, PASS
+        pass
     credentials = load_credentials()
     botcfg = load_botconfig()
     if not credentials or not botcfg:
@@ -228,12 +241,12 @@ if __name__ == '__main__':
     try:
         token = credentials['token']
     except TypeError:
-        log.critical('auth token not defined')
+        log.critical('Auth token is not defined')
 
     try:
         bot.client_id = credentials['client_id']
     except TypeError:
-        log.critical('client id not defined')
+        log.critical('Client id is not defined')
 
     for extension in initial_extensions:
         try:
