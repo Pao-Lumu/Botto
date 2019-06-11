@@ -14,9 +14,6 @@ from colorama import Fore
 from discord.ext import commands
 
 
-# from utils import checks
-
-
 class Botto(commands.Bot):
     __slots__ = {'loop', 'cog_folder', 'game', 'gop_text_cd', 'gop_voice_cd', 'debug', 'game_stopped', 'game_running',
                  'chat_channel', 'meme_channel'}
@@ -108,7 +105,6 @@ class Botto(commands.Bot):
 
 # noinspection PyUnusedLocal,PyUnusedLocal
 class OGBotCmd(cmd.Cmd):
-    prompt = f"{Fore.BLUE}OGBot >>>{Fore.RESET}"
 
     __slots__ = {'bot', 'loop', 'completekey', 'attributes', 'vars', 'methods'}
 
@@ -123,6 +119,7 @@ class OGBotCmd(cmd.Cmd):
                      not callable(getattr(self.bot, attr)) and not attr.startswith("__")]
         self.methods = [attr for attr in dir(self.bot) if
                         callable(getattr(self.bot, attr)) and not attr.startswith("__")]
+        self.prompt = f"{Fore.BLUE}{self.bot.user.name} >>>{Fore.RESET}"
 
     def default(self, line):
         self.do_exec(line)
