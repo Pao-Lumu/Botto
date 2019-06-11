@@ -7,6 +7,7 @@ import json
 import logging.handlers
 import os
 import sys
+from collections import defaultdict
 
 # noinspection PyPackageRequirements
 import discord
@@ -59,7 +60,7 @@ async def on_ready():
     bot.chat_channel = bot.get_channel(botcfg['chat_channel'])
     bot.meme_channel = bot.get_channel(botcfg['comrade_channel'])
     bot.bprint(f"""~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-{pyfiglet.figlet_format("The OGBot", font='epic')}
+{pyfiglet.figlet_format(bot.user.name, font='epic')}
 Username: {bot.user.name}  |  ID: {bot.user.id}
 Chat Channel: {bot.chat_channel}  |  Meme Channel: {bot.meme_channel}
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~""")
@@ -73,13 +74,20 @@ Chat Channel: {bot.chat_channel}  |  Meme Channel: {bot.meme_channel}
 
 
 def load_credentials() -> dict:
+    default = {'token': '', 'client_id': ''}
+
     if os.path.isfile("credentials.json"):
         with open('credentials.json') as creds:
-            return json.load(creds)
+            dd_creds = defaultdict(lambda: "", json.load(creds))
+        for k, v in default.items():
+            if k not in dd_creds:
+                dd_creds.setdefault(k, v)
+        with open('credentials.json', 'w') as creds:
+            json.dump(dd_creds, creds)
+        return dd_creds
     else:
         log.warning('File "credentials.json" not found; Generating...')
         with open('credentials.json', 'w+') as creds:
-            default = {'token': '', 'client_id': ''}
             json.dump(default, creds)
         bot.bprint('File "credentials.json" not found; Generating...')
         bot.bprint('Please input your bot\'s credentials and restart.')
@@ -87,13 +95,20 @@ def load_credentials() -> dict:
 
 
 def load_botconfig() -> dict:
+    default = {'guild_ids': [], 'chat_channel': 0, 'default_rcon_password': '', 'comrade_channel': 0}
+
     if os.path.isfile("botcfg.json"):
         with open('botcfg.json') as bcfg:
-            return json.load(bcfg)
+            dd_bcfg = defaultdict(lambda: "", json.load(bcfg))
+        for k, v in default.items():
+            if k not in dd_bcfg:
+                dd_bcfg.setdefault(k, v)
+        with open('botcfg.json', 'w') as creds:
+            json.dump(dd_bcfg, creds)
+        return dd_bcfg
     else:
         log.warning('File "botcfg.json" not found; Generating...')
         with open('botcfg.json', 'w+') as bcfg:
-            default = {'guild_ids': [], 'chat_channel': 0, 'default_rcon_password': '', 'comrade_channel': 0}
             json.dump(default, bcfg)
         bot.bprint('File "botcfg.json" not found; Generating...')
         bot.bprint('Please input any relevant information and restart.')
@@ -150,8 +165,6 @@ async def on_member_update(vor, ab):
             elif a.ob in ab.activities:
                 changes.append((ctype, states['activities'][a.type.name][0].format(
                     *[a.title, a.artist] if hasattr(a, 'title') else [a.name])))
-            else:
-                bot.bprint('evan you should fix your status code')
         else:
             pass
 
@@ -224,14 +237,49 @@ if __name__ == '__main__':
     try:
         import libtmux
 
+        server = libtmux.Server()
         if os.environ['TMUX']:
-            # ...AND IN TMUX, RENAME WINDOW TO SOMETHING
+            panes = server._list_panes()
+
+            windows = [session.windows for session in server.sessions]
+            for pane in panes:
+                if pane['pane_current_command'] == "python3" and "Botto" in pane['pane_current_path']:
+                    bot.t_session = server.get_by_id(pane["session_id"])
+                    bot.t_window = bot.t_session.get_by_id(pane["window_id"])
+                    bot.t_pane = bot.t_window.get_by_id(pane["pane_id"])
+                    break
+                    # # !/usr/bin/env python3
+                    # # !/bin tmux rename-window "Despactio"
+                    # # !/bin/sh echo "HELLO!"
+                    #
+                    # import libtmux
+                    # import os
+                    # from pprint import pprint
+                    #
+                    # server = libtmux.Server()
+                    # panes = server._list_panes()
+                    # pprint(panes)
+                    # for pane in panes:
+                    #     if pane['pane_current_command'] == 'python3' and "mine" in pane['pane_current_path']:
+                    #         t_session = server.get_by_id(pane["session_id"])
+                    #         t_window = t_session.get_by_id(pane["window_id"])
+                    #         t_pane = t_window.get_by_id(pane["pane_id"])
+                    #         print(type(t_pane))
+                    #         print("WE MUXING")
+                    #     elif pane['pane_current_command'] == 'java':
+                    #         m_session = server.get_by_id(pane["session_id"])
+                    #         m_window = t_session.get_by_id(pane["window_id"])
+                    #         m_pane = t_window.get_by_id(pane["pane_id"])
+                    #         m_pane.send_keys(
+                    #             '/tellraw @a [{"text":"[Discord] ","color":"blue"},{"text":"<USERNAME> ","italic":true,"color":"light_purple"},{"text":"Message","italic":true,"color":"white"}]',
+                    #             suppress_history=False)
+
             pass
         else:
-            # ...BUT NOT IN TMUX, RELAUNCH IN TMUX
+            # ...BUT NOT IN TMUX, RELAUNCH IN TMUX, AND NAME WINDOW SOMETHING
             pass
     except ImportError:
-        # ELSE IF WINDOWS, PASS
+        # ELSE IF WINDOWS OR TMUX/LIBTMUX NOT INSTALLED, PASS
         pass
     credentials = load_credentials()
     botcfg = load_botconfig()
