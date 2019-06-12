@@ -26,6 +26,7 @@ class Botto(commands.Bot):
         self.game = ""
         self.gop_text_cd = 0
         self.gop_voice_cd = 0
+        self.in_tmux = False
         if platform.system() == "Linux":
             asyncio.get_child_watcher().attach_loop(self.loop)
         command_prefix = kwargs.pop('command_prefix', commands.when_mentioned_or('.'))

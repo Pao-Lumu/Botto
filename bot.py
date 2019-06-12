@@ -274,12 +274,16 @@ if __name__ == '__main__':
                     #             '/tellraw @a [{"text":"[Discord] ","color":"blue"},{"text":"<USERNAME> ","italic":true,"color":"light_purple"},{"text":"Message","italic":true,"color":"white"}]',
                     #             suppress_history=False)
 
+            bot.in_tmux = True
             pass
         else:
-            # ...BUT NOT IN TMUX, RELAUNCH IN TMUX, AND NAME WINDOW SOMETHING
+            # ...BUT NOT IN TMUX, SOMEHOW GET IN TMUX, AND NAME WINDOW SOMETHING
             pass
     except ImportError:
-        # ELSE IF WINDOWS OR TMUX/LIBTMUX NOT INSTALLED, PASS
+        # ELSE IF TMUX/LIBTMUX NOT INSTALLED, PASS
+        pass
+    except KeyError:
+        # IF LIBTMUX INSTALLED BUT TMUX NOT RUNNING, PASS
         pass
     credentials = load_credentials()
     botcfg = load_botconfig()
