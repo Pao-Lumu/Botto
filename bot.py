@@ -52,7 +52,7 @@ initial_extensions = [
     'modules.server'
 ]
 
-bot = ogbot_base.Botto(command_prefix=">", cog_folder="modules")
+bot = ogbot_base.OGBot(command_prefix=">", cog_folder="modules")
 
 
 @bot.event
@@ -114,6 +114,29 @@ def load_botconfig() -> dict:
         bot.bprint('Please input any relevant information and restart.')
         return {}
 
+
+def load_json_file(filename: str, default: dict = {}, path: str = "", generate: bool = False) -> dict:
+    if path:
+        abs_path = os.path.join(path, filename)
+    else:
+        abs_path = filename
+    try:
+        with open(abs_path) as file:
+            dd_file = defaultdict(lambda: "", json.load(file))
+        for k, v in default.items():
+            if k not in dd_file:
+                dd_file.setdefault(k, v)
+        with open(abs_path, 'w') as creds:
+            json.dump(dd_file, creds)
+        return dd_file
+    except FileNotFoundError:
+        if generate:
+            bot.bprint(f'File "{filename}" not found{" at path " + path if path else ""}; Generating...')
+            with open(abs_path, 'w+') as file:
+                json.dump(default, file)
+            bot.bprint(f'File "{filename}" not found{" at path " + path if path else ""};')
+            bot.bprint('Please input any relevant information and restart.')
+            return {}
 
 # Bot Event Overrides
 
@@ -249,8 +272,6 @@ if __name__ == '__main__':
                     bot.t_pane = bot.t_window.get_by_id(pane["pane_id"])
                     break
                     # # !/usr/bin/env python3
-                    # # !/bin tmux rename-window "Despactio"
-                    # # !/bin/sh echo "HELLO!"
                     #
                     # import libtmux
                     # import os

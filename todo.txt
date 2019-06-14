@@ -1,0 +1,6 @@
+~ Games
+~~ Allow clean server launches and shutdowns from Discord
+~~ Improve guild<-->server chat, implement for all games
+
+~ Soundboard
+~~ Let Brandon create soundboard things

@@ -15,7 +15,7 @@ import ogbot_base
 class Comrade(commands.Cog):
     """For the glory of the motherland, komrades!"""
 
-    def __init__(self, bot: ogbot_base.Botto):
+    def __init__(self, bot: ogbot_base.OGBot):
         self.bot = bot
 
     @commands.Cog.listener()

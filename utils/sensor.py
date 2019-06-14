@@ -44,9 +44,23 @@ def get_game_info():
         elif "serverfiles" not in x:
             lr = str(datetime.now().timestamp())
             with open(path.join(x, ".gameinfo.json"), "w+") as file:
-                basic = {"name": current.title(), "folder": x, "last_run": lr, "rcon": "", "version": ""}
+                basic = {"name": current.title(), "folder": x, "last_run": lr, "rcon": "", "version": "",
+                         "executable": ""}
                 json.dump(basic, file)
                 return basic
+
+
+def add_to_masterlist(gi):
+    with open('masterlist.json') as ml:
+        master = json.load(ml)
+    if gi["name"] in master.keys():
+        pass
+    else:
+        for name, path in master.items():
+            if [gi['folder'], gi['executable']] in path and name is not gi['name']:
+                master.update({gi["name"]: [gi['folder'], gi['executable']]})
+        with open('masterlist.json', 'w') as ml:
+            json.dump(master, ml)
 
 
 def fix_mc_rcon_problems(server):
