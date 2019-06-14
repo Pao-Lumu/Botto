@@ -14,7 +14,7 @@ from colorama import Fore
 from discord.ext import commands
 
 
-class Botto(commands.Bot):
+class OGBot(commands.Bot):
     __slots__ = {'loop', 'cog_folder', 'game', 'gop_text_cd', 'gop_voice_cd', 'debug', 'game_stopped', 'game_running',
                  'chat_channel', 'meme_channel'}
 

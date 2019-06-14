@@ -5,6 +5,8 @@ from concurrent import futures
 import discord
 from discord.ext import commands
 
+from utils import utilities
+
 
 class ServerControl(commands.Cog):
 
@@ -64,6 +66,50 @@ class ServerControl(commands.Cog):
         except TypeError:
             pass
 
+    @commands.is_owner()
+    @minecraft.command()
+    async def repair(self, ctx):
+        if 'minecraft' not in self.bot.gwd:
+            await ctx.send("Minecraft not running")
+        fn = os.path.join(self.bot.gwd, "server.properties")
+        with open(fn, "r") as p:
+            lines = p.readlines()
+        qp = False
+        rp = False
+        for i, line in enumerate(lines):
+            if "motd" in line:
+                lines[i] = "motd=OGBox Server\n"
+            elif "server-port" in line:
+                lines[i] = "server-port=22222\n"
+            elif "enable-rcon" in line:
+                lines[i] = "enable-rcon=true\n"
+            elif "enable-query" in line:
+                lines[i] = "enable-query=true\n"
+            elif "query.port" in line:
+                lines[i] = "query.port=22222\n"
+                qp = True
+            elif "rcon.port" in line:
+                lines[i] = "rcon.port=22232\n"
+                rp = True
+            else:
+                pass
+
+        if not rp:
+            lines.append("rcon.port=22232\n")
+        if not qp:
+            lines.append("query.port=22222\n")
+
+        with open(fn, 'w') as f:
+            f.writelines(lines)
+
+    @commands.group()
+    async def run(self, ctx):
+        # TODO: Find a way to document the executables of each server and use that to create a shutdown/startup thing
+        if not ctx.subcommand_passed:
+            ctx.send(embed=utilities.wip_embed())
+            pass
+
+    # HELPER METHODS
     def parse_config_file(self):
         config = defaultdict(lambda: "")
         try:
