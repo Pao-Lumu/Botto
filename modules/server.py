@@ -96,6 +96,7 @@ class ServerControl(commands.Cog):
 
         if not rp:
             lines.append("rcon.port=22232\n")
+            lines.append(f"rcon.password={self.bot.cfg['default_rcon_password']}\n")
         if not qp:
             lines.append("query.port=22222\n")
 
