@@ -171,7 +171,12 @@ class Game:
                             time_sec = (datetime.datetime.now() - last_reconnect)
                             if time_sec.total_seconds() >= 240:
                                 last_reconnect = datetime.datetime.now()
-                                rcon.connect()
+                                try:
+                                    rcon.connect()
+                                except socket.error:
+                                    await msg.channel.send("Message failed to send, please try again in a few moments.", delete_after=10)
+                                    await asyncio.sleep(3)
+                                    continue
                             if msg.clean_content[0] == '/' and msg.author.id == self.bot.application_info().owner.id:
                                 x = rcon.command(msg.clean_content)
                                 if x:
