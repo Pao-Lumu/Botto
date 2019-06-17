@@ -294,6 +294,7 @@ class Game:
             else:
                 await asyncio.sleep(30)
 
-    @staticmethod
-    async def sleep_with_backoff(tries, wait_time=5):
+    async def sleep_with_backoff(self, tries, wait_time=5):
         await asyncio.sleep(wait_time * tries)
+        if self.bot.debug:
+            self.bot.bprint(f"sleep_with_backoff ~ Done waiting for backoff")
