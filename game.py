@@ -157,7 +157,7 @@ class Game:
         while not self.bot.is_closed():
             last_reconnect = datetime.datetime(1, 1, 1)
             try:
-                password = self.bot.gameinfo["rcon"]
+                password = self.bot.gameinfo["rcon"] if self.bot.gameinfo["rcon"] else self.bot.cfg["default_rcon_password"]
             except KeyError:
                 password = self.bot.cfg["default_rcon_password"]
             if "minecraft" in self.bot.gwd:
