@@ -134,7 +134,7 @@ class ServerControl(commands.Cog):
 
         with open(p, "w") as writeprop:
             for k, v in config.items():
-                print(f"{k}={v}\n")
+                # print(f"{k}={v}\n")
                 writeprop.write(f"{k}={v}\n")
 
     @staticmethod
