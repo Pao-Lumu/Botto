@@ -161,6 +161,26 @@ Loaded cogs: {", ".join(self.bot.cogs.keys())}""")
         """Print all (non-private) methods in self.bot"""
         pprint(self.methods)
 
+    # def do_get_tasks(self, line):
+    #     try:
+    #         x = asyncio.all_tasks(self.loop)
+    #         su = [c._coro.__name__ for c in x]
+    #         print(x)
+    #         pa = []
+    #         # pprint(x)
+    #         z = list(x)
+    #         # pprint(dir(z[0]))
+    #         print(dir(z[0]._coro))
+    #         print(z[4]._coro.__class__)
+    #         print(z[4]._coro.__name__)
+    #         print("List of running tasks:")
+    #         pprint(su)
+    #
+    #     except AttributeError:
+    #         x = asyncio.Task.all_tasks(self.loop)
+    #         pprint(x)
+
+
     def do_get_vars(self, line):
         """Print all vars in self.bot"""
         pprint(self.vars)

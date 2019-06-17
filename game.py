@@ -69,9 +69,11 @@ class Game:
                 await self.bot.wait_until_game_stopped()
 
     async def send_from_game_to_guild(self):
-        await self.bot.wait_until_game_running(10)
+        await self.bot.wait_until_ready()
         while not self.bot.is_closed():
-            if "minecraft" in self.bot.gwd:
+            if not self.bot.gwd:
+                await self.bot.wait_until_game_running(10)
+            elif "minecraft" in self.bot.gwd:
                 fpath = os.path.join(self.bot.gwd, "logs", "latest.log") if os.path.exists(
                     os.path.join(self.bot.gwd, "logs", "latest.log")) else os.path.join(self.bot.gwd, "server.log")
                 server_filter = re.compile(
@@ -81,6 +83,8 @@ class Game:
                     try:
                         await self.read_server_log(fpath, player_filter, server_filter)
                     except asyncio.CancelledError:
+                        if self.bot.debug:
+                            print('Fail Whale')
                         break
             else:
                 await asyncio.sleep(15)
