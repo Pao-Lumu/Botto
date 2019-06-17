@@ -57,7 +57,7 @@ class Game:
             d = sensor.get_running()
             # If no game is running upon instantiation:
             if not d:
-                self.bot.game, self.bot.gwd, self.bot.gameinfo = ("", "", "")
+                self.bot.game, self.bot.gwd, self.bot.gameinfo = ("", "", dict())
                 await self.bot.change_presence()
                 await self.bot.wait_until_game_running()
             # Elif game is running upon instantiation
@@ -156,7 +156,10 @@ class Game:
         await self.bot.wait_until_game_running(20)
         while not self.bot.is_closed():
             last_reconnect = datetime.datetime(1, 1, 1)
-            password = self.bot.gameinfo["rcon"] if self.bot.gameinfo["rcon"] else self.bot.cfg["default_rcon_password"]
+            try:
+                password = self.bot.gameinfo["rcon"]
+            except KeyError:
+                password = self.bot.cfg["default_rcon_password"]
             if "minecraft" in self.bot.gwd:
                 rcon = mcrcon.MCRcon("127.0.0.1", password, 22232)
                 while "minecraft" in self.bot.gwd:

@@ -24,6 +24,7 @@ class OGBot(commands.Bot):
         self.loop = kwargs.pop('loop', asyncio.get_event_loop())
         self.cog_folder = kwargs.pop('cog_folder')
         self.game = ""
+        self.gwd = ""
         self.gop_text_cd = 0
         self.gop_voice_cd = 0
         self.in_tmux = False
