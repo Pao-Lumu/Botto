@@ -26,6 +26,8 @@ class ServerControl(commands.Cog):
             if not setting:
                 e = discord.Embed()
                 for k, v in config.items():
+                    if k == "rcon.password":
+                        v = "SET" if v else "NOT SET"
                     e.add_field(name=f"{k}: {v}", value="-----------------------------")
                 await ctx.send("List of current config options:", embed=e)
             else:
@@ -122,9 +124,7 @@ class ServerControl(commands.Cog):
                 if line[0] == "#":
                     continue
                 k, v = line.rstrip().split("=")
-                if k == "rcon.password":
-                    v = "SET" if v else "NOT SET"
-                config[k] = v if v else "NONE"
+                config[k] = v if v else ""
             return config
         except TypeError:
             return False
@@ -134,7 +134,6 @@ class ServerControl(commands.Cog):
 
         with open(p, "w") as writeprop:
             for k, v in config.items():
-                # print(f"{k}={v}\n")
                 writeprop.write(f"{k}={v}\n")
 
     @staticmethod
