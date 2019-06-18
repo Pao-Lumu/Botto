@@ -15,6 +15,7 @@ import pyfiglet
 
 import game
 import ogbot_base
+from ogbotcmd import OGBotCmd
 from utils import helpers
 
 # import traceback
@@ -49,7 +50,8 @@ initial_extensions = [
     'modules.admin',
     'modules.music',
     'modules.comrade',
-    'modules.server'
+    'modules.server',
+    'modules.responder'
 ]
 
 bot = ogbot_base.OGBot(command_prefix=">", cog_folder="modules")
@@ -68,7 +70,7 @@ Chat Channel: {bot.chat_channel}  |  Meme Channel: {bot.meme_channel}
     if not hasattr(bot, 'uptime'):
         bot.uptime = datetime.datetime.utcnow()
     await asyncio.sleep(4)
-    bot.cli = ogbot_base.OGBotCmd(bot.loop, bot)
+    bot.cli = OGBotCmd(bot.loop, bot)
     await bot.cli.start()
     await bot.close()
 
@@ -139,6 +141,7 @@ def load_json_file(filename: str, default: dict = {}, path: str = "", generate: 
             return {}
 
 # Bot Event Overrides
+
 
 @bot.event
 async def on_resumed():
