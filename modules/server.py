@@ -3,6 +3,7 @@ from collections import defaultdict
 from concurrent import futures
 
 import discord
+import mcrcon
 from discord.ext import commands
 
 from utils import utilities
@@ -67,6 +68,23 @@ class ServerControl(commands.Cog):
 
         except TypeError:
             pass
+
+    @commands.is_owner()
+    @minecraft.command(aliases=['cmd', 'console', 'con'])
+    async def command(self, ctx, *, concmd: str):
+        try:
+            password = self.bot.gameinfo["rcon"] if self.bot.gameinfo["rcon"] else self.bot.cfg["default_rcon_password"]
+        except KeyError:
+            password = self.bot.cfg["default_rcon_password"]
+        if "minecraft" in self.bot.gwd:
+            try:
+                rcon = mcrcon.MCRcon("127.0.0.1", password, 22232)
+                msg = concmd
+                x = rcon.command(f'{msg.lstrip("/")}')
+                if x:
+                    await self.bot.chat_channel.send(f'`{x}`')
+            except:
+                await self.bot.chat_channel.send('`Error Caught. Not sure what. Probably bad config or w/e`')
 
     @commands.is_owner()
     @minecraft.command()
