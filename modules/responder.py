@@ -1,7 +1,6 @@
 import asyncio
 import os
 import re
-from pprint import pprint
 
 from discord.ext import commands, tasks
 
@@ -10,7 +9,6 @@ class Responder(commands.Cog):
     loop = None
 
     def __init__(self, bot):
-        pprint("HELLO I AM HERE")
         self.bot = bot
         self.loop = bot.loop
         self.lock = asyncio.Lock(loop=bot.loop)

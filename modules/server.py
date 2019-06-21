@@ -83,9 +83,10 @@ class ServerControl(commands.Cog):
                 x = rcon.command(f'{concmd.lstrip("/")}')
                 if x:
                     await ctx.send(f'`{x}`')
-                rcon.disconnect()
             except Exception as e:
                 await ctx.send(str(e))
+            finally:
+                rcon.disconnect()
 
     @commands.is_owner()
     @minecraft.command()
