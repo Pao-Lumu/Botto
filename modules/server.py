@@ -79,9 +79,11 @@ class ServerControl(commands.Cog):
         if "minecraft" in self.bot.gwd:
             try:
                 rcon = mcrcon.MCRcon("127.0.0.1", password, 22232)
+                rcon.connect()
                 x = rcon.command(f'{concmd.lstrip("/")}')
                 if x:
                     await ctx.send(f'`{x}`')
+                rcon.disconnect()
             except Exception as e:
                 await ctx.send(str(e))
 
