@@ -79,12 +79,11 @@ class ServerControl(commands.Cog):
         if "minecraft" in self.bot.gwd:
             try:
                 rcon = mcrcon.MCRcon("127.0.0.1", password, 22232)
-                msg = concmd
-                x = rcon.command(f'{msg.lstrip("/")}')
+                x = rcon.command(f'{concmd.lstrip("/")}')
                 if x:
-                    await self.bot.chat_channel.send(f'`{x}`')
-            except:
-                await self.bot.chat_channel.send('`Error Caught. Not sure what. Probably bad config or w/e`')
+                    await ctx.send(f'`{x}`')
+            except Exception as e:
+                await ctx.send(str(e))
 
     @commands.is_owner()
     @minecraft.command()
