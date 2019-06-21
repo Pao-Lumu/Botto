@@ -172,22 +172,16 @@ class Game:
                             if time_sec.total_seconds() >= 240:
                                 last_reconnect = datetime.datetime.now()
                                 rcon.connect()
-
-                            if msg.clean_content[0] == '/' and msg.author.id == self.bot.application_info().owner.id:
-                                x = rcon.command(msg.clean_content)
-                                if x:
-                                    await self.bot.chat_channel.send(f'`{x}`')
+                            content = re.sub(r'<(:\w+:)\d+>', r'\1', msg.clean_content)
+                            print(content)
+                            command = f"say §9§l{msg.author.name}§r: {content}"
+                            if len(command) >= 100:
+                                wrapped = textwrap.wrap(msg.clean_content, 86 + len(msg.author.name))
+                                for wrapped_line in wrapped:
+                                    rcon.command(f"say §9§l{msg.author.name}§r: {wrapped_line}")
                             else:
-                                content = re.sub(r'<(:\w+:)\d+>', r'\1', msg.clean_content)
-                                print(content)
-                                command = f"say §9§l{msg.author.name}§r: {content}"
-                                if len(command) >= 100:
-                                    wrapped = textwrap.wrap(msg.clean_content, 86 + len(msg.author.name))
-                                    for wrapped_line in wrapped:
-                                        rcon.command(f"say §9§l{msg.author.name}§r: {wrapped_line}")
-                                else:
-                                    rcon.command(command)
-                                    self.bot.bprint(f"Discord | <{msg.author.name}>: {content}")
+                                rcon.command(command)
+                                self.bot.bprint(f"Discord | <{msg.author.name}>: {content}")
                     except socket.error:
                         await self.bot.chat_channel.send("Message failed to send, please try again in a few moments.",
                                                          delete_after=10)
