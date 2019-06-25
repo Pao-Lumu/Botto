@@ -2,8 +2,10 @@ import asyncio
 import cmd
 import datetime
 import inspect
+import os
 import time
 import tracemalloc
+from collections import defaultdict
 from pprint import pprint
 
 from colorama import Fore
@@ -67,24 +69,29 @@ Loaded cogs: {", ".join(self.bot.cogs.keys())}""")
 
     def do_get_tasks(self, line):
         try:
+            # print("test")
             x = asyncio.all_tasks(self.loop)
-            su = [c._coro.__name__ for c in x]
-            print(x)
-            pa = []
-            # pprint(x)
-            z = list(x)
-            # pprint(dir(z[0]))
-            print(dir(z[0]._coro))
-            print(z[4]._coro.__class__)
-            print(z[4]._coro.__name__)
+            # su = [ for c in x]
+            suu = [(c._coro.__name__, c.get_stack()) for c in x]
+            # print(suu[0])
             print("List of running tasks:")
-            pprint(su)
+            # print(suu)
+            for x in suu:
+                name, path = x[0], x[1]
+                path = inspect.getabsfile(path[0])
+                if os.getcwd().lower() in path.lower():
+                    file = path.split('\\')[-1]
+                    print(f" {name} ({file})")
+
+            # pprint(suu)
 
         except AttributeError:
             x = asyncio.Task.all_tasks(self.loop)
             pprint(x)
+            print("I errored btw lol")
 
     def do_get_loop(self, line):
+        """Print the current asyncio event loop"""
         print(self.loop)
         asyncio.set_event_loop(loop=self.loop)
         print(asyncio.get_event_loop())
@@ -93,8 +100,8 @@ Loaded cogs: {", ".join(self.bot.cogs.keys())}""")
         """Print all vars in self.bot"""
         pprint(self.vars)
 
-    def do_get_line(self, line):
-        """Check how your input is being parsed"""
+    def do_debug_input(self, line):
+        """Check how command line input is being parsed"""
         print(type(line))
         print(line)
 
@@ -149,7 +156,32 @@ is_bot: {} | Avatar: {}""".format(z.name, z.id, z.bot, z.avatar_url)
                 print(f"Calling {b[0]}()")
                 if inspect.iscoroutinefunction(func):
                     print('e')
-                    self.loop.create_task(self._exec_async(func))
+
+                    def mrsa(result):
+                        print(result)
+
+                    self.loop.create_task(self._exec_async(func, callback=mrsa))
+
+                elif inspect.isgeneratorfunction(func):
+                    nn = set()
+                    ndic = defaultdict(lambda: [])
+                    for z in func():
+                        if z.name not in nn:
+                            nn.add(z)
+                            # pp = ndic.get(z.cog.name).append(z)
+
+                    nn = list(nn)
+                    print(nn)
+                    nn.sort(key=lambda x: x.cog.qualified_name if x.cog else "help")
+                    for x in nn:
+                        print(x)
+                    # print(nn)
+                    # for x in func():
+                    #     print(f"{x.name}")
+                    # print(x.aliases)
+                    # print(type(x))
+                    # print(dir(x))
+
                 else:
                     try:
                         result = func()
@@ -180,13 +212,17 @@ is_bot: {} | Avatar: {}""".format(z.name, z.id, z.bot, z.avatar_url)
         offs = len(mline) - len(text)
         return [s[offs:] for s in self.attributes if s.startswith(mline)]
 
+    def do_list_commands(self, line):
+        for x in self.bot.commands:
+            print(x.qualified_name)
+
     async def _exec_async(self, method, parameters=None, callback=None):
         try:
             if parameters:
                 result = await asyncio.wait_for(method(*parameters), timeout=10)
             else:
                 result = await asyncio.wait_for(method(), timeout=10)
-            print(result)
+            # print(result)
             if callback:
                 callback(result)
         except Exception as e:

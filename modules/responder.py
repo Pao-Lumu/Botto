@@ -32,7 +32,7 @@ class Responder(commands.Cog):
     async def soundboard(self, ctx, sound):
         """Literally just for Brandon"""
         if not ctx.subcommand_passed:
-            print("")
+            print("list")
 
     @soundboard.command(aliases=["ul", "u"])
     async def upload(self, ctx, name=""):
