@@ -1,0 +1,18 @@
+{
+  "reminders": [
+    {
+      "wash the dishes": {
+        "hour": 12,
+        "minute": 5,
+        "second": 32
+      }
+    },
+    {
+      "boop": {
+        "hour": 12,
+        "minute": 0,
+        "second": 0
+      }
+    }
+  ]
+}

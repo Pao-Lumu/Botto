@@ -51,10 +51,14 @@ initial_extensions = [
     'modules.music',
     'modules.comrade',
     'modules.server',
-    'modules.responder'
+    'modules.responder',
+    'modules.reminder'
 ]
 
-bot = ogbot_base.OGBot(command_prefix=">", cog_folder="modules")
+bot = ogbot_base.OGBot(command_prefix=">", cog_folder="modules", owner_id=141752316188426241)
+
+
+# bot = ogbot_base.OGBot(command_prefix=">", cog_folder="modules")
 
 
 @bot.event
