@@ -12,6 +12,7 @@ from collections import defaultdict
 # noinspection PyPackageRequirements
 import discord
 import pyfiglet
+from discord.ext import commands
 
 import game
 import ogbot_base
@@ -55,10 +56,8 @@ initial_extensions = [
     'modules.reminder'
 ]
 
-bot = ogbot_base.OGBot(command_prefix=">", cog_folder="modules", owner_id=141752316188426241)
-
-
-# bot = ogbot_base.OGBot(command_prefix=">", cog_folder="modules")
+bot = ogbot_base.OGBot(command_prefix=commands.when_mentioned_or(">"), cog_folder="modules",
+                       owner_id=141752316188426241)
 
 
 @bot.event
@@ -73,7 +72,7 @@ Chat Channel: {bot.chat_channel}  |  Meme Channel: {bot.meme_channel}
 
     if not hasattr(bot, 'uptime'):
         bot.uptime = datetime.datetime.utcnow()
-    await asyncio.sleep(4)
+    await asyncio.sleep(3)
     bot.cli = OGBotCmd(bot.loop, bot)
     await bot.cli.start()
     await bot.close()

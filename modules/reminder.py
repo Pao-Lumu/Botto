@@ -1,3 +1,4 @@
+import asyncio
 from datetime import datetime
 
 from discord.ext import commands, tasks
@@ -6,22 +7,29 @@ from discord.ext import commands, tasks
 class Reminder(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-        self._remind_check.start()
-        self._temp_reminder.start()
+        self.lock = asyncio.Lock(loop=bot.loop)
+        self.alarm.start(**{'proc': True})
 
     @tasks.loop(minutes=5)
-    async def _temp_reminder(self):
-        t = datetime.now().time()
-        if 1 < t.hour <= 3:
-            await self.temporary_reminding_method()
-        # await self.temporary_reminding_method()
+    async def alarm(self, *args, **kwargs):
+        proc = kwargs.pop('proc', False)
+        print(proc)
+        if proc:
+            self.alarm.change_interval(minutes=5)
+            dt = datetime.now()
+            t = dt.time()
+            d = dt.date()
+            # Mon = 0, Tues = 1, etc.
+            async with self.lock:
+                if d.weekday() < 5:
+                    if 1 <= t.hour <= 3:
+                        self.bot.loop.create_task(self.alarm_beep())
 
-    @tasks.loop(seconds=59)
-    async def _remind_check(self):
-        t = datetime.now().time()
-        print(t)
+    @alarm.after_loop
+    async def before_alarm(self):
+        await self.bot.wait_until_ready()
 
-    async def temporary_reminding_method(self):
+    async def alarm_beep(self):
         await self.bot.wait_until_ready()
         try:
             for pp in self.bot.get_all_members():
@@ -29,10 +37,16 @@ class Reminder(commands.Cog):
                 if owner:
                     break
             if owner.activities:
-                await owner.send("Hey Evan go to bed.", tts=True)
+                beep = await owner.send("Go to bed.", tts=True)
+                await self.bot.wait_for('message', check=lambda m: m.channel.id == beep.channel.id, timeout=301)
+                self.alarm.cancel()
+                self.alarm.change_interval(minutes=1)
+                self.alarm.restart(**{'proc': False})
+
+        except TimeoutError:
+            return
         except Exception as e:
             print(e)
-            print('smd')
 
     # @commands.command(aliases=['remindme', 'remindmeto', 'rmt'])
     # async def remind(self, ctx, *, args):

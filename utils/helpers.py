@@ -1,4 +1,4 @@
-from discord import Activity, Spotify, ActivityType
+from discord import Activity, Spotify, ActivityType, DMChannel, TextChannel, VoiceChannel
 
 
 class MiniActivity:
@@ -44,3 +44,15 @@ class MiniActivity:
             return f"MiniActivity object (type='{self.type.name}',title='{self.title}', artist='{self.artist}')"
         else:
             return f"MiniActivity object (type='{self.type.name}',name='{self.name}')"
+
+
+class MiniChannel:
+
+    def __init__(self, channel):
+        self.id = channel.id
+        if isinstance(channel, DMChannel):
+            self.name = "DM from " + channel.recipient.name
+        elif isinstance(channel, TextChannel):
+            self.name = channel.name
+        elif isinstance(channel, VoiceChannel):
+            self.name = channel.name

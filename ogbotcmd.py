@@ -10,6 +10,8 @@ from pprint import pprint
 
 from colorama import Fore
 
+from utils.helpers import MiniChannel
+
 
 # noinspection PyUnusedLocal,PyUnusedLocal
 class OGBotCmd(cmd.Cmd):
@@ -201,6 +203,18 @@ is_bot: {} | Avatar: {}""".format(z.name, z.id, z.bot, z.avatar_url)
                     pprint(func)
         except Exception as e:
             print(e)
+
+    def do_get_next_message(self, line):
+        self.loop.create_task(self._exec_async(self.get_next_message_async))
+
+    async def get_next_message_async(self):
+        m = await self.bot.wait_for('message', timeout=60)
+        vaas = f"""{m.author.name}({m.author.id})
+-----Content-----
+{Fore.GREEN}{m.clean_content}{Fore.RESET}
+Channel: {MiniChannel(m.channel).name} ({m.channel.id})
+Sent on {m.created_at.strftime('%a, %b %d, %Y at %I:%M:%S %p')}"""
+        print(vaas)
 
     def complete_exec(self, text, line, begidx, endidx):
         mline = line.partition(' ')[2]
