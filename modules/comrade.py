@@ -20,8 +20,9 @@ class Comrade(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message):
+        await self.bot.wait_until_ready()
         if not message.author.bot:
-            if message.channel.id == self.bot.meme_channel and message.clean_content:
+            if message.channel.id == self.bot.meme_channel.id and message.clean_content:
                 if message.clean_content[0] != '#':
                     await self.auto_comrade_check(message)
             await self.auto_thonk(message)
