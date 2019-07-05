@@ -19,16 +19,6 @@ import ogbot_base
 from ogbotcmd import OGBotCmd
 from utils import helpers
 
-# import traceback
-# from discord.ext import commands
-# try:
-#     import uvloop
-# except:
-#     pass
-# else:
-#     asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
-
-
 if len(sys.argv) > 1:
     os.chdir(sys.argv[1])
 
@@ -159,7 +149,7 @@ async def on_member_update(vor, ab):
     aft = frozenset(map(lambda x: helpers.MiniActivity(x), ab.activities))
     # 0 = set, 1 = unset, 2 = updated
     states = {"status": ["came online ({})", "went offline", "changed status from {} to {}"],
-              "nick": ["Nickname set to {}", "Nickname was deleted", "Nickname changed to {}"],
+              "nick": ["set their nickname to {}", "deleted their nickname", "changed their nickname to {}"],
               "activities": {'playing': ["started playing {}", "stopped playing {}"],
                              'streaming': ["is streaming {}", "stopped streaming {}"],
                              'listening': ["is listening to {} by {} on Spotify", "stopped listening to {}"]}}
@@ -200,13 +190,15 @@ async def on_member_update(vor, ab):
     if vor.nick == ab.nick:
         pass
     else:
+        ctype = 'nick'
         if not vor.nick:
-            changes.append(states['nick'][0].format(ab.nick))
+            changes.append((ctype, states['nick'][0].format(ab.nick)))
         elif not ab.nick:
-            changes.append(states['nick'][1])
+            changes.append((ctype, states['nick'][1]))
         else:
-            changes.append(states['nick'][2].format(ab.nick))
+            changes.append((ctype, states['nick'][2].format(ab.nick)))
 
+    # print(changes)
     for ctype, msg in changes:
         log.warning(f"{ctype.upper()} - {ab.name} {msg}")
 
