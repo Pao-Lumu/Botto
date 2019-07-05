@@ -1,4 +1,7 @@
 from discord import Activity, Spotify, ActivityType, DMChannel, TextChannel, VoiceChannel
+from discord.ext.commands import Command
+
+import utils.errors
 
 
 class MiniActivity:
@@ -56,3 +59,27 @@ class MiniChannel:
             self.name = channel.name
         elif isinstance(channel, VoiceChannel):
             self.name = channel.name
+
+
+def check(predicate):
+    def decorator(func):
+        if isinstance(func, Command):
+            func.checks.append(predicate)
+        else:
+            if not hasattr(func, '__commands_checks__'):
+                func.__commands_checks__ = []
+
+            func.__commands_checks__.append(predicate)
+
+        return func
+
+    return decorator
+
+
+def is_human():
+    async def predicate(ctx):
+        if ctx.author.bot:
+            raise utils.errors.NotHuman('Message not sent by a human')
+        return True
+
+    return check(predicate)

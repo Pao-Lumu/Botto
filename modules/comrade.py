@@ -9,23 +9,23 @@ import discord
 # noinspection PyPackageRequirements
 from discord.ext import commands
 
-import ogbot_base
+from utils import helpers
 
 
 class Comrade(commands.Cog):
     """For the glory of the motherland, komrades!"""
 
-    def __init__(self, bot: ogbot_base.OGBot):
+    def __init__(self, bot):
         self.bot = bot
 
+    @helpers.is_human()
     @commands.Cog.listener()
     async def on_message(self, message):
         await self.bot.wait_until_ready()
-        if not message.author.bot:
-            if message.channel.id == self.bot.meme_channel.id and message.clean_content:
-                if message.clean_content[0] != '#':
-                    await self.auto_comrade_check(message)
-            await self.auto_thonk(message)
+        if message.channel.id == self.bot.meme_channel.id and message.clean_content:
+            if message.clean_content[0] != '#':
+                await self.auto_comrade_check(message)
+        await self.auto_thonk(message)
 
     async def auto_comrade_check(self, msg):
         if msg.author.bot:
@@ -34,7 +34,7 @@ class Comrade(commands.Cog):
         if random.random() + chance <= .95:
             return
         if msg.clean_content:
-            if msg.clean_content[0] == '>':
+            if msg.clean_content[0] == self.bot.command_prefix:
                 return
         gopnik_text, gopnik_voice = False, False
         if self.bot.gop_voice_cd + 3600 < datetime.datetime.now().timestamp():
@@ -81,7 +81,8 @@ class Comrade(commands.Cog):
             except OSError:
                 print("Hey lotus why don't you eat a fucking dick")
 
-    @commands.command(pass_context=True)
+    @helpers.is_human()
+    @commands.command()
     async def comrade(self, ctx):
         gopnik_text = False
 
@@ -115,6 +116,7 @@ class Comrade(commands.Cog):
         if gopnik_text:
             await ctx.send("*" + "".join(raw) + "\n*Soviet Anthem Plays*")
 
+    @helpers.is_human()
     @commands.command()
     async def russkipride(self, ctx):
         if self.bot.gop_voice_cd + 360 < datetime.datetime.now().timestamp():

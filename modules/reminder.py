@@ -13,7 +13,6 @@ class Reminder(commands.Cog):
     @tasks.loop(minutes=5)
     async def alarm(self, *args, **kwargs):
         proc = kwargs.pop('proc', False)
-        print(proc)
         if proc:
             self.alarm.change_interval(minutes=5)
             dt = datetime.now()
