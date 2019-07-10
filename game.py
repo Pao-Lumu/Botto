@@ -172,16 +172,17 @@ class Game:
                             if time_sec.total_seconds() >= 240:
                                 last_reconnect = datetime.datetime.now()
                                 rcon.connect()
-                            content = re.sub(r'<(:\w+:)\d+>', r'\1', msg.clean_content)
-                            print(content)
-                            command = f"say §9§l{msg.author.name}§r: {content}"
-                            if len(command) >= 100:
-                                wrapped = textwrap.wrap(msg.clean_content, 86 + len(msg.author.name))
-                                for wrapped_line in wrapped:
-                                    rcon.command(f"say §9§l{msg.author.name}§r: {wrapped_line}")
-                            else:
-                                rcon.command(command)
-                                self.bot.bprint(f"Discord | <{msg.author.name}>: {content}")
+                            content = re.sub(r'<(:\w+:)\d+>', r'\1', msg.clean_content).split('\n')
+                            # print(content)
+                            for xex in content:
+                                command = f"say §9§l{msg.author.name}§r: {content}"
+                                if len(command) >= 100:
+                                    wrapped = textwrap.wrap(msg.clean_content, 86 + len(msg.author.name))
+                                    for wrapped_line in wrapped:
+                                        rcon.command(f"say §9§l{msg.author.name}§r: {wrapped_line}")
+                                else:
+                                    rcon.command(command)
+                                    self.bot.bprint(f"Discord | <{msg.author.name}>: {content}")
                     except socket.error:
                         await self.bot.chat_channel.send("Message failed to send, please try again in a few moments.",
                                                          delete_after=10)
@@ -272,7 +273,7 @@ class Game:
                     try:
                         with src(('192.168.25.40', 22222)) as server:
                             info = server.info()
-                            players = server.players()
+                            # players = server.players()
                             # print(players)
                         mode = info["game"]
                         cur_map = info["map"]

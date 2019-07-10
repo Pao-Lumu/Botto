@@ -8,7 +8,7 @@ from os import path
 
 def get_running():
     if platform.system() == 'Windows':
-        return None
+        raise OSError
     else:
         ps = subprocess.Popen(r"/usr/bin/pwdx $(/usr/sbin/ss -tulpn | grep -P :22222 | grep -oP '(?<=pid\=)(\d+)')",
                               shell=True, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
@@ -17,7 +17,7 @@ def get_running():
     if raw:
         return raw.split(": ")[1]
     else:
-        return None
+        raise ProcessLookupError
 
 
 def get_game_info():
