@@ -1,23 +1,43 @@
 import json
 import os
-import platform
-import subprocess
 from datetime import datetime
 from os import path
 
+import psutil
+
+
+# def get_running():
+#     if platform.system() == 'Windows':
+#         raise OSError("Gameserver status and management is not supported on Windows")
+#     else:
+#         ps = subprocess.Popen(r"/usr/bin/pwdx $(/usr/sbin/ss -tulpn | grep -P :22222 | grep -oP '(?<=pid\=)(\d+)')",
+#                               shell=True, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+#         raw = ps.stdout.read().decode("utf-8").rstrip()
+#
+#     if raw:
+#         return raw.split(": ")[1]
+#     else:
+#         raise ProcessLookupError
 
 def get_running():
-    if platform.system() == 'Windows':
-        raise OSError
-    else:
-        ps = subprocess.Popen(r"/usr/bin/pwdx $(/usr/sbin/ss -tulpn | grep -P :22222 | grep -oP '(?<=pid\=)(\d+)')",
-                              shell=True, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
-        raw = ps.stdout.read().decode("utf-8").rstrip()
+    current_proc = None
+    try:
+        for p in psutil.process_iter(attrs=['connections']):
+            for x in p.info['connections']:
+                if x.laddr.port == 22222:
+                    print(f"Process {p.name()} ({p.pid})")
+                    print(f"    Listening Address: {x.laddr.ip}:{x.laddr.port} ({x.laddr})")
+                    print(f"    Receiving Address: {x.raddr.ip}:{x.raddr.port} ({x.raddr})")
+                    current_proc = p
+            else:
+                continue
+    except Exception as e:
+        print('ERROR')
+        print(e)
+        pass
+    if current_proc:
+        return [current_proc.pid, current_proc.cwd()]
 
-    if raw:
-        return raw.split(": ")[1]
-    else:
-        raise ProcessLookupError
 
 
 def get_game_info():
