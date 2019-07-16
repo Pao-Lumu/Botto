@@ -25,37 +25,27 @@ class OGBot(commands.Bot):
         self.in_tmux = False
         self.debug = False
         # self.debug = True
-        self.game_running = asyncio.Event(loop=self.loop)
-        self.game_stopped = asyncio.Event(loop=self.loop)
+        self._game_running = asyncio.Event(loop=self.loop)
+        self._game_stopped = asyncio.Event(loop=self.loop)
         command_prefix = kwargs.pop('command_prefix', commands.when_mentioned_or('.'))
         if platform.system() == "Linux":
             asyncio.get_child_watcher().attach_loop(self.loop)
         super().__init__(command_prefix=command_prefix, *args, **kwargs)
 
-    # def debuggable(debug_text):
-    #     def decorator(func):
-    #         def wrapper(self, delay=0):
-    #             if self.debug:
-    #                 print(debug_text)
-    #             return asyncio.create_task(func(delay))
-    #         return wrapper
-    #     return decorator
-
-    # @debuggable("Waiting for the bot to start...")
     async def wait_until_ready(self, delay=0):
-        await super().wait_until_ready()
+        await discord.Client.wait_until_ready(self)
         if delay:
             await asyncio.sleep(delay)
 
     # @debuggable("Waiting for the game to run...")
     async def wait_until_game_running(self, delay=0):
-        await self.game_running.wait()
+        await self._game_running.wait()
         if delay:
             await asyncio.sleep(delay)
 
     # @debuggable("Waiting for the game to stop...")
     async def wait_until_game_stopped(self, delay=0):
-        await self.game_stopped.wait()
+        await self._game_stopped.wait()
         if delay:
             await asyncio.sleep(delay)
 
@@ -70,11 +60,11 @@ class OGBot(commands.Bot):
 
     @property
     def is_game_running(self):
-        return self.game_running.is_set()
+        return self._game_running.is_set()
 
     @property
     def is_game_stopped(self):
-        return self.game_stopped.is_set()
+        return self._game_stopped.is_set()
 
     def bprint(self, text, *args):
         cur_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")

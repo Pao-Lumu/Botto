@@ -52,6 +52,8 @@ bot = ogbot_base.OGBot(command_prefix=commands.when_mentioned_or(">"), cog_folde
 
 @bot.event
 async def on_ready():
+    if not hasattr(bot, 'uptime'):
+        bot.uptime = datetime.datetime.utcnow()
     bot.chat_channel = bot.get_channel(botcfg['chat_channel'])
     bot.meme_channel = bot.get_channel(botcfg['comrade_channel'])
     bot.bprint(f"""~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -60,8 +62,7 @@ Username: {bot.user.name}  |  ID: {bot.user.id}
 Chat Channel: {bot.chat_channel}  |  Meme Channel: {bot.meme_channel}
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~""")
 
-    if not hasattr(bot, 'uptime'):
-        bot.uptime = datetime.datetime.utcnow()
+
     await asyncio.sleep(3)
     bot.cli = OGBotCmd(bot.loop, bot)
     await bot.cli.start()
@@ -346,7 +347,7 @@ if __name__ == '__main__':
     bot.loop.create_task(gms.send_from_game_to_guild())
     bot.loop.create_task(gms.update_server_information())
     bot.loop.create_task(gms.check_server_running())
-    bot.loop.create_task(gms.check_server_stopped())
+    # bot.loop.create_task(gms.check_server_stopped())
 
     bot.cfg = botcfg
     bot.run(token)

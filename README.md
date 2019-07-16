@@ -1,2 +1,2 @@
 # The OGBot
-### Server status and
+### Gameserver Status and Management, the hard way. 

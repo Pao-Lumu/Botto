@@ -25,48 +25,44 @@ class Game:
         self.bot = bot
 
     async def check_server_running(self):
-        await self.bot.wait_until_ready()
+        await self.bot.wait_until_ready(1)
         while not self.bot.is_closed():
-            data = sensor.get_game_info()
-            if data:
-                self.bot.game_stopped.clear()
-                await asyncio.sleep(2)
-                self.bot.game_running.set()
-                self.bot.bprint(f"Server Status | Now Playing: {data['name']} {data['version']}")
-                await self.bot.wait_until_game_stopped()
-            else:
-                await asyncio.sleep(5)
 
-    async def check_server_stopped(self):
-        await self.bot.wait_until_ready()
-        while not self.bot.is_closed():
-            data = sensor.get_game_info()
-            if not data:
-                self.bot.game_running.clear()
-                await asyncio.sleep(2)
-                self.bot.game_stopped.set()
-                self.bot.bprint("Server Status | All Servers Offline")
-                await self.bot.wait_until_game_running()
+            process, data = sensor.get_game_info()
+            # print(f"Is running?: {data is not None}")
+            if data:
+                self.bot._game_stopped.clear()
+                # await asyncio.sleep(1)
+                self.bot._game_running.set()
+
+                self.bot.bprint(f"Server Status | Now Playing: {data['name']} {data['version']}")
+                await self.bot.loop.run_in_executor(None, process.wait)
+                self.bot.bprint(f"Server Status | Offline")
+
+                self.bot._game_running.clear()
+                # await asyncio.sleep(1)
+                self.bot._game_stopped.set()
             else:
                 await asyncio.sleep(5)
 
     async def get_current_server_status(self):
-        await self.bot.wait_until_ready(1)
-        self.bot.game, self.bot.gwd = ("", "")
+        await self.bot.wait_until_game_running(1)
+        self.bot.game, self.bot.gwd, self.bot.gameinfo = ("", "", dict())
         while not self.bot.is_closed():
-            d = sensor.get_running()
-            # If no game is running upon instantiation:
-            if not d:
-                self.bot.game, self.bot.gwd, self.bot.gameinfo = ("", "", dict())
-                await self.bot.change_presence()
-                await self.bot.wait_until_game_running()
-            # Elif game is running upon instantiation
-            else:
-                data = sensor.get_game_info()
+            process, data = sensor.get_game_info()
+
+            # If game is running upon instantiation
+            if self.bot.is_game_running:
                 self.bot.game = data["name"] if data["name"] else "A Game"
                 self.bot.gwd = data["folder"]
-                self.bot.gameinfo = data
-                await self.bot.wait_until_game_stopped()
+                self.bot.gameinfo = data if data else None
+                await self.bot.wait_until_game_stopped(2)
+
+            # Elif no game is running upon instantiation:
+            elif self.bot.is_game_stopped:
+                self.bot.game, self.bot.gwd, self.bot.gameinfo = ("", "", dict())
+                await self.bot.change_presence()
+                await self.bot.wait_until_game_running(2)
 
     async def send_from_game_to_guild(self):
         await self.bot.wait_until_ready()

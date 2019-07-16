@@ -6,7 +6,7 @@ class Server:
         self.port = kwargs.pop('port', '22222')
         self.password = kwargs.pop('password', '')
         self.working_dir = kwargs.pop('working_dir', '')
-        self.process_id = kwargs.pop('process_id', -1)
+        self.process = kwargs.pop('process', None)
 
     async def chat_from_server_to_discord(self): pass
 
@@ -15,6 +15,9 @@ class Server:
     async def update_server_information(self):
         self.bot.set_bot_status(self.name)
 
+    @property
+    def status(self):
+        return self.process
 
 class MinecraftServer(Server):
     def __init__(self, bot, *args, **kwargs):
