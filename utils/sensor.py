@@ -26,6 +26,8 @@ def get_running():
         pass
     if current_proc:
         return current_proc
+    else:
+        return None
 
 
 def get_game_info():
@@ -52,10 +54,10 @@ def get_game_info():
             pass
 
         elif "serverfiles" not in cwd:
-            lr = str(datetime.now().timestamp())
+            lr = str(datetime.now().utcnow())
             with open(path.join(cwd, ".gameinfo.json"), "w+") as file:
                 basic = {"name": current.title(), "folder": cwd, "last_run": lr, "rcon": "", "version": "",
-                         "executable": ""}
+                         "executable": process.name()}
                 json.dump(basic, file)
                 return process, basic
 

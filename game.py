@@ -16,6 +16,7 @@ from mcstatus import MinecraftServer as mc
 from valve import rcon as valvercon
 from valve.source.a2s import ServerQuerier as src
 
+from utils import Server as srv
 from utils import sensor as sensor
 
 
@@ -32,7 +33,6 @@ class Game:
             # print(f"Is running?: {data is not None}")
             if data:
                 self.bot._game_stopped.clear()
-                # await asyncio.sleep(1)
                 self.bot._game_running.set()
 
                 self.bot.bprint(f"Server Status | Now Playing: {data['name']} {data['version']}")
@@ -40,40 +40,37 @@ class Game:
                 self.bot.bprint(f"Server Status | Offline")
 
                 self.bot._game_running.clear()
-                # await asyncio.sleep(1)
                 self.bot._game_stopped.set()
             else:
                 await asyncio.sleep(5)
 
     async def get_current_server_status(self):
         await self.bot.wait_until_game_running(1)
-        self.bot.game, self.bot.gwd, self.bot.gameinfo = ("", "", dict())
+        self.bot.game = None
         while not self.bot.is_closed():
             process, data = sensor.get_game_info()
 
             # If game is running upon instantiation
             if self.bot.is_game_running:
-                self.bot.game = data["name"] if data["name"] else "A Game"
-                self.bot.gwd = data["folder"]
-                self.bot.gameinfo = data if data else None
+                self.bot.game = srv.generate_server_object(self.bot, process, data)
                 await self.bot.wait_until_game_stopped(2)
 
             # Elif no game is running upon instantiation:
             elif self.bot.is_game_stopped:
-                self.bot.game, self.bot.gwd, self.bot.gameinfo = ("", "", dict())
+                self.bot.game = None
                 await self.bot.change_presence()
                 await self.bot.wait_until_game_running(2)
 
     async def send_from_game_to_guild(self):
         await self.bot.wait_until_ready()
         while not self.bot.is_closed():
-            if not self.bot.gwd:
+            if not self.bot.game:
                 await self.bot.wait_until_game_running(10)
             elif "minecraft" in self.bot.gwd:
                 fpath = os.path.join(self.bot.gwd, "logs", "latest.log") if os.path.exists(
                     os.path.join(self.bot.gwd, "logs", "latest.log")) else os.path.join(self.bot.gwd, "server.log")
                 server_filter = re.compile(
-                    r"FO\]:?(?:.*tedServer\]:)? (\[[^\]]*: .*\].*|(?<=]:\s).* the game|.* has made the .*)")
+                    r"INFO\]:?(?:.*tedServer\]:)? (\[[^\]]*: .*\].*|(?<=]:\s).* the game|.* has made the .*)")
                 player_filter = re.compile(r"FO\]:?(?:.*tedServer\]:)? (\[Server\].*|<.*>.*)")
                 while "minecraft" in self.bot.gwd:
                     try:
