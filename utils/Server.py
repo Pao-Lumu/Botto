@@ -55,7 +55,7 @@ class MinecraftServer(Server):
         super().__init__(bot, process, *args, **kwargs)
 
     def __repr__(self):
-        return "minecraft"
+        return "Minecraft"
 
     async def chat_from_server_to_discord(self):
         fpath = os.path.join(self.working_dir, "logs", "latest.log") if os.path.exists(
@@ -153,7 +153,7 @@ class MinecraftServer(Server):
                                 rcon.command(f"say §9§l{msg.author.name}§r: {wrapped_line}")
                         else:
                             rcon.command(command)
-                            self.bot.bprint(f"Discord | <{msg.author.name}>: {content}")
+                        self.bot.bprint(f"Discord | <{msg.author.name}>: {' '.join(content)}")
             except socket.error as e:
                 print(e)
                 await self.bot.chat_channel.send("Message failed to send, please try again in a few moments.",
@@ -217,7 +217,7 @@ class SourceServer(Server):
         super().__init__(bot, process, *args, **kwargs)
 
     def __repr__(self):
-        return "source"
+        return "Source"
 
     async def chat_from_server_to_discord(self):
         connect = """Client "CLIENTNAME" connected (IPADDRESS)"""

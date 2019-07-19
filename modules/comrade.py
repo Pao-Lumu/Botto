@@ -54,18 +54,20 @@ class Comrade(commands.Cog):
                     "mine": "ours",
                     'myself': 'ourselves'}
         ptn = re.compile(r"(?<!\w)(i|me|myself|mine|my|am|was)(\.|\?|!|,|:|;|\"|-|'m|'|\n|\s)", flags=re.IGNORECASE)
-        raw = re.split(ptn, str(msg.clean_content).split(" ", 1)[1])
-
+        try:
+            raw = re.split(ptn, str(msg.clean_content))
+        except IndexError:
+            return
         for cheeki, breeki in enumerate(raw):
             if breeki.casefold() in comrades.keys():
-                raw[cheeki] = f"_{comrades[breeki.casefold()].upper()}_"
+                raw[cheeki] = f"**{comrades[breeki.casefold()].upper()}**"
                 gopnik_text = True
 
         if gopnik_text:
-            await msg.channel.send("*" + "".join(raw) + "\n_*Soviet Anthem Plays*_")
+            await msg.channel.send("" + "".join(raw) + "\n_Soviet Anthem Plays_")
             self.bot.gop_text_cd = datetime.now().timestamp()
             try:
-                if msg.author.voice and not msg.author.is_afk and gopnik_voice:
+                if msg.author.voice and gopnik_voice and not msg.author.voice.afk:
                     self.bot.gop_voice_cd = datetime.now().timestamp()
 
                     choir = await msg.author.voice_channel.connect()
