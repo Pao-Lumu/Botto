@@ -14,14 +14,11 @@ class Server:
     def __init__(self, bot, process, *args, **kwargs):
         self.bot = bot
         self.process = process
-        print(f"kwargs barg{kwargs}")
         self.name = kwargs.pop('name', 'a game')
         self.ip = kwargs.pop('ip', '127.0.0.1')
         self.port = kwargs.pop('port', '22222')
         self.password = kwargs.pop('rcon', self.bot.cfg["default_rcon_password"])
         self.working_dir = kwargs.pop('folder', '')
-        print(f"kwargs barg{kwargs}")
-        print(self.working_dir)
         self.bot.loop.create_task(self.chat_from_server_to_discord())
         self.bot.loop.create_task(self.chat_to_server_from_discord())
         self.bot.loop.create_task(self.update_server_information())
