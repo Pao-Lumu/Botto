@@ -14,16 +14,13 @@ def get_running():
             for p in psutil.process_iter(attrs=['connections']):
                 for x in p.info['connections']:
                     if x.laddr.port == 22222:
-                        # print(f"Process {p.name()} ({p.pid})")
-                        # print(f"    Listening Address: {x.laddr.ip}:{x.laddr.port} ({x.laddr})")
                         current_proc = p
                 else:
                     continue
         elif psutil.LINUX:
             ps = psutil.Popen("/usr/sbin/ss -tulpn | grep -P :22222 | grep -oP '(?<=pid\=)(\d+)'", shell=True, stdout=PIPE, stderr=DEVNULL)
-            raw = ps.stdout.read().decode("utf-8").rstrip()
-            print(raw)
-            current_proc = psutil.Process(pid=raw)
+            raw = ps.stdout.read().decode("utf-8").split('\n')[0]
+            current_proc = psutil.Process(pid=int(raw))
 
     except AttributeError:
         print('Oh no')
