@@ -19,8 +19,9 @@ def get_running():
                     continue
         elif psutil.LINUX:
             ps = psutil.Popen("/usr/sbin/ss -tulpn | grep -P :22222 | grep -oP '(?<=pid\=)(\d+)'", shell=True, stdout=PIPE, stderr=DEVNULL)
-            raw = ps.stdout.read().decode("utf-8").split('\n')[0]
-            current_proc = psutil.Process(pid=int(raw))
+            pid = ps.stdout.read().decode("utf-8").split('\n')[0]
+            if pid:
+                current_proc = psutil.Process(pid=int(pid))
 
     except AttributeError:
         print('Oh no')
