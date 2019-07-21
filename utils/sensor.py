@@ -2,6 +2,7 @@ import json
 import os
 from datetime import datetime
 from os import path
+from subprocess import PIPE, DEVNULL
 
 import psutil
 
@@ -9,14 +10,20 @@ import psutil
 def get_running():
     current_proc = None
     try:
-        for p in psutil.process_iter(attrs=['connections']):
-            for x in p.info['connections']:
-                if x.laddr.port == 22222:
-                    # print(f"Process {p.name()} ({p.pid})")
-                    # print(f"    Listening Address: {x.laddr.ip}:{x.laddr.port} ({x.laddr})")
-                    current_proc = p
-            else:
-                continue
+        if psutil.WINDOWS:
+            for p in psutil.process_iter(attrs=['connections']):
+                for x in p.info['connections']:
+                    if x.laddr.port == 22222:
+                        # print(f"Process {p.name()} ({p.pid})")
+                        # print(f"    Listening Address: {x.laddr.ip}:{x.laddr.port} ({x.laddr})")
+                        current_proc = p
+                else:
+                    continue
+        elif psutil.LINUX:
+            ps = psutil.Popen("/usr/sbin/ss -tulpn | grep -P :22222 | grep -oP '(?<=pid\=)(\d+)'", shell=True, stdout=PIPE, stderr=DEVNULL)
+            raw = ps.stdout.read().decode("utf-8").rstrip()
+            print(raw)
+            current_proc = psutil.Process(pid=raw)
 
     except AttributeError:
         print('Oh no')
