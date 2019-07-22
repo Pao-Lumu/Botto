@@ -217,23 +217,25 @@ class SourceServer(Server):
         return "Source"
 
     async def chat_from_server_to_discord(self):
-        connect = """Client "CLIENTNAME" connected (IPADDRESS)"""
-        disconnect = """Dropped CLIENTNAME from server(REASON)"""
-        fpath = os.path.join(self.working_dir, "logs", "latest.log") if os.path.exists(
-            os.path.join(self.working_dir, "logs", "latest.log")) else os.path.join(self.working_dir, "server.log")
-        server_filter = re.compile(
-            r"INFO\]:?(?:.*tedServer\]:)? (\[[^\]]*: .*\].*|(?<=]:\s).* the game|.* has made the .*)")
-        player_filter = re.compile(r"FO\]:?(?:.*tedServer\]:)? (\[Server\].*|<.*>.*)")
-        while self.process.is_running():
-            try:
-                await self.read_server_log(fpath, player_filter, server_filter)
-            except asyncio.CancelledError:
-                break
+        # connect = """Client "CLIENTNAME" connected (IPADDRESS)"""
+        # disconnect = """Dropped CLIENTNAME from server(REASON)"""
+
+        # fpath = os.path.join(self.working_dir, "logs", "latest.log") if os.path.exists(
+        #     os.path.join(self.working_dir, "logs", "latest.log")) else os.path.join(self.working_dir, "server.log")
+        # server_filter = re.compile(
+        #     r"INFO\]:?(?:.*tedServer\]:)? (\[[^\]]*: .*\].*|(?<=]:\s).* the game|.* has made the .*)")
+        # player_filter = re.compile(r"FO\]:?(?:.*tedServer\]:)? (\[Server\].*|<.*>.*)")
+        # while self.process.is_running():
+        #     try:
+        #         await self.read_server_log(fpath, player_filter, server_filter)
+        #     except asyncio.CancelledError:
+        #         break
+        pass
 
     async def chat_to_server_from_discord(self):
         import valve.rcon as valvercon
         with valvercon.RCON(("192.168.25.40", 22222), self.password) as rcon:
-            while "gmod" in self.bot.gwd:
+            while self.process.is_running():
                 try:
                     msg = await self.bot.wait_for('message', check=self.is_chat_channel, timeout=5)
                     if not hasattr(msg, 'author') or (hasattr(msg, 'author') and msg.author.bot):
@@ -255,7 +257,29 @@ class SourceServer(Server):
                     pass
 
     async def update_server_information(self):
-        self.bot.set_bot_status(self.name)
+        from valve.source.a2s import ServerQuerier as src
+        import valve.source
+        while self.process.is_running():
+            try:
+                with src(('192.168.25.40', 22222)) as server:
+                    info = server.info()
+                    # players = server.players()
+                    # print(players)
+                mode = info["game"]
+                cur_map = info["map"]
+                cur_p = info["player_count"]
+                max_p = info["max_players"]
+                cur_status = f"Playing: Garry's Mod - {mode} on map {cur_map} ({cur_p}/{max_p} players)"
+                await self.bot.chat_channel.edit(topic=cur_status)
+                await self.bot.set_bot_status("Garry's Mod", f"{mode} on map {cur_map}",
+                                              f"({cur_p}/{max_p} players)")
+            except discord.Forbidden:
+                print("Bot lacks permission to edit channels. (discord.Forbidden)")
+            except valve.source.NoResponseError:
+                print("No Response from server before timeout (NoResponseError)")
+            except Exception as e:
+                print(f"Error: {e} {type(e)}")
+            await asyncio.sleep(30)
 
 
 def generate_server_object(bot, process, gameinfo: dict) -> Server:
