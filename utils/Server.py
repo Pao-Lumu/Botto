@@ -234,8 +234,8 @@ class SourceServer(Server):
 
     async def chat_to_server_from_discord(self):
         import valve.rcon as valvercon
-        with valvercon.RCON(("192.168.25.40", 22222), self.password) as rcon:
-            while self.process.is_running():
+        while self.process.is_running():
+            with valvercon.RCON(("192.168.25.40", 22222), self.password) as rcon:
                 try:
                     msg = await self.bot.wait_for('message', check=self.is_chat_channel, timeout=5)
                     if not hasattr(msg, 'author') or (hasattr(msg, 'author') and msg.author.bot):
