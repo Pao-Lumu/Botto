@@ -77,7 +77,7 @@ class Comrade(commands.Cog):
 
                     await choir.disconnect()
             except OSError:
-                print("Hey lotus why don't you eat a fucking dick")
+                print("Hey lotus why don't you eat a fucking dick ~ Zach 2018")
 
     # Commands
 
@@ -114,7 +114,6 @@ class Comrade(commands.Cog):
         if self.bot.gop_voice_cd + 360 < datetime.now().timestamp():
             pass
         else:
-            # await ctx.send(":musical_note: Guess who's going to the GUUULAG! The GUULAG! The GUUULAG! :musical_note:")
             return
         try:
             if ctx.author.voice.channel and not ctx.author.voice.afk:

@@ -8,12 +8,13 @@ from concurrent import futures
 
 import aiofiles
 import discord
+import psutil
 
 
 class Server:
     def __init__(self, bot, process, *args, **kwargs):
         self.bot = bot
-        self.process = process
+        self.proc = process
         self.name = kwargs.pop('name', 'a game')
         self.ip = kwargs.pop('ip', '127.0.0.1')
         self.port = kwargs.pop('port', '22222')
@@ -40,7 +41,7 @@ class Server:
 
     @property
     def status(self):
-        return self.process
+        return self.proc
 
     def is_chat_channel(self, m):
         return m.channel == self.bot.chat_channel
@@ -60,7 +61,7 @@ class MinecraftServer(Server):
         server_filter = re.compile(
             r"INFO\]:?(?:.*tedServer\]:)? (\[[^\]]*: .*\].*|(?<=]:\s).* the game|.* has made the .*)")
         player_filter = re.compile(r"FO\]:?(?:.*tedServer\]:)? (\[Server\].*|<.*>.*)")
-        while self.process.is_running():
+        while self.proc.is_running():
             try:
                 await self.read_server_log(fpath, player_filter, server_filter)
             except asyncio.CancelledError:
@@ -70,7 +71,7 @@ class MinecraftServer(Server):
         async with aiofiles.open(fpath) as log:
             await log.seek(0, 2)
             size = os.stat(fpath)
-            while self.process.is_running():
+            while self.proc.is_running():
                 try:
                     lines = await log.readlines()  # Returns instantly
                     msgs = list()
@@ -131,7 +132,7 @@ class MinecraftServer(Server):
         import socket
         last_reconnect = datetime.datetime(1, 1, 1)
         rcon = mcrcon.MCRcon(self.ip, self.password, 22232)
-        while self.process.is_running():
+        while self.proc.is_running():
             try:
                 msg = await self.bot.wait_for('message', check=self.is_chat_channel, timeout=5)
                 if not hasattr(msg, 'author') or (hasattr(msg, 'author') and msg.author.bot):
@@ -164,8 +165,9 @@ class MinecraftServer(Server):
         tries = 1
         server = mc.lookup("localhost:22222")
         failed = False
-        while self.process.is_running():
+        while self.proc.is_running():
             try:
+                await asyncio.sleep(10)
                 stats = server.status()
                 version, online, max_p = stats.version.name, stats.players.online, stats.players.max
                 if 'modinfo' in stats.raw:
@@ -183,7 +185,7 @@ class MinecraftServer(Server):
                 self.bot.bprint("Server running a MC version <1.7, or is still starting. (BrokenPipeError)")
                 await self.sleep_with_backoff(tries)
                 tries += 1
-                break
+                pass
             except ConnectionRefusedError:
                 self.bot.bprint("Server running on incorrect port. (ConnectionRefusedError)")
                 break
@@ -210,7 +212,7 @@ class MinecraftServer(Server):
 
 
 class SourceServer(Server):
-    def __init__(self, bot, process, *args, **kwargs):
+    def __init__(self, bot, process: psutil.Process, *args, **kwargs):
         super().__init__(bot, process, *args, **kwargs)
 
     def __repr__(self):
@@ -219,6 +221,47 @@ class SourceServer(Server):
     async def chat_from_server_to_discord(self):
         # connect = """Client "CLIENTNAME" connected (IPADDRESS)"""
         # disconnect = """Dropped CLIENTNAME from server(REASON)"""
+        # chat = """AAAA"""
+        while self.proc.is_running():
+            for file in self.proc.open_files():
+                if os.path.splitext(file.path)[1] == '.log':
+                    logpath = file.path
+                    break
+            else:
+                await asyncio.sleep(3)
+                continue
+            async with aiofiles.open(logpath) as log:
+                await log.seek(0, 2)
+                log_refresh = datetime.datetime.now() + datetime.timedelta(minutes=10)
+                while log_refresh > datetime.datetime.now():
+                    try:
+                        lines = await log.readlines()  # Returns instantly
+                        msgs = list()
+                        # for line in lines:
+                        #     raw_playermsg = re.findall(player_filter, line)
+                        #     raw_servermsg = re.findall(server_filter, line)
+                        #
+                        #     if raw_playermsg:
+                        #         x = self.check_for_mentions(raw_playermsg)
+                        #         msgs.append(x)
+                        #     elif raw_servermsg:
+                        #         msgs.append(f'`{raw_servermsg[0].rstrip()}`')
+                        #     else:
+                        #         continue
+                        if msgs:
+                            x = "\n".join(msgs)
+                            # await self.bot.chat_channel.send(f'{x}')
+                        # for msg in msgs:
+                        #     self.bot.bprint(f"{self.bot.game} | {''.join(msg)}")
+                        continue
+                    except asyncio.CancelledError:
+                        break
+                    except Exception as e:
+                        print(e)
+                    finally:
+                        await asyncio.sleep(.75)
+
+
 
         # fpath = os.path.join(self.working_dir, "logs", "latest.log") if os.path.exists(
         #     os.path.join(self.working_dir, "logs", "latest.log")) else os.path.join(self.working_dir, "server.log")
@@ -235,7 +278,7 @@ class SourceServer(Server):
     async def chat_to_server_from_discord(self):
         import valve.rcon as valvercon
         with valvercon.RCON(("192.168.25.40", 22222), self.password) as rcon:
-            while self.process.is_running():
+            while self.proc.is_running():
                 try:
                     msg = await self.bot.wait_for('message', check=self.is_chat_channel, timeout=5)
                     if not hasattr(msg, 'author') or (hasattr(msg, 'author') and msg.author.bot):
@@ -259,7 +302,7 @@ class SourceServer(Server):
     async def update_server_information(self):
         from valve.source.a2s import ServerQuerier as src
         import valve.source
-        while self.process.is_running():
+        while self.proc.is_running():
             try:
                 with src(('192.168.25.40', 22222)) as server:
                     info = server.info()
@@ -270,9 +313,10 @@ class SourceServer(Server):
                 cur_p = info["player_count"]
                 max_p = info["max_players"]
                 cur_status = f"Playing: Garry's Mod - {mode} on map {cur_map} ({cur_p}/{max_p} players)"
+
                 await self.bot.chat_channel.edit(topic=cur_status)
-                await self.bot.set_bot_status("Garry's Mod", f"{mode} on map {cur_map}",
-                                              f"({cur_p}/{max_p} players)")
+                await self.bot.set_bot_status("Garry's Mod", f"{mode} on {cur_map} ({cur_p}/{max_p})",
+                                              f"CPU: {self.proc.cpu_percent()}% | Mem: {self.proc.memory_percent()}")
             except discord.Forbidden:
                 print("Bot lacks permission to edit channels. (discord.Forbidden)")
             except valve.source.NoResponseError:
