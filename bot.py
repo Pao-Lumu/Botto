@@ -8,6 +8,7 @@ import logging.handlers
 import os
 import sys
 from collections import defaultdict
+from concurrent.futures._base import CancelledError
 
 # noinspection PyPackageRequirements
 import discord
@@ -350,4 +351,7 @@ if __name__ == '__main__':
     # bot.loop.create_task(gms.check_server_stopped())
 
     bot.cfg = botcfg
-    bot.run(token)
+    try:
+        bot.run(token)
+    except CancelledError:
+        pass

@@ -18,7 +18,7 @@ class Server:
         self.name = kwargs.pop('name', 'a game')
         self.ip = kwargs.pop('ip', '127.0.0.1')
         self.port = kwargs.pop('port', '22222')
-        self.password = kwargs.get('rcon') if kwargs['rcon'] is not "" else self.bot.cfg["default_rcon_password"]
+        self.password = kwargs.pop('rcon') if kwargs['rcon'] else self.bot.cfg["default_rcon_password"]
         self.working_dir = kwargs.pop('folder', '')
         self.bot.loop.create_task(self.chat_from_server_to_discord())
         self.bot.loop.create_task(self.chat_to_server_from_discord())
@@ -56,16 +56,17 @@ class MinecraftServer(Server):
         return "Minecraft"
 
     async def chat_from_server_to_discord(self):
-        fpath = os.path.join(self.working_dir, "logs", "latest.log") if os.path.exists(
-            os.path.join(self.working_dir, "logs", "latest.log")) else os.path.join(self.working_dir, "server.log")
-        server_filter = re.compile(
-            r"INFO\]:?(?:.*tedServer\]:)? (\[[^\]]*: .*\].*|(?<=]:\s).* the game|.* has made the .*)")
-        player_filter = re.compile(r"FO\]:?(?:.*tedServer\]:)? (\[Server\].*|<.*>.*)")
         while self.proc.is_running():
-            try:
-                await self.read_server_log(fpath, player_filter, server_filter)
-            except asyncio.CancelledError:
-                break
+            fpath = os.path.join(self.working_dir, "logs", "latest.log") if os.path.exists(
+                os.path.join(self.working_dir, "logs", "latest.log")) else os.path.join(self.working_dir, "server.log")
+            server_filter = re.compile(
+                r"INFO\]:?(?:.*tedServer\]:)? (\[[^\]]*: .*\].*|(?<=]:\s).* the game|.* has made the .*)")
+            player_filter = re.compile(r"FO\]:?(?:.*tedServer\]:)? (\[Server\].*|<.*>.*)")
+            while self.proc.is_running():
+                try:
+                    await self.read_server_log(fpath, player_filter, server_filter)
+                except asyncio.CancelledError:
+                    break
 
     async def read_server_log(self, fpath, player_filter, server_filter):
         async with aiofiles.open(fpath) as log:
@@ -219,8 +220,12 @@ class SourceServer(Server):
         return "Source"
 
     async def chat_from_server_to_discord(self):
-        # connect = """Client "CLIENTNAME" connected (IPADDRESS)"""
-        # disconnect = """Dropped CLIENTNAME from server(REASON)"""
+        connections = re.compile(r"")
+        chat = re.compile(r"")
+        cvars = re.compile(r"")
+
+        # connect = r"""Client "CLIENTNAME" connected (IPADDRESS)"""
+        # disconnect = r"""Dropped CLIENTNAME from server(REASON)"""
         # chat = """AAAA"""
         while self.proc.is_running():
             for file in self.proc.open_files():
@@ -237,17 +242,20 @@ class SourceServer(Server):
                     try:
                         lines = await log.readlines()  # Returns instantly
                         msgs = list()
-                        # for line in lines:
-                        #     raw_playermsg = re.findall(player_filter, line)
-                        #     raw_servermsg = re.findall(server_filter, line)
-                        #
-                        #     if raw_playermsg:
-                        #         x = self.check_for_mentions(raw_playermsg)
-                        #         msgs.append(x)
-                        #     elif raw_servermsg:
-                        #         msgs.append(f'`{raw_servermsg[0].rstrip()}`')
-                        #     else:
-                        #         continue
+                        for line in lines:
+                            raw_connectionmsg = re.findall(connections, line)
+                            raw_chatmsg = re.findall(chat, line)
+                            raw_cvarsmsg = re.findall(cvars, line)
+
+                            if raw_chatmsg:
+                                x = self.check_for_mentions(raw_chatmsg)
+                                msgs.append(x)
+                            elif raw_connectionmsg:
+                                msgs.append(f'`{raw_connectionmsg[0].rstrip()}`')
+                            elif raw_cvarsmsg:
+                                msgs.append(f'`{raw_cvarsmsg[0].rstrip()}`')
+                            else:
+                                continue
                         if msgs:
                             x = "\n".join(msgs)
                             # await self.bot.chat_channel.send(f'{x}')
@@ -306,8 +314,6 @@ class SourceServer(Server):
             try:
                 with src(('192.168.25.40', 22222)) as server:
                     info = server.info()
-                    # players = server.players()
-                    # print(players)
                 mode = info["game"]
                 cur_map = info["map"]
                 cur_p = info["player_count"]

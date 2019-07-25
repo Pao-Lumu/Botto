@@ -36,13 +36,19 @@ class Game:
                 self.bot._game_running.set()
 
                 self.bot.bprint(f"Server Status | Now Playing: {data['name']} {data['version']}")
-                await self.bot.loop.run_in_executor(None, process.wait)
+                await self.bot.loop.run_in_executor(None, self.wait_or_when_cancelled)
                 self.bot.bprint(f"Server Status | Offline")
 
                 self.bot._game_running.clear()
                 self.bot._game_stopped.set()
             else:
                 await asyncio.sleep(5)
+
+    def wait_or_when_cancelled(self, process):
+        try:
+            process.wait()
+        except KeyboardInterrupt:
+            return
 
     async def get_current_server_status(self):
         await self.bot.wait_until_game_running(1)
