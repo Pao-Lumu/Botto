@@ -172,7 +172,6 @@ class Game:
                                 last_reconnect = datetime.datetime.now()
                                 rcon.connect()
                             content = re.sub(r'<(:\w+:)\d+>', r'\1', msg.clean_content).split('\n')
-                            # print(content)
                             for xex in content:
                                 command = f"say §9§l{msg.author.name}§r: {content}"
                                 if len(command) >= 100:

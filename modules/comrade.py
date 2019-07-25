@@ -64,7 +64,7 @@ class Comrade(commands.Cog):
                 gopnik_text = True
 
         if gopnik_text:
-            await msg.channel.send("" + "".join(raw) + "\n_Soviet Anthem Plays_")
+            await msg.channel.send("*" + "".join(raw) + "\n **_Союз нерушимый республик свободных..._**")
             self.bot.gop_text_cd = datetime.now().timestamp()
             try:
                 if msg.author.voice and gopnik_voice and not msg.author.voice.afk:
@@ -106,7 +106,7 @@ class Comrade(commands.Cog):
                 gopnik_text = True
 
         if gopnik_text:
-            await ctx.send("*" + "".join(raw) + "\n **_Soviet Anthem Plays_**")
+            await ctx.send("*" + "".join(raw) + "\n **_Союз нерушимый республик свободных..._**")
 
     @helpers.is_human()
     @commands.command()

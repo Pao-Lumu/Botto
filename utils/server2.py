@@ -12,7 +12,6 @@ import mcrcon
 import psutil
 import valve.rcon as valvercon
 import valve.source
-from discord import Forbidden
 from mcstatus import MinecraftServer as mc
 from valve.source.a2s import ServerQuerier as src
 
@@ -31,7 +30,6 @@ class Server:
         self.rcon = None
         self.rcon_lock = asyncio.Lock()
 
-        self.bot.loop.create_task(self._rcon_loop())
         self.bot.loop.create_task(self.chat_from_server_to_discord())
         self.bot.loop.create_task(self.chat_to_server_from_discord())
         self.bot.loop.create_task(self.update_server_information())
@@ -73,21 +71,17 @@ class MinecraftServer(Server):
 
     async def _rcon_loop(self):
         if not self.rcon:
-            # self.rcon = mcrcon.MCRcon(self.ip, self.password, port=self.rcon_port)
-            self.rcon = mcrcon.MCRcon("127.0.0.1", "ogboxrcon", port=22232)
+            self.rcon = mcrcon.MCRcon(self.ip, self.password, self.rcon_port)
         # TODO: MAKE `last_reconnect` SETTABLE FROM OTHER CODE
         last_reconnect = datetime.datetime(1, 1, 1)
         while self.proc.is_running() and not self.bot.is_closed():
             time_sec = (datetime.datetime.now() - last_reconnect)
             if time_sec.total_seconds() >= 240:
-                async with self.rcon_lock:
+                with self.rcon_lock:
                     try:
                         self.rcon.connect()
-                        last_reconnect = datetime.datetime.now()
                     except mcrcon.MCRconException as e:
                         print(e)
-
-            await asyncio.sleep(5)
 
     async def chat_from_server_to_discord(self):
         while self.proc.is_running() and not self.bot.is_closed():
@@ -155,11 +149,6 @@ class MinecraftServer(Server):
                     elif mention[:ind].lower() == 'here' or mention[:ind].lower() == 'everyone':
                         message = message.replace("@" + mention[:ind],
                                                   f"{discord.utils.escape_mentions('@' + mention[:ind])}")
-                    else:
-                        member = discord.utils.get(self.bot.chat_channel.guild.members, nick=mention[:ind])
-                        if member:
-                            message = message.replace("@" + mention[:ind], f"<@{member.id}>")
-                            break
                 else:
                     pass
             except Exception as e:
@@ -179,13 +168,13 @@ class MinecraftServer(Server):
                         command = f"say §9§l{msg.author.name}§r: {line}"
                         if len(command) >= 100:
                             wrapped = textwrap.wrap(line, width=90, initial_indent=f"§9§l{msg.author.name}§r: ")
-                            async with self.rcon_lock:
-                                for wrapped_line in wrapped:
+                            with self.rcon_lock:
+                                for i, wrapped_line in enumerate(wrapped):
                                     self.rcon.command(f"say {wrapped_line}")
                         else:
-                            async with self.rcon_lock:
+                            with self.rcon_lock:
                                 self.rcon.command(command)
-                    self.bot.bprint(f"Discord | <{msg.author.name}>: {' '.join(content)}")
+                        self.bot.bprint(f"Discord | <{msg.author.name}>: {' '.join(content)}")
             except mcrcon.MCRconException as e:
                 print(e)
                 await asyncio.sleep(2)
@@ -236,14 +225,14 @@ class MinecraftServer(Server):
                 self.bot.bprint("Connection to server was reset by peer. (ConnectionResetError)")
                 failed = True
                 pass
+            except discord.Forbidden:
+                self.bot.bprint("Bot lacks permissions to edit channels. (discord.Forbidden)")
+                pass
             except ConnectionError:
                 self.bot.bprint("General Connection Error. (ConnectionError)")
             except socket.timeout:
                 self.bot.bprint("Server not responding. (socket.timeout)")
                 failed = True
-            except Forbidden:
-                self.bot.bprint("Bot lacks permissions to edit channels. (discord.Forbidden)")
-                pass
             except NameError:
                 pass
             except Exception as e:
@@ -310,8 +299,6 @@ class SourceServer(Server):
                         print(e)
                     finally:
                         await asyncio.sleep(.75)
-
-
 
         # fpath = os.path.join(self.working_dir, "logs", "latest.log") if os.path.exists(
         #     os.path.join(self.working_dir, "logs", "latest.log")) else os.path.join(self.working_dir, "server.log")
