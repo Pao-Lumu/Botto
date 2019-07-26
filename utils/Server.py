@@ -73,8 +73,8 @@ class MinecraftServer(Server):
 
     async def _rcon_loop(self):
         if not self.rcon:
-            # self.rcon = mcrcon.MCRcon(self.ip, self.password, port=self.rcon_port)
-            self.rcon = mcrcon.MCRcon("127.0.0.1", "ogboxrcon", port=22232)
+            self.rcon = mcrcon.MCRcon(self.ip, self.password, port=self.rcon_port)
+            # self.rcon = mcrcon.MCRcon("127.0.0.1", "ogboxrcon", port=22232)
         # TODO: MAKE `last_reconnect` SETTABLE FROM OTHER CODE
         last_reconnect = datetime.datetime(1, 1, 1)
         while self.proc.is_running() and not self.bot.is_closed():
