@@ -4,6 +4,7 @@ import os
 import re
 import socket
 import textwrap
+import itertools
 from concurrent import futures
 
 import aiofiles
@@ -74,19 +75,21 @@ class MinecraftServer(Server):
     async def _rcon_loop(self):
         if not self.rcon:
             self.rcon = mcrcon.MCRcon(self.ip, self.password, port=self.rcon_port)
-            # self.rcon = mcrcon.MCRcon("127.0.0.1", "ogboxrcon", port=22232)
         # TODO: MAKE `last_reconnect` SETTABLE FROM OTHER CODE
         last_reconnect = datetime.datetime(1, 1, 1)
         while self.proc.is_running() and not self.bot.is_closed():
-            time_sec = (datetime.datetime.now() - last_reconnect)
-            if time_sec.total_seconds() >= 240:
-                async with self.rcon_lock:
-                    try:
-                        self.rcon.connect()
-                        last_reconnect = datetime.datetime.now()
-                    except mcrcon.MCRconException as e:
-                        print(e)
-
+            try:
+                time_sec = (datetime.datetime.now() - last_reconnect)
+                if time_sec.total_seconds() >= 240:
+                    async with self.rcon_lock:
+                        try:
+                            self.rcon.connect()
+                            last_reconnect = datetime.datetime.now()
+                        except mcrcon.MCRconException as e:
+                            print(e)
+            except Exception as e:
+                print(e)
+                pass
             await asyncio.sleep(5)
 
     async def chat_from_server_to_discord(self):
@@ -175,16 +178,24 @@ class MinecraftServer(Server):
                     pass
                 elif msg.clean_content:
                     content = re.sub(r'<(:\w+:)\d+>', r'\1', msg.clean_content).split('\n')  # splits on messages lines
-                    for line in content:
-                        command = f"say §9§l{msg.author.name}§r: {line}"
+                    long = False
+                    for index, line in enumerate(content):
+                        command = f"§9§l{msg.author.name}§r: {line}"
                         if len(command) >= 100:
-                            wrapped = textwrap.wrap(line, width=90, initial_indent=f"§9§l{msg.author.name}§r: ")
-                            async with self.rcon_lock:
-                                for wrapped_line in wrapped:
-                                    self.rcon.command(f"say {wrapped_line}")
+                            if not index:
+                                content[index] = textwrap.wrap(line, width=90, initial_indent=f"§9§l{msg.author.name}§r: ")
+                            else:
+                                content[index] = textwrap.wrap(line, width=90)
+                            long = True
+                        elif not index:
+                            content[index] = command
                         else:
-                            async with self.rcon_lock:
-                                self.rcon.command(command)
+                            content[index] = line
+                    if long:
+                        content = itertools.chain.from_iterable(content)
+                    async with self.rcon_lock:
+                        for line in content:
+                            x = self.rcon.command(f"say {line}")
                     self.bot.bprint(f"Discord | <{msg.author.name}>: {' '.join(content)}")
             except mcrcon.MCRconException as e:
                 print(e)

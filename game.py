@@ -30,7 +30,6 @@ class Game:
         while not self.bot.is_closed():
 
             process, data = sensor.get_game_info()
-            # print(f"Is running?: {data is not None}")
             if data:
                 self.bot._game_stopped.clear()
                 self.bot._game_running.set()
