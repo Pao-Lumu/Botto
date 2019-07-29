@@ -129,15 +129,14 @@ class MinecraftServer(Server):
                         await self.bot.chat_channel.send(f'{x}')
                     for msg in msgs:
                         self.bot.bprint(f"{self.bot.game} | {''.join(msg)}")
-                    continue
-                except NameError:
+
+                    await asyncio.sleep(.5)
+
                     if size < os.stat(fpath):
                         size = os.stat(fpath)
-                    else:
+                    elif size > os.stat(fpath):
                         break
                     continue
-                except asyncio.CancelledError:
-                    break
                 except Exception as e:
                     print(e)
                 finally:
