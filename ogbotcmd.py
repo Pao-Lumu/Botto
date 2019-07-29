@@ -283,8 +283,14 @@ Sent on {m.created_at.strftime('%a, %b %d, %Y at %I:%M:%S %p')}"""
         return True
 
     def cmdloop(self, intro=None):
-        asyncio.set_event_loop(self.loop)
-        super().cmdloop(intro=intro)
+        try:
+            asyncio.set_event_loop(self.loop)
+            super().cmdloop(intro=intro)
+        finally:
+            self.loop.stop()
 
     async def start(self):
-        await self.loop.run_in_executor(None, self.cmdloop)
+        try:
+            await self.loop.run_in_executor(None, self.cmdloop)
+        except asyncio.CancelledError:
+            pass

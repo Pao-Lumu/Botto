@@ -1,10 +1,10 @@
 import asyncio
 import datetime
+import itertools
 import os
 import re
 import socket
 import textwrap
-import itertools
 from concurrent import futures
 
 import aiofiles
@@ -85,57 +85,54 @@ class MinecraftServer(Server):
                         self.last_reconnect = datetime.datetime.now()
                     except mcrcon.MCRconException as e:
                         print(e)
+        except asyncio.CancelledError:
+            print("Cancelled")
         except Exception as e:
             print(e)
             pass
 
     async def chat_from_server_to_discord(self):
+        fpath = os.path.join(self.working_dir, "logs", "latest.log") if os.path.exists(
+            os.path.join(self.working_dir, "logs", "latest.log")) else os.path.join(self.working_dir, "server.log")
+        server_filter = re.compile(
+            r"INFO\]:?(?:.*tedServer\]:)? (\[[^\]]*: .*\].*|(?<=]:\s).* the game|.* has made the .*)")
+        player_filter = re.compile(r"FO\]:?(?:.*tedServer\]:)? (\[Server\].*|<.*>.*)")
         while self.proc.is_running() and not self.bot.is_closed():
-            fpath = os.path.join(self.working_dir, "logs", "latest.log") if os.path.exists(
-                os.path.join(self.working_dir, "logs", "latest.log")) else os.path.join(self.working_dir, "server.log")
-            server_filter = re.compile(
-                r"INFO\]:?(?:.*tedServer\]:)? (\[[^\]]*: .*\].*|(?<=]:\s).* the game|.* has made the .*)")
-            player_filter = re.compile(r"FO\]:?(?:.*tedServer\]:)? (\[Server\].*|<.*>.*)")
-            while self.proc.is_running() and not self.bot.is_closed():
-                try:
-                    await self.read_server_log(fpath, player_filter, server_filter)
-                except asyncio.CancelledError:
-                    break
+            try:
+                await self.read_server_log(fpath, player_filter, server_filter)
+            except Exception as e:
+                print(e)
 
     async def read_server_log(self, fpath, player_filter, server_filter):
         size = os.stat(fpath)
         async with aiofiles.open(str(fpath)) as log:
             await log.seek(0, 2)
             while self.proc.is_running() and not self.bot.is_closed():
-                try:
-                    lines = await log.readlines()  # Returns instantly
-                    msgs = list()
-                    for line in lines:
-                        raw_playermsg = re.findall(player_filter, line)
-                        raw_servermsg = re.findall(server_filter, line)
+                lines = await log.readlines()  # Returns instantly
+                msgs = list()
+                for line in lines:
+                    raw_playermsg = re.findall(player_filter, line)
+                    raw_servermsg = re.findall(server_filter, line)
 
-                        if raw_playermsg:
-                            x = self.check_for_mentions(raw_playermsg)
-                            msgs.append(x)
-                        elif raw_servermsg:
-                            msgs.append(f'`{raw_servermsg[0].rstrip()}`')
-                        else:
-                            continue
-                    if msgs:
-                        x = "\n".join(msgs)
-                        await self.bot.chat_channel.send(f'{x}')
-                    for msg in msgs:
-                        self.bot.bprint(f"{self.bot.game} | {''.join(msg)}")
+                    if raw_playermsg:
+                        x = self.check_for_mentions(raw_playermsg)
+                        msgs.append(x)
+                    elif raw_servermsg:
+                        msgs.append(f'`{raw_servermsg[0].rstrip()}`')
+                    else:
+                        continue
+                if msgs:
+                    x = "\n".join(msgs)
+                    await self.bot.chat_channel.send(f'{x}')
+                for msg in msgs:
+                    self.bot.bprint(f"{self.bot.game} | {''.join(msg)}")
 
-                    if size < os.stat(fpath):
-                        size = os.stat(fpath)
-                    elif size > os.stat(fpath):
-                        print("BREAKIN' OUT BOYS!")
-                        break
-                except Exception as e:
-                    print(e)
-                finally:
-                    await asyncio.sleep(.75)
+                if size < os.stat(fpath):
+                    size = os.stat(fpath)
+                elif size > os.stat(fpath):
+                    print("BREAKIN' OUT BOYS!")
+                    break
+                await asyncio.sleep(.75)
 
     def check_for_mentions(self, raw_playermsg):
         message = raw_playermsg[0]
@@ -178,7 +175,8 @@ class MinecraftServer(Server):
                         command = f"§9§l{msg.author.name}§r: {line}"
                         if len(command) >= 100:
                             if not index:
-                                content[index] = textwrap.wrap(line, width=90, initial_indent=f"§9§l{msg.author.name}§r: ")
+                                content[index] = textwrap.wrap(line, width=90,
+                                                               initial_indent=f"§9§l{msg.author.name}§r: ")
                             else:
                                 content[index] = textwrap.wrap(line, width=90)
                             long = True
@@ -202,7 +200,7 @@ class MinecraftServer(Server):
             except futures.TimeoutError:
                 pass
             except Exception as e:
-                print("guild2server catchall:")
+                self.bot.bprint("guild2server catchall:")
                 print(e)
 
     async def update_server_information(self):
@@ -316,8 +314,6 @@ class SourceServer(Server):
                         print(e)
                     finally:
                         await asyncio.sleep(.75)
-
-
 
         # fpath = os.path.join(self.working_dir, "logs", "latest.log") if os.path.exists(
         #     os.path.join(self.working_dir, "logs", "latest.log")) else os.path.join(self.working_dir, "server.log")

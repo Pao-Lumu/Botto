@@ -8,14 +8,12 @@ import logging.handlers
 import os
 import sys
 from collections import defaultdict
-from concurrent.futures._base import CancelledError
 
 # noinspection PyPackageRequirements
 import discord
 import pyfiglet
 from discord.ext import commands
 
-import game
 import ogbot_base
 from ogbotcmd import OGBotCmd
 from utils import helpers
@@ -38,14 +36,18 @@ sh.setFormatter(fmt)
 log.addHandler(sh)
 discord_logger.addHandler(sh)
 
+# initial_extensions = []
+
 initial_extensions = [
-    'modules.admin',
-    'modules.music',
-    'modules.comrade',
+    # 'modules.admin',
+    # 'modules.music',
+    # 'modules.comrade',
+    'modules.game',
     'modules.server'
     # 'modules.responder',
     # 'modules.reminder'
 ]
+
 
 bot = ogbot_base.OGBot(command_prefix=commands.when_mentioned_or(">"), cog_folder="modules",
                        owner_id=141752316188426241)
@@ -53,6 +55,7 @@ bot = ogbot_base.OGBot(command_prefix=commands.when_mentioned_or(">"), cog_folde
 
 @bot.event
 async def on_ready():
+    bot.loop = asyncio.get_running_loop()
     if not hasattr(bot, 'uptime'):
         bot.uptime = datetime.datetime.utcnow()
     bot.chat_channel = bot.get_channel(botcfg['chat_channel'])
@@ -63,11 +66,12 @@ Username: {bot.user.name}  |  ID: {bot.user.id}
 Chat Channel: {bot.chat_channel}  |  Meme Channel: {bot.meme_channel}
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~""")
 
-
     await asyncio.sleep(3)
     bot.cli = OGBotCmd(bot.loop, bot)
-    await bot.cli.start()
-    await bot.close()
+    try:
+        await bot.cli.start()
+    finally:
+        raise KeyboardInterrupt
 
 
 def load_credentials() -> dict:
@@ -337,21 +341,17 @@ if __name__ == '__main__':
             pass
 
     fh = logging.handlers.TimedRotatingFileHandler(filename=log_path, when="midnight", encoding='utf-8')
+    fh.setLevel(logging.ERROR)
+    if bot.debug:
+        sh.setLevel(logging.DEBUG)
+        discord_logger.setLevel(logging.DEBUG)
     discord_logger.addHandler(fh)
     fh.setFormatter(fmt)
     log.addHandler(fh)
 
     bot.log = log
-    gms = game.Game(bot)
-    bot.loop.create_task(gms.get_current_server_status())
-    bot.loop.create_task(gms.check_server_running())
-    # bot.loop.create_task(gms.send_from_guild_to_game())
-    # bot.loop.create_task(gms.send_from_game_to_guild())
-    # bot.loop.create_task(gms.update_server_information())
-    # bot.loop.create_task(gms.check_server_stopped())
-
     bot.cfg = botcfg
     try:
         bot.run(token)
-    except CancelledError:
-        pass
+    finally:
+        sys.exit(1)

@@ -16,7 +16,8 @@ class OGBot(commands.Bot):
     def __init__(self, *args, **kwargs):
         tracemalloc.start()
         colorama.init()
-        self.loop = kwargs.pop('loop', asyncio.get_event_loop())
+        # self.loop = kwargs.pop('loop', asyncio.get_event_loop())
+        self.loop = None
         self.cog_folder = kwargs.pop('cog_folder')
         self.game = ""
         self.gwd = ""
@@ -79,15 +80,16 @@ class OGBot(commands.Bot):
     def run(self, token):
         super().run(token)
 
-    async def die(self):
-        await self.close()
-
-    async def close(self):
-        try:
-            await super().close()
-            tasks = asyncio.gather(*asyncio.Task.all_tasks(), loop=self.loop)
-            tasks.cancel()
-            tasks.exception()
-            self.loop.stop()
-        except:
-            pass
+    # async def die(self):
+    #     await super().close()
+    #     self.close()
+    #
+    # def close(self):
+    #     try:
+    #         for task in asyncio.all_tasks():
+    #             print(task)
+    #             task.cancel()
+    #         self.loop.stop()
+    #         self.loop.close()
+    #     except Exception as e:
+    #         print(e)
