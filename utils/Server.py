@@ -31,6 +31,7 @@ class Server:
         self.rcon_port = kwargs.pop('rcon_port', 22232)
         self.rcon = None
         self.rcon_lock = asyncio.Lock()
+        self.last_reconnect = datetime.datetime(1, 1, 1)
 
         self.bot.loop.create_task(self._rcon_loop())
         self.bot.loop.create_task(self.chat_from_server_to_discord())
@@ -72,25 +73,21 @@ class MinecraftServer(Server):
     def __repr__(self):
         return "Minecraft"
 
-    async def _rcon_loop(self):
+    async def _rcon_connect(self):
         if not self.rcon:
             self.rcon = mcrcon.MCRcon(self.ip, self.password, port=self.rcon_port)
-        # TODO: MAKE `last_reconnect` SETTABLE FROM OTHER CODE
-        last_reconnect = datetime.datetime(1, 1, 1)
-        while self.proc.is_running() and not self.bot.is_closed():
-            try:
-                time_sec = (datetime.datetime.now() - last_reconnect)
-                if time_sec.total_seconds() >= 240:
-                    async with self.rcon_lock:
-                        try:
-                            self.rcon.connect()
-                            last_reconnect = datetime.datetime.now()
-                        except mcrcon.MCRconException as e:
-                            print(e)
-            except Exception as e:
-                print(e)
-                pass
-            await asyncio.sleep(5)
+        try:
+            time_sec = (datetime.datetime.now() - self.last_reconnect)
+            async with self.rcon_lock:
+                if time_sec.total_seconds() >= 600:
+                    try:
+                        self.rcon.connect()
+                        self.last_reconnect = datetime.datetime.now()
+                    except mcrcon.MCRconException as e:
+                        print(e)
+        except Exception as e:
+            print(e)
+            pass
 
     async def chat_from_server_to_discord(self):
         while self.proc.is_running() and not self.bot.is_closed():
@@ -106,9 +103,9 @@ class MinecraftServer(Server):
                     break
 
     async def read_server_log(self, fpath, player_filter, server_filter):
-        async with aiofiles.open(fpath) as log:
+        size = os.stat(fpath)
+        async with aiofiles.open(str(fpath)) as log:
             await log.seek(0, 2)
-            size = os.stat(fpath)
             while self.proc.is_running() and not self.bot.is_closed():
                 try:
                     lines = await log.readlines()  # Returns instantly
@@ -130,13 +127,11 @@ class MinecraftServer(Server):
                     for msg in msgs:
                         self.bot.bprint(f"{self.bot.game} | {''.join(msg)}")
 
-                    await asyncio.sleep(.5)
-
                     if size < os.stat(fpath):
                         size = os.stat(fpath)
                     elif size > os.stat(fpath):
+                        print("BREAKIN' OUT BOYS!")
                         break
-                    continue
                 except Exception as e:
                     print(e)
                 finally:
@@ -176,6 +171,7 @@ class MinecraftServer(Server):
                 if not hasattr(msg, 'author') or (hasattr(msg, 'author') and msg.author.bot):
                     pass
                 elif msg.clean_content:
+                    await self._rcon_connect()
                     content = re.sub(r'<(:\w+:)\d+>', r'\1', msg.clean_content).split('\n')  # splits on messages lines
                     long = False
                     for index, line in enumerate(content):
