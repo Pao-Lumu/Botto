@@ -85,8 +85,6 @@ class MinecraftServer(Server):
                         self.last_reconnect = datetime.datetime.now()
                     except mcrcon.MCRconException as e:
                         print(e)
-        except asyncio.CancelledError:
-            print("Cancelled")
         except Exception as e:
             print(e)
             pass
@@ -195,7 +193,7 @@ class MinecraftServer(Server):
                 await asyncio.sleep(2)
             except socket.error as e:
                 print(e)
-                await self.bot.chat_channel.send("Message failed to send, the bot is probably broken", delete_after=10)
+                await self.bot.chat_channel.send("Message failed to send; the bot is broken, tag Evan", delete_after=10)
                 continue
             except futures.TimeoutError:
                 pass
@@ -308,8 +306,6 @@ class SourceServer(Server):
                         # for msg in msgs:
                         #     self.bot.bprint(f"{self.bot.game} | {''.join(msg)}")
                         continue
-                    except asyncio.CancelledError:
-                        break
                     except Exception as e:
                         print(e)
                     finally:
@@ -321,11 +317,8 @@ class SourceServer(Server):
         #     r"INFO\]:?(?:.*tedServer\]:)? (\[[^\]]*: .*\].*|(?<=]:\s).* the game|.* has made the .*)")
         # player_filter = re.compile(r"FO\]:?(?:.*tedServer\]:)? (\[Server\].*|<.*>.*)")
         # while self.process.is_running():
-        #     try:
-        #         await self.read_server_log(fpath, player_filter, server_filter)
-        #     except asyncio.CancelledError:
-        #         break
-        pass
+        #     await self.read_server_log(fpath, player_filter, server_filter)
+        # pass
 
     async def chat_to_server_from_discord(self):
         with valvercon.RCON(("192.168.25.40", 22222), self.password) as rcon:

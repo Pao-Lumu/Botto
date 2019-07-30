@@ -214,7 +214,7 @@ class MinecraftServer(Server):
                 await self.bot.chat_channel.edit(topic=cur_status)
                 await self.bot.set_bot_status(f'{self.bot.game} {version}', mod_count, player_count)
             except BrokenPipeError:
-                self.bot.bprint("Server running a MC version <1.7, or is still starting. (BrokenPipeError)")
+                # self.bot.bprint("Server running a MC version <1.7, or is still starting. (BrokenPipeError)")
                 await self.sleep_with_backoff(tries)
                 tries += 1
                 pass
