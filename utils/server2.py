@@ -189,7 +189,7 @@ class MinecraftServer(Server):
                 print(e)
 
     async def update_server_information(self):
-        tries = 1
+        tries = 0
         server = mc.lookup("localhost:22222")
         failed = False
         while self.proc.is_running() and not self.bot.is_closed():
@@ -214,9 +214,10 @@ class MinecraftServer(Server):
                 await self.bot.chat_channel.edit(topic=cur_status)
                 await self.bot.set_bot_status(f'{self.bot.game} {version}', mod_count, player_count)
             except BrokenPipeError:
-                # self.bot.bprint("Server running a MC version <1.7, or is still starting. (BrokenPipeError)")
-                await self.sleep_with_backoff(tries)
                 tries += 1
+                if tries >= 3:
+                    self.bot.bprint("Server running a MC version <1.7, or is still starting. (BrokenPipeError)")
+                await self.sleep_with_backoff(tries)
                 pass
             except ConnectionRefusedError:
                 self.bot.bprint("Server running on incorrect port. (ConnectionRefusedError)")
