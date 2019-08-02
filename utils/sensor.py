@@ -5,6 +5,7 @@ from os import path
 from subprocess import PIPE, DEVNULL
 
 import psutil
+import toml
 
 
 def get_running():
@@ -49,10 +50,13 @@ def get_game_info():
             with open(path.join(cwd, ".gameinfo.json")) as file:
                 try:
                     gi = json.load(file)
-                    return process, gi
                 except json.decoder.JSONDecodeError as e:
                     print(f"JSON decoding error | {e}")
                     pass
+            with open(path.join(cwd, ".gameinfo.toml")) as file:
+                toml.dump(gi, file)
+            os.remove(path.join(cwd, ".gameinfo.json"))
+            return process, gi
 
         elif "serverfiles" in cwd:
             cwd = root

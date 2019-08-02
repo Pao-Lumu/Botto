@@ -6,6 +6,7 @@ import re
 import socket
 import textwrap
 from concurrent import futures
+from os import path
 
 import aiofiles
 import discord
@@ -93,20 +94,20 @@ class MinecraftServer(Server):
             pass
 
     async def chat_from_server_to_discord(self):
-        fpath = os.path.join(self.working_dir, "logs", "latest.log") if os.path.exists(
-            os.path.join(self.working_dir, "logs", "latest.log")) else os.path.join(self.working_dir, "server.log")
+        fpath = path.join(self.working_dir, "logs", "latest.log") if path.exists(
+            path.join(self.working_dir, "logs", "latest.log")) else os.path.join(self.working_dir, "server.log")
         server_filter = re.compile(
             r"INFO\]:?(?:.*tedServer\]:)? (\[[^\]]*: .*\].*|(?<=]:\s).* the game|.* has made the .*)")
         player_filter = re.compile(r"FO\]:?(?:.*tedServer\]:)? (\[Server\].*|<.*>.*)")
         while self.proc.is_running() and not self.bot.is_closed():
             try:
-                await self.read_server_log(fpath, player_filter, server_filter)
+                await self.read_server_log(str(fpath), player_filter, server_filter)
             except Exception as e:
                 print(e)
 
     async def read_server_log(self, fpath, player_filter, server_filter):
         size = os.stat(fpath)
-        async with aiofiles.open(str(fpath)) as log:
+        async with aiofiles.open(fpath) as log:
             await log.seek(0, 2)
             while self.proc.is_running() and not self.bot.is_closed():
                 lines = await log.readlines()  # Returns instantly
