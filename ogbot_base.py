@@ -20,7 +20,6 @@ class OGBot(commands.Bot):
         self.loop = None
         self.cog_folder = kwargs.pop('cog_folder')
         self.game = ""
-        self.gwd = ""
         self.gop_text_cd = 0
         self.gop_voice_cd = 0
         self.in_tmux = False

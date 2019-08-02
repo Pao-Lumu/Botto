@@ -77,8 +77,8 @@ class ServerControl(commands.Cog):
         except KeyError:
             password = self.bot.cfg["default_rcon_password"]
         if "minecraft" in self.bot.gwd:
+            rcon = mcrcon.MCRcon("127.0.0.1", password, 22232)
             try:
-                rcon = mcrcon.MCRcon("127.0.0.1", password, 22232)
                 rcon.connect()
                 x = rcon.command(f'{concmd.lstrip("/")}')
                 if x:
@@ -91,13 +91,13 @@ class ServerControl(commands.Cog):
     @commands.is_owner()
     @minecraft.command()
     async def repair(self, ctx):
-        if 'minecraft' not in self.bot.gwd:
+        if 'Minecraft' not in str(self.bot.game):
             await ctx.send("Minecraft not running")
-        fn = os.path.join(self.bot.gwd, "server.properties")
+        fn = os.path.join(self.bot.game.working_dir, "server.properties")
         with open(fn, "r") as p:
             lines = p.readlines()
-        qp = False
-        rp = False
+        qp, rp = False, False
+
         for i, line in enumerate(lines):
             if "motd" in line:
                 lines[i] = "motd=OGBox Server\n"
@@ -136,7 +136,7 @@ class ServerControl(commands.Cog):
     def parse_config_file(self):
         config = defaultdict(lambda: "")
         try:
-            p = os.path.join(self.bot.gwd, "server.properties")
+            p = os.path.join(self.bot.game.working_dir, "server.properties")
             with open(p) as readprop:
                 lines = readprop.readlines()
             lines.sort()
@@ -150,7 +150,7 @@ class ServerControl(commands.Cog):
             return False
 
     def write_config_file(self, config):
-        p = os.path.join(self.bot.gwd, "server.properties")
+        p = os.path.join(self.bot.game.working_dir, "server.properties")
 
         with open(p, "w") as writeprop:
             for k, v in config.items():
@@ -160,7 +160,7 @@ class ServerControl(commands.Cog):
     def is_forcing(m):
         # I want this to specifically fail safe, which requires checking for an N before a Y
         if "n" in m.clean_content.lower():
-            return True
+            return False
         elif "y" in m.clean_content.lower():
             return True
         else:

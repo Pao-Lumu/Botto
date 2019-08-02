@@ -41,6 +41,9 @@ class Server:
     def __repr__(self):
         return "a game"
 
+    def is_running(self):
+        return self.proc.is_running()
+
     async def _rcon_loop(self): pass
 
     async def _log_loop(self): pass

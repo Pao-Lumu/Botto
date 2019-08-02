@@ -1,4 +1,7 @@
 # bot token file
+config.ini
+
+# legacy token and config files
 credentials.json
 botcfg.json
 
@@ -12,3 +15,4 @@ __pycache__/
 
 .idea/
 *.xml
+/config.ini

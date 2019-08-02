@@ -12,6 +12,7 @@ from collections import defaultdict
 # noinspection PyPackageRequirements
 import discord
 import pyfiglet
+import toml
 from discord.ext import commands
 
 import ogbot_base
@@ -58,8 +59,8 @@ async def on_ready():
     bot.loop = asyncio.get_running_loop()
     if not hasattr(bot, 'uptime'):
         bot.uptime = datetime.datetime.utcnow()
-    bot.chat_channel = bot.get_channel(botcfg['chat_channel'])
-    bot.meme_channel = bot.get_channel(botcfg['comrade_channel'])
+    bot.chat_channel = bot.get_channel(bot.cfg['chat_channel'])
+    bot.meme_channel = bot.get_channel(bot.cfg['comrade_channel'])
     bot.bprint(f"""~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 {pyfiglet.figlet_format(bot.user.name, font='epic')}
 Username: {bot.user.name}  |  ID: {bot.user.id}
@@ -116,6 +117,27 @@ def load_botconfig() -> dict:
         return {}
 
 
+def load_config():
+    default = {'guild_ids': [], 'chat_channel': 0, 'default_rcon_password': '', 'comrade_channel': 0}
+
+    try:
+        with open('config.toml') as config:
+            dd_config = defaultdict(lambda: "", toml.load(config))
+            for k, v in default.items():
+                if k not in dd_config:
+                    dd_config[k] = v
+        with open('config.toml', 'w+') as config:
+            toml.dump(dd_config, config)
+        return dd_config
+    except FileNotFoundError:
+        log.warning('File "botcfg.json" not found; Generating...')
+        with open('config.toml', 'w+') as config:
+            toml.dump(default, config)
+        bot.bprint('File "config.toml" not found; Generating...')
+        bot.bprint('Please input any relevant information and restart.')
+        return {}
+
+
 def load_json_file(filename: str, default: dict = {}, path: str = "", generate: bool = False) -> dict:
     if path:
         abs_path = os.path.join(path, filename)
@@ -149,7 +171,7 @@ async def on_resumed():
 
 @bot.event
 async def on_member_update(vor, ab):
-    if vor.guild.id not in bot.cfg['guild_ids'] or vor.bot:
+    if vor.guild.id not in bot.cfg['tracked_guild_ids'] or vor.bot:
         return
     bef = frozenset(map(lambda x: helpers.MiniActivity(x), vor.activities))
     aft = frozenset(map(lambda x: helpers.MiniActivity(x), ab.activities))
@@ -310,18 +332,20 @@ if __name__ == '__main__':
     except KeyError:
         # IF LIBTMUX INSTALLED BUT TMUX NOT RUNNING, PASS
         pass
-    credentials = load_credentials()
-    botcfg = load_botconfig()
-    if not credentials or not botcfg:
-        exit(0)
+    # credentials = load_credentials()
+    # botcfg = load_botconfig()
+    config = load_config()
+    # if not credentials or not botcfg or not config:
+    if not config:
+        exit(-1)
     token = ""
     try:
-        token = credentials['token']
+        token = config['credentials']['token']
     except TypeError:
         log.critical('Auth token is not defined')
 
     try:
-        bot.client_id = credentials['client_id']
+        bot.client_id = config['credentials']['client_id']
     except TypeError:
         log.critical('Client id is not defined')
 
@@ -350,7 +374,8 @@ if __name__ == '__main__':
     log.addHandler(fh)
 
     bot.log = log
-    bot.cfg = botcfg
+    # bot.cfg = botcfg
+    bot.cfg = config['bot configuration']
     try:
         bot.run(token)
     finally:
