@@ -1,7 +1,8 @@
 # bot token file
-config.ini
+config.toml
 
 # legacy token and config files
+config.ini
 credentials.json
 botcfg.json
 

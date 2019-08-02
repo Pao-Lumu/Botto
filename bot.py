@@ -3,7 +3,6 @@
 
 import asyncio
 import datetime
-import json
 import logging.handlers
 import os
 import sys
@@ -49,7 +48,6 @@ initial_extensions = [
     # 'modules.reminder'
 ]
 
-
 bot = ogbot_base.OGBot(command_prefix=commands.when_mentioned_or(">"), cog_folder="modules",
                        owner_id=141752316188426241)
 
@@ -75,50 +73,52 @@ Chat Channel: {bot.chat_channel}  |  Meme Channel: {bot.meme_channel}
         raise KeyboardInterrupt
 
 
-def load_credentials() -> dict:
-    default = {'token': '', 'client_id': ''}
+# def load_credentials() -> dict:
+#     default = {'token': '', 'client_id': ''}
+#
+#     if os.path.isfile("credentials.json"):
+#         with open('credentials.json') as creds:
+#             dd_creds = defaultdict(lambda: "", json.load(creds))
+#         for k, v in default.items():
+#             if k not in dd_creds:
+#                 dd_creds.setdefault(k, v)
+#         with open('credentials.json', 'w') as creds:
+#             json.dump(dd_creds, creds)
+#         return dd_creds
+#     else:
+#         log.warning('File "credentials.json" not found; Generating...')
+#         with open('credentials.json', 'w+') as creds:
+#             json.dump(default, creds)
+#         bot.bprint('File "credentials.json" not found; Generating...')
+#         bot.bprint('Please input your bot\'s credentials and restart.')
+#         return {}
+#
+#
+# def load_botconfig() -> dict:
+#     default = {'guild_ids': [], 'chat_channel': 0, 'default_rcon_password': '', 'comrade_channel': 0}
+#
+#     if os.path.isfile("botcfg.json"):
+#         with open('botcfg.json') as bcfg:
+#             dd_bcfg = defaultdict(lambda: "", json.load(bcfg))
+#         for k, v in default.items():
+#             if k not in dd_bcfg:
+#                 dd_bcfg.setdefault(k, v)
+#         with open('botcfg.json', 'w') as creds:
+#             json.dump(dd_bcfg, creds)
+#         return dd_bcfg
+#     else:
+#         log.warning('File "botcfg.json" not found; Generating...')
+#         with open('botcfg.json', 'w+') as bcfg:
+#             json.dump(default, bcfg)
+#         bot.bprint('File "botcfg.json" not found; Generating...')
+#         bot.bprint('Please input any relevant information and restart.')
+#         return {}
 
-    if os.path.isfile("credentials.json"):
-        with open('credentials.json') as creds:
-            dd_creds = defaultdict(lambda: "", json.load(creds))
-        for k, v in default.items():
-            if k not in dd_creds:
-                dd_creds.setdefault(k, v)
-        with open('credentials.json', 'w') as creds:
-            json.dump(dd_creds, creds)
-        return dd_creds
-    else:
-        log.warning('File "credentials.json" not found; Generating...')
-        with open('credentials.json', 'w+') as creds:
-            json.dump(default, creds)
-        bot.bprint('File "credentials.json" not found; Generating...')
-        bot.bprint('Please input your bot\'s credentials and restart.')
-        return {}
 
-
-def load_botconfig() -> dict:
-    default = {'guild_ids': [], 'chat_channel': 0, 'default_rcon_password': '', 'comrade_channel': 0}
-
-    if os.path.isfile("botcfg.json"):
-        with open('botcfg.json') as bcfg:
-            dd_bcfg = defaultdict(lambda: "", json.load(bcfg))
-        for k, v in default.items():
-            if k not in dd_bcfg:
-                dd_bcfg.setdefault(k, v)
-        with open('botcfg.json', 'w') as creds:
-            json.dump(dd_bcfg, creds)
-        return dd_bcfg
-    else:
-        log.warning('File "botcfg.json" not found; Generating...')
-        with open('botcfg.json', 'w+') as bcfg:
-            json.dump(default, bcfg)
-        bot.bprint('File "botcfg.json" not found; Generating...')
-        bot.bprint('Please input any relevant information and restart.')
-        return {}
-
-
-def load_config():
-    default = {'guild_ids': [], 'chat_channel': 0, 'default_rcon_password': '', 'comrade_channel': 0}
+def load_config() -> dict:
+    default = {"credentials": {'token': '', 'client_id': ''},
+               "bot_configuration": {'tracked_guild_ids': [], 'chat_channel': 0, 'default_rcon_password': '',
+                                     'comrade_channel': 0}}
 
     try:
         with open('config.toml') as config:
@@ -130,7 +130,7 @@ def load_config():
             toml.dump(dd_config, config)
         return dd_config
     except FileNotFoundError:
-        log.warning('File "botcfg.json" not found; Generating...')
+        log.warning('File "config.toml" not found; Generating...')
         with open('config.toml', 'w+') as config:
             toml.dump(default, config)
         bot.bprint('File "config.toml" not found; Generating...')
@@ -138,28 +138,29 @@ def load_config():
         return {}
 
 
-def load_json_file(filename: str, default: dict = {}, path: str = "", generate: bool = False) -> dict:
-    if path:
-        abs_path = os.path.join(path, filename)
-    else:
-        abs_path = filename
-    try:
-        with open(abs_path) as file:
-            dd_file = defaultdict(lambda: "", json.load(file))
-        for k, v in default.items():
-            if k not in dd_file:
-                dd_file.setdefault(k, v)
-        with open(abs_path, 'w') as creds:
-            json.dump(dd_file, creds)
-        return dd_file
-    except FileNotFoundError:
-        if generate:
-            bot.bprint(f'File "{filename}" not found{" at path " + path if path else ""}; Generating...')
-            with open(abs_path, 'w+') as file:
-                json.dump(default, file)
-            bot.bprint(f'File "{filename}" not found{" at path " + path if path else ""};')
-            bot.bprint('Please input any relevant information and restart.')
-            return {}
+# def load_json_file(filename: str, default: dict = {}, path: str = "", generate: bool = False) -> dict:
+#     if path:
+#         abs_path = os.path.join(path, filename)
+#     else:
+#         abs_path = filename
+#     try:
+#         with open(abs_path) as file:
+#             dd_file = defaultdict(lambda: "", json.load(file))
+#         for k, v in default.items():
+#             if k not in dd_file:
+#                 dd_file.setdefault(k, v)
+#         with open(abs_path, 'w') as creds:
+#             json.dump(dd_file, creds)
+#         return dd_file
+#     except FileNotFoundError:
+#         if generate:
+#             bot.bprint(f'File "{filename}" not found{" at path " + path if path else ""}; Generating...')
+#             with open(abs_path, 'w+') as file:
+#                 json.dump(default, file)
+#             bot.bprint(f'File "{filename}" not found{" at path " + path if path else ""};')
+#             bot.bprint('Please input any relevant information and restart.')
+#             return {}
+
 
 # Bot Event Overrides
 
@@ -375,7 +376,7 @@ if __name__ == '__main__':
 
     bot.log = log
     # bot.cfg = botcfg
-    bot.cfg = config['bot configuration']
+    bot.cfg = config['bot_configuration']
     try:
         bot.run(token)
     finally:
