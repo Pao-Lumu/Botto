@@ -2,7 +2,6 @@ import asyncio
 import datetime
 import itertools
 import os
-import re
 import socket
 import textwrap
 from concurrent import futures
@@ -12,6 +11,7 @@ import aiofiles
 import discord
 import mcrcon
 import psutil
+import regex
 import valve.rcon as valvercon
 import valve.source
 from discord import Forbidden
@@ -45,7 +45,7 @@ class Server:
     def is_running(self):
         return self.proc.is_running()
 
-    async def _rcon_loop(self): pass
+    # async def _rcon_loop(self): pass
 
     async def _log_loop(self): pass
 
@@ -96,9 +96,9 @@ class MinecraftServer(Server):
     async def chat_from_server_to_discord(self):
         fpath = path.join(self.working_dir, "logs", "latest.log") if path.exists(
             path.join(self.working_dir, "logs", "latest.log")) else os.path.join(self.working_dir, "server.log")
-        server_filter = re.compile(
+        server_filter = regex.compile(
             r"INFO\]:?(?:.*tedServer\]:)? (\[[^\]]*: .*\].*|(?<=]:\s).* the game|.* has made the .*)")
-        player_filter = re.compile(r"FO\]:?(?:.*tedServer\]:)? (\[Server\].*|<.*>.*)")
+        player_filter = regex.compile(r"FO\]:?(?:.*tedServer\]:)? (\[Server\].*|<.*>.*)")
         while self.proc.is_running() and not self.bot.is_closed():
             try:
                 await self.read_server_log(str(fpath), player_filter, server_filter)
@@ -113,8 +113,8 @@ class MinecraftServer(Server):
                 lines = await log.readlines()  # Returns instantly
                 msgs = list()
                 for line in lines:
-                    raw_playermsg = re.findall(player_filter, line)
-                    raw_servermsg = re.findall(server_filter, line)
+                    raw_playermsg = regex.findall(player_filter, line)
+                    raw_servermsg = regex.findall(server_filter, line)
 
                     if raw_playermsg:
                         x = self.check_for_mentions(raw_playermsg)
@@ -171,7 +171,8 @@ class MinecraftServer(Server):
                     pass
                 elif msg.clean_content:
                     await self._rcon_connect()
-                    content = re.sub(r'<(:\w+:)\d+>', r'\1', msg.clean_content).split('\n')  # splits on messages lines
+                    content = regex.sub(r'<(:\w+:)\d+>', r'\1', msg.clean_content).split(
+                        '\n')  # splits on messages lines
                     long = False
                     for index, line in enumerate(content):
                         command = f"§9§l{msg.author.name}§r: {line}"
@@ -267,62 +268,57 @@ class SourceServer(Server):
     def __repr__(self):
         return "Source"
 
-    async def chat_from_server_to_discord(self):
-        connections = re.compile(r"")
-        chat = re.compile(r"")
-        cvars = re.compile(r"")
-
-        # connect = r"""Client "CLIENTNAME" connected (IPADDRESS)"""
-        # disconnect = r"""Dropped CLIENTNAME from server(REASON)"""
-        # chat = """AAAA"""
-        while self.proc.is_running() and not self.bot.is_closed():
+    async def _log_loop(self):
+        if psutil.LINUX:
             for file in self.proc.open_files():
                 if os.path.splitext(file.path)[1] == '.log':
-                    logpath = file.path
-                    break
-            else:
-                await asyncio.sleep(3)
-                continue
-            async with aiofiles.open(logpath) as log:
+                    self.log_fd = file.fd
+                    self.log_path = file.path
+            while self.proc.is_running() and not self.bot.is_closed:  # CHANGE THIS
+                pp = path.join(psutil.PROCFS_PATH, self.proc.pid, 'fd', self.log_fd)
+                if not os.path.samefile(psutil.PROCFS_PATH, self.log_path):
+                    self.log_path = pp
+                else:
+                    await asyncio.sleep(10)
+        elif psutil.WINDOWS:
+            for file in self.proc.open_files():
+                if os.path.splitext(file.path)[1] == '.log':
+                    self.log_path = file.path
+
+    async def chat_from_server_to_discord(self):
+        connections = regex.compile(
+            r"""(?<=: ")([\w\s]+)(?:<\d><STEAM_0:\d:\d+><.*>") (?:((?:dis)?connected),? (?|address "(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}:\d{2,5})|(\(reason ".+"?)))""")
+        chat = regex.compile(r"""(?<=: ")([\w\s]+)(?:<\d><STEAM_0:\d:\d+><.*>") (|(say)|(say_team)) (".*")""")
+
+        while self.proc.is_running() and not self.bot.is_closed():
+            log_path = self.log_path
+            async with aiofiles.open(log_path) as log:
                 await log.seek(0, 2)
                 log_refresh = datetime.datetime.now() + datetime.timedelta(minutes=10)
-                while log_refresh > datetime.datetime.now():
+                while log_path == self.log_path:
                     try:
                         lines = await log.readlines()  # Returns instantly
                         msgs = list()
                         for line in lines:
-                            raw_connectionmsg = re.findall(connections, line)
-                            raw_chatmsg = re.findall(chat, line)
-                            raw_cvarsmsg = re.findall(cvars, line)
+                            raw_connectionmsg = regex.findall(connections, line)
+                            raw_chatmsg = regex.findall(chat, line)
 
                             if raw_chatmsg:
-                                x = self.check_for_mentions(raw_chatmsg)
                                 msgs.append(x)
                             elif raw_connectionmsg:
                                 msgs.append(f'`{raw_connectionmsg[0].rstrip()}`')
-                            elif raw_cvarsmsg:
-                                msgs.append(f'`{raw_cvarsmsg[0].rstrip()}`')
                             else:
                                 continue
                         if msgs:
                             x = "\n".join(msgs)
                             # await self.bot.chat_channel.send(f'{x}')
-                        # for msg in msgs:
-                        #     self.bot.bprint(f"{self.bot.game} | {''.join(msg)}")
+                        for msg in msgs:
+                            self.bot.bprint(f"{self.bot.game} | {''.join(msg)}")
                         continue
                     except Exception as e:
                         print(e)
                     finally:
                         await asyncio.sleep(.75)
-
-        # fpath = os.path.join(self.working_dir, "logs", "latest.log") if os.path.exists(
-        #     os.path.join(self.working_dir, "logs", "latest.log")) else os.path.join(self.working_dir, "server.log")
-        # server_filter = re.compile(
-        #     r"INFO\]:?(?:.*tedServer\]:)? (\[[^\]]*: .*\].*|(?<=]:\s).* the game|.* has made the .*)")
-        # player_filter = re.compile(r"FO\]:?(?:.*tedServer\]:)? (\[Server\].*|<.*>.*)")
-        # while self.process.is_running():
-        #     await self.read_server_log(fpath, player_filter, server_filter)
-        # pass
 
     async def chat_to_server_from_discord(self):
         with valvercon.RCON(("192.168.25.40", 22222), self.password) as rcon:
