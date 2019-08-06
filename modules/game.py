@@ -1,5 +1,4 @@
 import asyncio
-import functools
 
 from discord.ext import commands
 
@@ -9,13 +8,11 @@ from utils import sensor
 
 
 class Gamesense(commands.Cog):
+    """whut"""
+
     def __init__(self, bot):
         print("fff")
         self.bot = bot
-
-    @commands.Cog.listener()
-    async def on_ready(self):
-        print("HELP")
         self.bot.loop.create_task(self.get_current_server_status())
         self.bot.loop.create_task(self.check_server_running())
 
@@ -30,7 +27,8 @@ class Gamesense(commands.Cog):
 
                 self.bot.bprint(f"Server Status | Now Playing: {data['name']} {data['version']}")
                 print('t')
-                await self.bot.loop.run_in_executor(functools.partial(self.wait_or_when_cancelled, process))
+                await self.bot.loop.run_in_executor(process.wait())
+                # await self.bot.loop.run_in_executor(functools.partial(self.wait_or_when_cancelled, process))
                 # await self.bot.loop.run_in_executor(None, functools.partial(self.wait_or_when_cancelled, process))
                 self.bot.bprint(f"Server Status | Offline")
 
