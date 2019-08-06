@@ -4,6 +4,7 @@ import functools
 from discord.ext import commands
 
 from utils import Server as srv
+from utils import helpers
 from utils import sensor as sensor
 
 
@@ -57,6 +58,11 @@ class Gamesense(commands.Cog):
                 self.bot.game = None
                 await self.bot.change_presence()
                 await self.bot.wait_until_game_running(2)
+
+    @helpers.is_human()
+    @commands.command()
+    async def ping(self, ctx):
+        await ctx.send("Pong!")
 
 
 def setup(bot):
