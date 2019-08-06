@@ -42,7 +42,7 @@ initial_extensions = [
     'modules.admin',
     'modules.music',
     'modules.comrade',
-    'modules.game',
+    'modules.gamesense',
     'modules.server'
 ]
 

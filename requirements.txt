@@ -1,3 +1,4 @@
+toml
 aiofiles>=0.4.0
 colorama>=0.4.1
 discord.py[voice]>=1.2.2
