@@ -269,21 +269,23 @@ class SourceServer(Server):
         return "Source"
 
     async def _log_loop(self):
-        if psutil.LINUX:
-            for file in self.proc.open_files():
-                if os.path.splitext(file.path)[1] == '.log':
-                    self.log_fd = file.fd
-                    self.log_path = file.path
-            while self.proc.is_running() and not self.bot.is_closed:  # CHANGE THIS
-                pp = path.join(psutil.PROCFS_PATH, self.proc.pid, 'fd', self.log_fd)
-                if not os.path.samefile(psutil.PROCFS_PATH, self.log_path):
-                    self.log_path = pp
-                else:
-                    await asyncio.sleep(10)
-        elif psutil.WINDOWS:
-            for file in self.proc.open_files():
-                if os.path.splitext(file.path)[1] == '.log':
-                    self.log_path = file.path
+        while self.proc.is_running() and not self.bot.is_closed:
+            if psutil.LINUX:
+                for file in self.proc.open_files():
+                    if os.path.splitext(file.path)[1] == '.log':
+                        self.log_fd = file.fd
+                        self.log_path = file.path
+                while self.proc.is_running() and not self.bot.is_closed:
+                    pp = path.join(psutil.PROCFS_PATH, self.proc.pid, 'fd', self.log_fd)
+                    if not os.path.samefile(pp, self.log_path):
+                        self.log_path = pp
+                        break
+                    else:
+                        await asyncio.sleep(10)
+            elif psutil.WINDOWS:
+                for file in self.proc.open_files():
+                    if os.path.splitext(file.path)[1] == '.log':
+                        self.log_path = file.path
 
     async def chat_from_server_to_discord(self):
         connections = regex.compile(
@@ -356,7 +358,7 @@ class SourceServer(Server):
 
                 await self.bot.chat_channel.edit(topic=cur_status)
                 await self.bot.set_bot_status("Garry's Mod", f"{mode} on {cur_map} ({cur_p}/{max_p})",
-                                              f"CPU: {self.proc.cpu_percent()}% | Mem: {self.proc.memory_percent()}")
+                                              f"CPU: {self.proc.cpu_percent()}% | Mem: {round(self.proc.memory_percent())}")
             except discord.Forbidden:
                 print("Bot lacks permission to edit channels. (discord.Forbidden)")
             except valve.source.NoResponseError:
