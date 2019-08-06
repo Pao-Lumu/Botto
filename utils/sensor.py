@@ -1,5 +1,6 @@
 import json
 import os
+import pathlib
 from datetime import datetime
 from os import path
 from subprocess import PIPE, DEVNULL
@@ -50,12 +51,24 @@ def get_game_info():
             with open(path.join(cwd, ".gameinfo.json")) as file:
                 try:
                     gi = json.load(file)
-                except json.decoder.JSONDecodeError as e:
+                except json.JSONDecodeError as e:
                     print(f"JSON decoding error | {e}")
-                    pass
+                    raise json.JSONDecodeError
+
+            pathlib.Path(path.join(cwd, ".gameinfo.toml")).touch()
             with open(path.join(cwd, ".gameinfo.toml")) as file:
                 toml.dump(gi, file)
             os.remove(path.join(cwd, ".gameinfo.json"))
+
+            return process, gi
+
+        elif os.path.isfile(path.join(cwd, ".gameinfo.toml")):
+            with open(path.join(cwd, ".gameinfo.toml")) as file:
+                try:
+                    gi = toml.load(file)
+                except toml.TomlDecodeError as e:
+                    print(f"TOML decoding error | {e}")
+                    raise toml.TomlDecodeError
             return process, gi
 
         elif "serverfiles" in cwd:
