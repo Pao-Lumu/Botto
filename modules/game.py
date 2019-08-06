@@ -1,5 +1,5 @@
-import asyncio
-import functools
+# import asyncio
+# import functools
 
 from discord.ext import commands
 
@@ -12,39 +12,33 @@ class Gamesense(commands.Cog):
     """whut"""
 
     def __init__(self, bot):
-        print("fff")
         self.bot = bot
-
-    @commands.Cog.listener()
-    async def on_ready(self):
-        await asyncio.sleep(5)
-        print("HELP")
         self.bot.loop.create_task(self.get_current_server_status())
-        self.bot.loop.create_task(self.check_server_running())
+        # self.bot.loop.create_task(self.check_server_running())
 
-    def wait_or_when_cancelled(self, process):
-        while not self.bot.is_closed() and process.is_running():
-            process.wait(timeout=1)
-
-    async def check_server_running(self):
-        # await self.bot.wait_until_ready(1)
-        while not self.bot.is_closed():
-
-            process, data = sensor.get_game_info()
-            if data:
-                self.bot._game_stopped.clear()
-                self.bot._game_running.set()
-
-                self.bot.bprint(f"Server Status | Now Playing: {data['name']} {data['version']}")
-                print('t')
-                await self.bot.loop.run_in_executor(functools.partial(self.wait_or_when_cancelled, process))
-                # await self.bot.loop.run_in_executor(None, functools.partial(self.wait_or_when_cancelled, process))
-                self.bot.bprint(f"Server Status | Offline")
-
-                self.bot._game_running.clear()
-                self.bot._game_stopped.set()
-            else:
-                await asyncio.sleep(5)
+    # def wait_or_when_cancelled(self, process):
+    #     while not self.bot.is_closed() and process.is_running():
+    #         process.wait(timeout=1)
+    #
+    # async def check_server_running(self):
+    #     # await self.bot.wait_until_ready(1)
+    #     while not self.bot.is_closed():
+    #
+    #         process, data = sensor.get_game_info()
+    #         if data:
+    #             self.bot._game_stopped.clear()
+    #             self.bot._game_running.set()
+    #
+    #             self.bot.bprint(f"Server Status | Now Playing: {data['name']} {data['version']}")
+    #             print('t')
+    #             await self.bot.loop.run_in_executor(functools.partial(self.wait_or_when_cancelled, process))
+    #             # await self.bot.loop.run_in_executor(None, functools.partial(self.wait_or_when_cancelled, process))
+    #             self.bot.bprint(f"Server Status | Offline")
+    #
+    #             self.bot._game_running.clear()
+    #             self.bot._game_stopped.set()
+    #         else:
+    #             await asyncio.sleep(5)
 
     async def get_current_server_status(self):
         # await self.bot.wait_until_game_running(1)
