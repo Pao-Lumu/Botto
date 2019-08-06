@@ -14,6 +14,8 @@ from discord.ext import commands
 class OGBot(commands.Bot):
 
     def __init__(self, *args, **kwargs):
+        command_prefix = kwargs.pop('command_prefix', commands.when_mentioned_or('.'))
+        super().__init__(command_prefix=command_prefix, *args, **kwargs)
         tracemalloc.start()
         colorama.init()
         # self.loop = kwargs.pop('loop', asyncio.get_event_loop())
@@ -27,10 +29,9 @@ class OGBot(commands.Bot):
         self.debug = True
         self._game_running = asyncio.Event(loop=self.loop)
         self._game_stopped = asyncio.Event(loop=self.loop)
-        command_prefix = kwargs.pop('command_prefix', commands.when_mentioned_or('.'))
+
         if platform.system() == "Linux":
             asyncio.get_child_watcher().attach_loop(self.loop)
-        super().__init__(command_prefix=command_prefix, *args, **kwargs)
 
     async def wait_until_ready(self, delay=0):
         await discord.Client.wait_until_ready(self)
