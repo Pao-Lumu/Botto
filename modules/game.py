@@ -10,6 +10,10 @@ from utils import sensor as sensor
 class Game(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+
+    @commands.Cog.listener()
+    async def on_ready(self):
+        print("HELP")
         self.bot.loop.create_task(self.get_current_server_status())
         self.bot.loop.create_task(self.check_server_running())
 
