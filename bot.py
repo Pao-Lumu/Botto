@@ -14,6 +14,7 @@ import pyfiglet
 import toml
 from discord.ext import commands
 
+import game
 import ogbot_base
 from ogbotcmd import OGBotCmd
 from utils import helpers
@@ -42,7 +43,6 @@ initial_extensions = [
     'modules.admin',
     'modules.music',
     'modules.comrade',
-    'modules.game',
     'modules.server'
 ]
 
@@ -309,6 +309,7 @@ if __name__ == '__main__':
     bot.log = log
     # bot.cfg = botcfg
     bot.cfg = config['bot_configuration']
+    game = game.Game(bot)
     try:
         bot.run(token)
     finally:
