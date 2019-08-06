@@ -17,7 +17,7 @@ class OGBot(commands.Bot):
         tracemalloc.start()
         colorama.init()
         # self.loop = kwargs.pop('loop', asyncio.get_event_loop())
-        self.loop = None
+        # self.loop = None
         # self.cog_folder = kwargs.pop('cog_folder')
         self.game = ""
         self.gop_text_cd = 0
