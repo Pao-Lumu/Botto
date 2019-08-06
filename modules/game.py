@@ -2,6 +2,7 @@ import asyncio
 import functools
 
 from discord.ext import commands
+from discord.ext import tasks
 
 from utils import Server as srv
 from utils import helpers
@@ -13,13 +14,14 @@ class Gamesense(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
-        self.bot.loop.create_task(self.get_current_server_status())
+        # self.bot.loop.create_task(self.get_current_server_status())
         # self.bot.loop.create_task(self.check_server_running())
 
     def wait_or_when_cancelled(self, process):
         while not self.bot.is_closed() and process.is_running():
             process.wait(timeout=1)
 
+    @tasks.loop(count=1)
     async def check_server_running(self):
         # await self.bot.wait_until_ready(1)
         while not self.bot.is_closed():
@@ -40,6 +42,7 @@ class Gamesense(commands.Cog):
             else:
                 await asyncio.sleep(5)
 
+    @tasks.loop(count=1)
     async def get_current_server_status(self):
         # await self.bot.wait_until_game_running(1)
         self.bot.game = None
