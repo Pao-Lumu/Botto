@@ -1,13 +1,13 @@
 import asyncio
 import functools
 
-from discord.ext.commands import Cog
+from discord.ext import commands
 
 from utils import Server as srv
 from utils import sensor as sensor
 
 
-class Game(Cog):
+class Game(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.bot.loop.create_task(self.get_current_server_status())
