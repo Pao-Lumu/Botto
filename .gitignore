@@ -17,3 +17,4 @@ __pycache__/
 .idea/
 *.xml
 /config.ini
+screw_around/
