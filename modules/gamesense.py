@@ -7,8 +7,9 @@ from utils import Server as srv
 from utils import sensor as sensor
 
 
-class Game(commands.Cog):
+class Gamesense(commands.Cog):
     def __init__(self, bot):
+        print("fff")
         self.bot = bot
 
     @commands.Cog.listener()
@@ -59,4 +60,5 @@ class Game(commands.Cog):
 
 
 def setup(bot):
-    bot.add_cog(Game(bot))
+    print("h")
+    bot.add_cog(Gamesense(bot))
