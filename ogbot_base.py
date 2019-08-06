@@ -18,13 +18,13 @@ class OGBot(commands.Bot):
         colorama.init()
         # self.loop = kwargs.pop('loop', asyncio.get_event_loop())
         self.loop = None
-        self.cog_folder = kwargs.pop('cog_folder')
+        # self.cog_folder = kwargs.pop('cog_folder')
         self.game = ""
         self.gop_text_cd = 0
         self.gop_voice_cd = 0
         self.in_tmux = False
-        self.debug = False
-        # self.debug = True
+        # self.debug = False
+        self.debug = True
         self._game_running = asyncio.Event(loop=self.loop)
         self._game_stopped = asyncio.Event(loop=self.loop)
         command_prefix = kwargs.pop('command_prefix', commands.when_mentioned_or('.'))
