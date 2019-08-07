@@ -292,7 +292,8 @@ class SourceServer(Server):
     async def chat_from_server_to_discord(self):
         connections = regex.compile(
             r"""(?<=: ")([\w\s]+)(?:<\d><STEAM_0:\d:\d+><.*>") (?:((?:dis)?connected),? (?|address "(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}:\d{2,5})|(\(reason ".+"?)))""")
-        chat = regex.compile(r"""(?<=: ")([\w\s]+)(?:<\d><STEAM_0:\d:\d+><.*>") (|(say)|(say_team)) (".*")""")
+        chat = regex.compile(
+            r"""(?<=: ")([\w\s]+)(?:<\d><(?:STEAM_0:\d:\d+|Console)><.*>") (|(say)|(say_team)) (".*")""")
 
         while self.proc.is_running() and not self.bot.is_closed():
             log_path = self.log_path
