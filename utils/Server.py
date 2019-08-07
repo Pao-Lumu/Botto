@@ -364,7 +364,7 @@ class SourceServer(Server):
 
                 await self.bot.chat_channel.edit(topic=cur_status)
                 await self.bot.set_bot_status("Garry's Mod", f"{mode} on {cur_map} ({cur_p}/{max_p})",
-                                              f"CPU: {self.proc.cpu_percent()}% | Mem: {round(self.proc.memory_percent())}")
+                                              f"CPU: {self.proc.cpu_percent()}% | Mem: {round(self.proc.memory_percent(), 2)}%")
             except discord.Forbidden:
                 print("Bot lacks permission to edit channels. (discord.Forbidden)")
             except valve.source.NoResponseError:
