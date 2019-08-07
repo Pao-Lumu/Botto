@@ -25,8 +25,8 @@ class OGBot(commands.Bot):
         self.gop_text_cd = 0
         self.gop_voice_cd = 0
         self.in_tmux = False
-        # self.debug = False
-        self.debug = True
+        self.debug = False
+        # self.debug = True
         self._game_running = asyncio.Event(loop=self.loop)
         self._game_stopped = asyncio.Event(loop=self.loop)
 

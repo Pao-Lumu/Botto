@@ -56,7 +56,7 @@ def get_game_info():
                     raise json.JSONDecodeError
 
             pathlib.Path(path.join(cwd, ".gameinfo.toml")).touch()
-            with open(path.join(cwd, ".gameinfo.toml")) as file:
+            with open(path.join(cwd, ".gameinfo.toml"), "w+") as file:
                 toml.dump(gi, file)
             os.remove(path.join(cwd, ".gameinfo.json"))
 
