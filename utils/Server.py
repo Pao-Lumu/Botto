@@ -273,10 +273,13 @@ class SourceServer(Server):
     async def _log_loop(self):
         while self.proc.is_running() and not self.bot.is_closed:
             if psutil.LINUX:
+                print("Finding logs...")
                 for file in self.proc.open_files():
                     if os.path.splitext(file.path)[1] == '.log':
                         self.log_fd = file.fd
                         self.log_path = file.path
+                else:
+                    print("mission failed.")
                 while self.proc.is_running() and not self.bot.is_closed:
                     pp = path.join(psutil.PROCFS_PATH, self.proc.pid, 'fd', self.log_fd)
                     if not os.path.samefile(pp, self.log_path):
