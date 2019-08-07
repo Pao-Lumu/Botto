@@ -45,7 +45,7 @@ class Server:
     def is_running(self):
         return self.proc.is_running()
 
-    # async def _rcon_loop(self): pass
+    async def _rcon_loop(self): pass
 
     async def _log_loop(self): pass
 
@@ -54,6 +54,7 @@ class Server:
     async def chat_to_server_from_discord(self): pass
 
     async def update_server_information(self):
+        print("server")
         await self.bot.set_bot_status(self.name, "", "")
 
     async def sleep_with_backoff(self, tries, wait_time=5):
@@ -264,6 +265,7 @@ class MinecraftServer(Server):
 class SourceServer(Server):
     def __init__(self, bot, process: psutil.Process, *args, **kwargs):
         super().__init__(bot, process, *args, **kwargs)
+        self.bot.loop.create_task(self._log_loop())
 
     def __repr__(self):
         return "Source"
