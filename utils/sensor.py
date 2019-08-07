@@ -63,6 +63,7 @@ def get_game_info():
             return process, gi
 
         elif os.path.isfile(path.join(cwd, ".gameinfo.toml")):
+            pathlib.Path(path.join(cwd, ".gameinfo.toml")).touch()
             with open(path.join(cwd, ".gameinfo.toml")) as file:
                 try:
                     gi = toml.load(file)
