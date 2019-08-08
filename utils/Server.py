@@ -334,7 +334,6 @@ class SourceServer(Server):
                         i = len(msg.author.name)
                         if len(msg.clean_content) + i > 242:
                             wrapped = textwrap.wrap(msg.clean_content, width=230 - i, initial_indent=f"|{msg.author.name}: ", subsequent_indent='|')
-                            pprint(wrapped)
                             for wrapped_line in wrapped:
                                 rcon(f"say |{wrapped_line.encode('utf-8')}")
                         else:
