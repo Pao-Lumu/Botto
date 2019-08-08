@@ -277,7 +277,7 @@ class SourceServer(Server):
         port = 22242
 
         transport, protocol = await self.bot.loop.create_datagram_endpoint(
-            lambda: SrcdsLoggingProtocol(asyncio.create_task, self._log_callback),
+            lambda: SrcdsLoggingProtocol(self.bot.loop.create_task, self._log_callback),
             local_addr=(self.bot.cfg.local_ip, port))
 
         try:
