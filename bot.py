@@ -80,14 +80,11 @@ def load_config() -> dict:
         with open('config.toml') as cfg:
             dd_config = toml.load(cfg)
             for k1, v1 in default.items():
-                print(f"{k1}: {v1}")
                 if k1 not in dd_config.keys():
                     dd_config[k1] = v1
                 if isinstance(v1, dict):
                     for k2, v2 in v1.items():
-                        print(f"   {k2}: {v2}")
                         if k2 not in dd_config[k1].keys():
-                            print(k2)
                             dd_config[k1][k2] = v2
 
 
