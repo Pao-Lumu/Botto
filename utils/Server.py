@@ -336,10 +336,10 @@ class SourceServer(Server):
                             wrapped = textwrap.wrap(msg.clean_content, width=230 - i, initial_indent=f"|{msg.author.name}: ", subsequent_indent='|')
                             pprint(wrapped)
                             for wrapped_line in wrapped:
-                                rcon(f"say |{wrapped_line}")
+                                rcon(f"say |{wrapped_line.encode('utf-8')}")
                                 await asyncio.sleep(1)
                         else:
-                            rcon(f"say |{msg.author.name}: {msg.clean_content}")
+                            rcon(f"say |{msg.author.name}: {msg.clean_content.encode('utf-8')}")
                         self.bot.bprint(f"Discord | <{msg.author.name}>: {msg.clean_content}")
                     if msg.attachments:
                         rcon.command(f"say |{msg.author.name}: Image {msg.attachments[0]['filename']}")
