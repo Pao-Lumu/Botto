@@ -337,7 +337,6 @@ class SourceServer(Server):
                             pprint(wrapped)
                             for wrapped_line in wrapped:
                                 rcon(f"say |{wrapped_line.encode('utf-8')}")
-                                await asyncio.sleep(1)
                         else:
                             rcon(f"say |{msg.author.name}: {msg.clean_content.encode('utf-8')}")
                         self.bot.bprint(f"Discord | <{msg.author.name}>: {msg.clean_content}")
