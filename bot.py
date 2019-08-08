@@ -90,7 +90,6 @@ def load_config() -> dict:
 
         with open('config.toml', 'w') as cfg2:
             toml.dump(dd_config, cfg2)
-            print(dd_config)
         return dd_config
     except FileNotFoundError:
         log.warning('File "config.toml" not found; Generating...')
