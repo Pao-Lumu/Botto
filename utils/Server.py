@@ -336,7 +336,7 @@ class SourceServer(Server):
                             wrapped = textwrap.wrap(msg.clean_content, width=230 - i, initial_indent=f"|{msg.author.name}: ", subsequent_indent='|')
                             pprint(wrapped)
                             for wrapped_line in wrapped:
-                                rcon(f"say {wrapped_line}")
+                                rcon(f"say |{wrapped_line}")
                                 await asyncio.sleep(1)
                         else:
                             rcon(f"say |{msg.author.name}: {msg.clean_content}")
@@ -347,6 +347,8 @@ class SourceServer(Server):
                             f"Discord | {msg.author.name}: Image {msg.attachments[0]['filename']}")
                 except futures.TimeoutError:
                     pass
+                except Exception as e:
+                    print(e)
 
     async def update_server_information(self):
         while self.proc.is_running() and not self.bot.is_closed():
