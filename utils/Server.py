@@ -100,6 +100,7 @@ class MinecraftServer(Server):
         server_filter = regex.compile(
             r"INFO\]:?(?:.*tedServer\]:)? (\[[^\]]*: .*\].*|(?<=]:\s).* the game|.* has made the .*)")
         player_filter = regex.compile(r"FO\]:?(?:.*tedServer\]:)? (\[Server\].*|<.*>.*)")
+
         while self.proc.is_running() and not self.bot.is_closed():
             try:
                 await self.read_server_log(str(fpath), player_filter, server_filter)
@@ -265,68 +266,66 @@ class MinecraftServer(Server):
 class SourceServer(Server):
     def __init__(self, bot, process: psutil.Process, *args, **kwargs):
         super().__init__(bot, process, *args, **kwargs)
+        self.log = list()
+        self.log_lock = asyncio.Lock()
         self.bot.loop.create_task(self._log_loop())
 
     def __repr__(self):
         return "Source"
 
     async def _log_loop(self):
-        while self.proc.is_running() and not self.bot.is_closed:
-            if psutil.LINUX:
-                print("Finding logs...")
-                for file in self.proc.open_files():
-                    if os.path.splitext(file.path)[1] == '.log':
-                        self.log_fd = file.fd
-                        self.log_path = file.path
-                else:
-                    print("mission failed.")
-                while self.proc.is_running() and not self.bot.is_closed:
-                    pp = path.join(psutil.PROCFS_PATH, self.proc.pid, 'fd', self.log_fd)
-                    if not os.path.samefile(pp, self.log_path):
-                        self.log_path = pp
-                        break
-                    else:
-                        await asyncio.sleep(10)
-            elif psutil.WINDOWS:
-                for file in self.proc.open_files():
-                    if os.path.splitext(file.path)[1] == '.log':
-                        self.log_path = file.path
+        port = 22242
+
+        transport, protocol = await self.bot.loop.create_datagram_endpoint(
+            lambda: SrcdsLoggingProtocol(asyncio.create_task, self._log_callback),
+            local_addr=(self.ip, port))
+
+        try:
+            await self.bot.wait_until_game_stopped()
+        finally:
+            transport.close()
+
+    async def _log_callback(self, message):
+        async with self.log_lock:
+            self.log.append(message)
+            print(f"Log state: {self.log}")
 
     async def chat_from_server_to_discord(self):
         connections = regex.compile(
             r"""(?<=: ")([\w\s]+)(?:<\d><STEAM_0:\d:\d+><.*>") (?:((?:dis)?connected),? (?|address "(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}:\d{2,5})|(\(reason ".+"?)))""")
         chat = regex.compile(
-            r"""(?<=: ")([\w\s]+)(?:<\d><(?:STEAM_0:\d:\d+|Console)><.*>") (|(say)|(say_team)) (".*")""")
+            r"""(?<=: ")([\w\s]+)(?:<\d><(?:STEAM_0:\d:\d+|Console)><.*>") (|say|say_team) "(.*)\"""")
+        while True:
+            try:
+                lines = []
+                async with self.log_lock:
+                    if self.log:
+                        lines = self.log
+                        self.log = []
+                msgs = list()
+                for line in lines:
+                    raw_connectionmsg = regex.findall(connections, line)
+                    raw_chatmsg = regex.findall(chat, line)
 
-        while self.proc.is_running() and not self.bot.is_closed():
-            log_path = self.log_path
-            async with aiofiles.open(log_path) as log:
-                await log.seek(0, 2)
-                log_refresh = datetime.datetime.now() + datetime.timedelta(minutes=10)
-                while log_path == self.log_path:
-                    try:
-                        lines = await log.readlines()  # Returns instantly
-                        msgs = list()
-                        for line in lines:
-                            raw_connectionmsg = regex.findall(connections, line)
-                            raw_chatmsg = regex.findall(chat, line)
-
-                            if raw_chatmsg:
-                                msgs.append(x)
-                            elif raw_connectionmsg:
-                                msgs.append(f'`{raw_connectionmsg[0].rstrip()}`')
-                            else:
-                                continue
-                        if msgs:
-                            x = "\n".join(msgs)
-                            # await self.bot.chat_channel.send(f'{x}')
-                        for msg in msgs:
-                            self.bot.bprint(f"{self.bot.game} | {''.join(msg)}")
+                    if raw_chatmsg:
+                        msgs.append(f"{'[TEAM] ' if raw_chatmsg[0][1] is 'say_team' else ''}{raw_chatmsg[0][0]}: {raw_chatmsg[0][2]}")
+                        print(msgs)
+                    elif raw_connectionmsg:
+                        # putting this here prevents people from typing out the format and faking a connection
+                        msgs.append(f"`{' '.join(raw_connectionmsg[0])}`")
+                        print(msgs)
+                    else:
                         continue
-                    except Exception as e:
-                        print(e)
-                    finally:
-                        await asyncio.sleep(.75)
+                if msgs:
+                    x = "\n".join(msgs)
+                    await self.bot.chat_channel.send(f'{x}')
+                for msg in msgs:
+                    print(f"{self.bot.game} | {''.join(msg)}")
+                continue
+            except Exception as e:
+                print(e)
+            finally:
+                await asyncio.sleep(.75)
 
     async def chat_to_server_from_discord(self):
         with valvercon.RCON(("192.168.25.40", 22222), self.password) as rcon:
@@ -381,3 +380,42 @@ def generate_server_object(bot, process, gameinfo: dict) -> Server:
         return SourceServer(bot, process, **gameinfo)
     else:
         return Server(bot, process, **gameinfo)
+
+
+class SrcdsLoggingProtocol(asyncio.DatagramProtocol):
+
+    def __init__(self, cb1, cb2):
+        self.callback1 = cb1
+        self.callback2 = cb2
+
+    def connection_made(self, transport):
+        self.transport = transport
+
+    def datagram_received(self, packet, addr):
+        message = self.parse(packet)
+        self.callback1(self.callback2(message))
+
+    def parse(self, packet: bytes):
+        packet_len = len(packet)
+
+        if packet_len < 7:
+            raise Exception("Packet is too short")
+
+        for i in range(4):
+            if packet[i] != int(0xFF):
+                raise Exception('invalid header value')
+
+        if packet[packet_len - 1] != int(0x00):
+            raise Exception('invalid footer value')
+
+        ptype, offset, footer = packet[4], 5, 2
+
+        if packet[packet_len - 2] != int(0x0a):
+            footer = 1
+
+        if ptype != int(0x52):
+            raise Exception('invalid packet type ' + hex(ptype))
+
+        message = packet[offset:(packet_len - footer)]
+
+        return message.decode('utf-8').strip()
