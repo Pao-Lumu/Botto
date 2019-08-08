@@ -17,7 +17,7 @@ import valve.source
 from discord import Forbidden
 from mcstatus import MinecraftServer as mc
 from valve.source.a2s import ServerQuerier as src
-
+from pprint import pprint
 
 class Server:
     def __init__(self, bot, process, *args, **kwargs):
@@ -334,8 +334,10 @@ class SourceServer(Server):
                         i = len(msg.author.name)
                         if len(msg.clean_content) + i > 242:
                             wrapped = textwrap.wrap(msg.clean_content, width=230 - i, initial_indent=f"|{msg.author.name}: ", subsequent_indent='|')
+                            pprint(wrapped)
                             for wrapped_line in wrapped:
                                 rcon(f"say {wrapped_line}")
+                                await asyncio.sleep(1)
                         else:
                             rcon(f"say |{msg.author.name}: {msg.clean_content}")
                         self.bot.bprint(f"Discord | <{msg.author.name}>: {msg.clean_content}")
