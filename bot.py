@@ -74,21 +74,31 @@ Chat Channel: {bot.chat_channel}  |  Meme Channel: {bot.meme_channel}
 def load_config() -> dict:
     default = {"credentials": {'token': '', 'client_id': ''},
                "bot_configuration": {'tracked_guild_ids': [], 'chat_channel': 0, 'default_rcon_password': '',
-                                     'comrade_channel': 0}}
+                                     'comrade_channel': 0, 'local_ip': '127.0.0.1'}}
 
     try:
-        with open('config.toml') as config:
-            dd_config = defaultdict(lambda: "", toml.load(config))
-            for k, v in default.items():
-                if k not in dd_config:
-                    dd_config[k] = v
-        with open('config.toml', 'w+') as config:
-            toml.dump(dd_config, config)
+        with open('config.toml') as cfg:
+            dd_config = toml.load(cfg)
+            for k1, v1 in default.items():
+                print(f"{k1}: {v1}")
+                if k1 not in dd_config.keys():
+                    dd_config[k1] = v1
+                if isinstance(v1, dict):
+                    for k2, v2 in v1.items():
+                        print(f"   {k2}: {v2}")
+                        if k2 not in dd_config[k1].keys():
+                            print(k2)
+                            dd_config[k1][k2] = v2
+
+
+        with open('config.toml', 'w') as cfg2:
+            toml.dump(dd_config, cfg2)
+            print(dd_config)
         return dd_config
     except FileNotFoundError:
         log.warning('File "config.toml" not found; Generating...')
-        with open('config.toml', 'w+') as config:
-            toml.dump(default, config)
+        with open('config.toml', 'w+') as cfg3:
+            toml.dump(default, cfg3)
         bot.bprint('File "config.toml" not found; Generating...')
         bot.bprint('Please input any relevant information and restart.')
         return {}
@@ -306,7 +316,6 @@ if __name__ == '__main__':
     log.addHandler(fh)
 
     bot.log = log
-    # bot.cfg = botcfg
     bot.cfg = config['bot_configuration']
     game = game.Game(bot)
     try:

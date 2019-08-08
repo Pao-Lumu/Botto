@@ -278,7 +278,7 @@ class SourceServer(Server):
 
         transport, protocol = await self.bot.loop.create_datagram_endpoint(
             lambda: SrcdsLoggingProtocol(asyncio.create_task, self._log_callback),
-            local_addr=('127.0.0.1', port))
+            local_addr=(self.bot.cfg.local_ip, port))
 
         try:
             await self.bot.wait_until_game_stopped()
