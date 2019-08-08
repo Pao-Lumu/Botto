@@ -293,7 +293,7 @@ class SourceServer(Server):
         connections = regex.compile(
             r"""(?<=: ")([\w\s]+)(?:<\d><STEAM_0:\d:\d+><.*>") (?:((?:dis)?connected),? (?|address "(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}:\d{2,5})|(\(reason ".+"?)))""")
         chat = regex.compile(
-            r"""(?<=: ")([\w\s]+)(?:<\d><(?:STEAM_0:\d:\d+|Console)><.*>") (|say|say_team) "[^\|](.*)\"""")
+            r"""(?<=: ")([\w\s]+)(?:<\d><(?:STEAM_0:\d:\d+|Console)><.*>") (|say|say_team) "([^\|].*)\"""")
         while True:
             try:
                 lines = []
@@ -314,7 +314,7 @@ class SourceServer(Server):
                         continue
                 if msgs:
                     x = "\n".join(msgs)
-                    await self.bot.chat_channel.send(f'|{x}')
+                    await self.bot.chat_channel.send(f'{x}')
                 for msg in msgs:
                     self.bot.bprint(f"{self.bot.game} | {''.join(msg)}")
                 continue
@@ -324,7 +324,7 @@ class SourceServer(Server):
                 await asyncio.sleep(.75)
 
     async def chat_to_server_from_discord(self):
-        with valvercon.RCON(("192.168.25.40", 22222), self.password) as rcon:
+        with valvercon.RCON((self.bot.cfg["local_ip"], 22222), self.password) as rcon:
             while self.proc.is_running() and not self.bot.is_closed():
                 try:
                     msg = await self.bot.wait_for('message', check=self.is_chat_channel, timeout=5)
@@ -332,15 +332,15 @@ class SourceServer(Server):
                         pass
                     elif msg.clean_content:
                         i = len(msg.author.name)
-                        if len(msg.clean_content) + i > 243:
+                        if len(msg.clean_content) + i > 242:
                             wrapped = textwrap.wrap(msg.clean_content, 243 - i)
                             for wrapped_line in wrapped:
                                 rcon(f"say {msg.author.name}: {wrapped_line}")
                         else:
-                            rcon(f"say {msg.author.name}: {msg.clean_content}")
+                            rcon(f"say |{msg.author.name}: {msg.clean_content}")
                         self.bot.bprint(f"Discord | <{msg.author.name}>: {msg.clean_content}")
                     if msg.attachments:
-                        rcon.command(f"say §l{msg.author.name}§r: Image {msg.attachments[0]['filename']}")
+                        rcon.command(f"say |{msg.author.name}: Image {msg.attachments[0]['filename']}")
                         self.bot.bprint(
                             f"Discord | {msg.author.name}: Image {msg.attachments[0]['filename']}")
                 except futures.TimeoutError:
