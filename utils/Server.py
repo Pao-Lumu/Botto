@@ -393,7 +393,9 @@ class SrcdsLoggingProtocol(asyncio.DatagramProtocol):
         self.transport = transport
 
     def datagram_received(self, packet, addr):
+        print(packet)
         message = self.parse(packet)
+        print(message)
         self.callback1(self.callback2(message))
 
     def parse(self, packet: bytes):
