@@ -333,9 +333,9 @@ class SourceServer(Server):
                     elif msg.clean_content:
                         i = len(msg.author.name)
                         if len(msg.clean_content) + i > 242:
-                            wrapped = textwrap.wrap(msg.clean_content, 243 - i)
+                            wrapped = textwrap.wrap(msg.clean_content, width=242 - i, initial_indent=f"|msg.author.name: ", subsequent_indent='|')
                             for wrapped_line in wrapped:
-                                rcon(f"say {msg.author.name}: {wrapped_line}")
+                                rcon(f"say {wrapped_line}")
                         else:
                             rcon(f"say |{msg.author.name}: {msg.clean_content}")
                         self.bot.bprint(f"Discord | <{msg.author.name}>: {msg.clean_content}")
