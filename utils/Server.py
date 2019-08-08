@@ -288,13 +288,12 @@ class SourceServer(Server):
     async def _log_callback(self, message):
         async with self.log_lock:
             self.log.append(message)
-            print(f"Log state: {self.log}")
 
     async def chat_from_server_to_discord(self):
         connections = regex.compile(
             r"""(?<=: ")([\w\s]+)(?:<\d><STEAM_0:\d:\d+><.*>") (?:((?:dis)?connected),? (?|address "(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}:\d{2,5})|(\(reason ".+"?)))""")
         chat = regex.compile(
-            r"""(?<=: ")([\w\s]+)(?:<\d><(?:STEAM_0:\d:\d+|Console)><.*>") (|say|say_team) "(.*)\"""")
+            r"""(?<=: ")([\w\s]+)(?:<\d><(?:STEAM_0:\d:\d+|Console)><.*>") (|say|say_team) "[^\|](.*)\"""")
         while True:
             try:
                 lines = []
@@ -308,19 +307,16 @@ class SourceServer(Server):
                     raw_chatmsg = regex.findall(chat, line)
 
                     if raw_chatmsg:
-                        msgs.append(f"{'[TEAM] ' if raw_chatmsg[0][1] is 'say_team' else ''}{raw_chatmsg[0][0]}: {raw_chatmsg[0][2]}")
-                        print(msgs)
+                        msgs.append(f"{'[TEAM] ' if raw_chatmsg[0][1] is 'say_team' else ''} *[{raw_chatmsg[0][0]}]*: {raw_chatmsg[0][2]}")
                     elif raw_connectionmsg:
-                        # putting this here prevents people from typing out the format and faking a connection
                         msgs.append(f"`{' '.join(raw_connectionmsg[0])}`")
-                        print(msgs)
                     else:
                         continue
                 if msgs:
                     x = "\n".join(msgs)
-                    await self.bot.chat_channel.send(f'{x}')
+                    await self.bot.chat_channel.send(f'|{x}')
                 for msg in msgs:
-                    print(f"{self.bot.game} | {''.join(msg)}")
+                    self.bot.bprint(f"{self.bot.game} | {''.join(msg)}")
                 continue
             except Exception as e:
                 print(e)
@@ -393,9 +389,7 @@ class SrcdsLoggingProtocol(asyncio.DatagramProtocol):
         self.transport = transport
 
     def datagram_received(self, packet, addr):
-        print(packet)
         message = self.parse(packet)
-        print(message)
         self.callback1(self.callback2(message))
 
     def parse(self, packet: bytes):
