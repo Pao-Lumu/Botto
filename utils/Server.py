@@ -278,7 +278,7 @@ class SourceServer(Server):
 
         transport, protocol = await self.bot.loop.create_datagram_endpoint(
             lambda: SrcdsLoggingProtocol(asyncio.create_task, self._log_callback),
-            local_addr=(self.ip, port))
+            local_addr=('127.0.0.1', port))
 
         try:
             await self.bot.wait_until_game_stopped()
@@ -389,6 +389,7 @@ class SrcdsLoggingProtocol(asyncio.DatagramProtocol):
         self.callback2 = cb2
 
     def connection_made(self, transport):
+        print("Connected to Server")
         self.transport = transport
 
     def datagram_received(self, packet, addr):
