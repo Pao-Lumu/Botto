@@ -7,4 +7,4 @@
 
 ~ LOW PRIORITY: Soundboard
 ~~ Let Brandon create soundboard things
-~~ Use XMLRPC to give him a UI on his desktop to play it.
+~~ Use ?XMLRPC? to give him a UI on his desktop to play it.

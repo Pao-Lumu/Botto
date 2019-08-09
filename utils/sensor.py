@@ -9,21 +9,20 @@ import psutil
 import toml
 
 
-def get_running():
-    current_proc = None
+def get_running() -> psutil.Process:
     try:
         if psutil.WINDOWS:
             for p in psutil.process_iter(attrs=['connections']):
                 for x in p.info['connections']:
                     if x.laddr.port == 22222:
-                        current_proc = p
+                        return p
                 else:
                     continue
         elif psutil.LINUX:
             ps = psutil.Popen("/usr/sbin/ss -tulpn | grep -P :22222 | grep -oP '(?<=pid\=)(\d+)'", shell=True, stdout=PIPE, stderr=DEVNULL)
             pid = ps.stdout.read().decode("utf-8").split('\n')[0]
             if pid:
-                current_proc = psutil.Process(pid=int(pid))
+                return psutil.Process(pid=int(pid))
 
     except AttributeError:
         print('Oh no')
@@ -31,10 +30,6 @@ def get_running():
         print('ERROR')
         print(e)
         pass
-    if current_proc:
-        return current_proc
-    else:
-        return None
 
 
 def get_game_info():
