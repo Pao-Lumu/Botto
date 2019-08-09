@@ -1,5 +1,7 @@
 import asyncio
+
 import regex
+
 
 # host = ''
 # port = 22242
@@ -104,7 +106,7 @@ class Crap:
         await loop.create_task(self.chat_from_server_to_discord())
 
         try:
-            await asyncio.sleep(30)  # Serve for 1 hour.
+            await asyncio.sleep(30)  # Serve for 30 seconds
         finally:
             transport.close()
 

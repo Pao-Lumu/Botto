@@ -17,7 +17,7 @@ import valve.source
 from discord import Forbidden
 from mcstatus import MinecraftServer as mc
 from valve.source.a2s import ServerQuerier as src
-from pprint import pprint
+
 
 class Server:
     def __init__(self, bot, process, *args, **kwargs):
@@ -293,7 +293,7 @@ class SourceServer(Server):
         connections = regex.compile(
             r"""(?<=: ")([\w\s]+)(?:<\d><STEAM_0:\d:\d+><.*>") (?:((?:dis)?connected),? (?|address "(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}:\d{2,5})|(\(reason ".+"?)))""")
         chat = regex.compile(
-            r"""(?<=: ")([\w\s]+)(?:<\d+><(?:STEAM_0:\d:\d+|Console)><.*>") (|say|say_team) "([^\|]?.*)\"""")
+            r"""(?<=: ")([\w\s]+)(?:<\d+><(?:STEAM_0:\d:\d+|Console)><.*>)" (|say|say_team) "(?!\|D> )(.*)\"""")
         while True:
             try:
                 lines = []
@@ -332,15 +332,18 @@ class SourceServer(Server):
                         pass
                     elif msg.clean_content:
                         i = len(msg.author.name)
-                        if len(msg.clean_content) + i > 242:
-                            wrapped = textwrap.wrap(msg.clean_content, width=230 - i, initial_indent=f"|{msg.author.name}: ", subsequent_indent='|')
+                        # if message is longer than 200-some characters
+                        if len(msg.clean_content) > 230 - i:
+                            wrapped = textwrap.wrap(msg.clean_content, width=230 - i,
+                                                    initial_indent=f"{msg.author.name}: ")
                             for wrapped_line in wrapped:
-                                rcon(f"say |{wrapped_line.encode('utf-8')}")
+                                rcon(f"say |D> {wrapped_line}")
+                        # elif shorter than 200-some characters
                         else:
-                            rcon(f"say |{msg.author.name}: {msg.clean_content.encode('utf-8')}")
+                            rcon(f"say |D> {msg.author.name}: {msg.clean_content}")
                         self.bot.bprint(f"Discord | <{msg.author.name}>: {msg.clean_content}")
                     if msg.attachments:
-                        rcon.command(f"say |{msg.author.name}: Image {msg.attachments[0]['filename']}")
+                        rcon.command(f"say |D> {msg.author.name}: Image {msg.attachments[0]['filename']}")
                         self.bot.bprint(
                             f"Discord | {msg.author.name}: Image {msg.attachments[0]['filename']}")
                 except futures.TimeoutError:
