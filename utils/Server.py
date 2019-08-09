@@ -18,6 +18,7 @@ from discord import Forbidden
 from mcstatus import MinecraftServer as mc
 from valve.source.a2s import ServerQuerier as src
 
+valvercon.RCONMessage.ENCODING = "utf-8"
 
 class Server:
     def __init__(self, bot, process, *args, **kwargs):
