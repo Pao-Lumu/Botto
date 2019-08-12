@@ -6,7 +6,6 @@ import datetime
 import logging.handlers
 import os
 import sys
-from collections import defaultdict
 
 # noinspection PyPackageRequirements
 import discord
@@ -270,10 +269,7 @@ if __name__ == '__main__':
     except KeyError:
         # IF LIBTMUX INSTALLED BUT TMUX NOT RUNNING, PASS
         pass
-    # credentials = load_credentials()
-    # botcfg = load_botconfig()
     config = load_config()
-    # if not credentials or not botcfg or not config:
     if not config:
         exit(-1)
     token = ""
