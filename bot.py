@@ -36,8 +36,6 @@ sh.setFormatter(fmt)
 log.addHandler(sh)
 discord_logger.addHandler(sh)
 
-# initial_extensions = []
-
 initial_extensions = [
     'modules.admin',
     'modules.music',
@@ -87,7 +85,6 @@ def load_config() -> dict:
                         if k2 not in dd_config[k1].keys():
                             dd_config[k1][k2] = v2
 
-
         with open('config.toml', 'w') as cfg2:
             toml.dump(dd_config, cfg2)
         return dd_config
@@ -98,6 +95,7 @@ def load_config() -> dict:
         bot.bprint('File "config.toml" not found; Generating...')
         bot.bprint('Please input any relevant information and restart.')
         return {}
+
 
 # Bot Event Overrides
 
