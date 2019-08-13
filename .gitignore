@@ -2,9 +2,9 @@
 config.toml
 
 # legacy token and config files
-config.ini
-credentials.json
-botcfg.json
+old/config.ini
+old/credentials.json
+old/botcfg.json
 
 # bot logs
 logs/
@@ -16,5 +16,5 @@ __pycache__/
 
 .idea/
 *.xml
-/config.ini
+/old/config.ini
 screw_around/

@@ -4,7 +4,6 @@ import datetime
 import inspect
 import os
 import time
-import tracemalloc
 from collections import defaultdict
 from pprint import pprint
 
@@ -65,52 +64,49 @@ Loaded cogs: {", ".join(self.bot.cogs.keys())}""")
             self.bot.load_extension(ex)
             pass
 
-    def do_get_methods(self, line):
-        """Print all (non-private) methods in self.bot"""
+    def do_methods(self, line):
+        """Prints all (non-private) methods in self.bot (any defined in ogbot_base or its superclasses)"""
         pprint(self.methods)
 
-    def do_get_tasks(self, line):
+    def do_tasks(self, line):
+        """Prints aio tasks launched by the user's code.
+
+        If 'debug' is appended to this, the command will print all aio tasks.
+        """
+
         try:
-            # print("test")
             x = asyncio.all_tasks(self.loop)
-            # su = [ for c in x]
             suu = [(c._coro.__name__, c.get_stack()) for c in x]
-            # print(suu[0])
             print("List of running tasks:")
-            # print(suu)
             for x in suu:
                 name, path = x[0], x[1]
                 path = inspect.getabsfile(path[0])
                 if os.getcwd().lower() in path.lower():
                     file = path.split('\\')[-1]
                     print(f" {name} ({file})")
-
-            # pprint(suu)
+                elif "debug" in line:
+                    print(f" {name} (internal)")
 
         except AttributeError:
             x = asyncio.Task.all_tasks(self.loop)
             pprint(x)
             print("I errored btw lol")
 
-    def do_get_loop(self, line):
-        """Print the current asyncio event loop"""
+    def do_loop(self, line):
+        """Prints limited information about the current asyncio event loop."""
         print(self.loop)
-        asyncio.set_event_loop(loop=self.loop)
-        print(asyncio.get_event_loop())
 
-    def do_get_vars(self, line):
-        """Print all vars in self.bot"""
+    def do_vars(self, line):
+        """Prints all vars in self.bot"""
         pprint(self.vars)
 
     def do_debug_input(self, line):
-        """Check how command line input is being parsed"""
+        """Echos any command line input"""
         print(type(line))
         print(line)
 
     def do_get_user_info(self, line):
-        print(line)
-        print(type(line))
-        # x = self.bot.fetch_user(int(line))
+        """Prints information about a Discord user"""
         x = self.loop.create_task(
             self._exec_async(self.bot.fetch_user, parameters=[int(line)], callback=self._bad_practice))
         while not x.done():
@@ -120,16 +116,6 @@ Loaded cogs: {", ".join(self.bot.cogs.keys())}""")
         data = """Name: {} | ID: {}
 is_bot: {} | Avatar: {}""".format(z.name, z.id, z.bot, z.avatar_url)
         print(data)
-
-    def do_memory(self, line):
-
-        snapshot = tracemalloc.take_snapshot()
-        top_stats = snapshot.statistics('size')
-
-        stat = top_stats[0]
-        print("%s memory blocks: %.1f KiB" % (stat.count, stat.size / 1024))
-        for line in stat.traceback.format():
-            print(line)
 
     def do_exec(self, line):
         """Run methods and return their values, or get the values of variables"""
@@ -177,12 +163,6 @@ is_bot: {} | Avatar: {}""".format(z.name, z.id, z.bot, z.avatar_url)
                     nn.sort(key=lambda x: x.cog.qualified_name if x.cog else "help")
                     for x in nn:
                         print(x)
-                    # print(nn)
-                    # for x in func():
-                    #     print(f"{x.name}")
-                    # print(x.aliases)
-                    # print(type(x))
-                    # print(dir(x))
 
                 else:
                     try:
@@ -227,8 +207,25 @@ Sent on {m.created_at.strftime('%a, %b %d, %Y at %I:%M:%S %p')}"""
         return [s[offs:] for s in self.attributes if s.startswith(mline)]
 
     def do_list_commands(self, line):
-        for x in self.bot.commands:
-            print(x.qualified_name)
+        # for x in self.bot.commands:
+        #     print(x.qualified_name)
+        #     print(self.bot.cogs)
+        for name, cog in self.bot.cogs.items():
+            # pprint(dir(cog))
+            print("Module: " + name)
+            for group in cog.get_commands():
+                try:
+                    assert group.commands
+                    print("  | Group: " + str(group.qualified_name))
+                    print("  +-------|")
+                    for sc in group.commands:
+                        print("          | " + sc.name)
+                except AttributeError as e:
+                    print("  | Command: " + str(group.qualified_name))
+                    continue
+                except Exception as e:
+                    print(e.__class__)
+                    print(dir(e))
 
     async def _exec_async(self, method, parameters=None, callback=None):
         try:

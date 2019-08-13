@@ -17,7 +17,9 @@ import valve.source
 from discord import Forbidden
 from mcstatus import MinecraftServer as mc
 from valve.source.a2s import ServerQuerier as src
-from pprint import pprint
+
+valvercon.RCONMessage.ENCODING = "utf-8"
+
 
 class Server:
     def __init__(self, bot, process, *args, **kwargs):
@@ -34,9 +36,8 @@ class Server:
         self.rcon_lock = asyncio.Lock()
         self.last_reconnect = datetime.datetime(1, 1, 1)
 
-        self.bot.loop.create_task(self._rcon_loop())
-        self.bot.loop.create_task(self.chat_from_server_to_discord())
-        self.bot.loop.create_task(self.chat_to_server_from_discord())
+        self.bot.loop.create_task(self.chat_from_game_to_guild())
+        self.bot.loop.create_task(self.chat_from_guild_to_game())
         self.bot.loop.create_task(self.update_server_information())
 
     def __repr__(self):
@@ -45,13 +46,11 @@ class Server:
     def is_running(self):
         return self.proc.is_running()
 
-    async def _rcon_loop(self): pass
-
     async def _log_loop(self): pass
 
-    async def chat_from_server_to_discord(self): pass
+    async def chat_from_game_to_guild(self): pass
 
-    async def chat_to_server_from_discord(self): pass
+    async def chat_from_guild_to_game(self): pass
 
     async def update_server_information(self):
         print("server")
@@ -94,7 +93,7 @@ class MinecraftServer(Server):
             print(e)
             pass
 
-    async def chat_from_server_to_discord(self):
+    async def chat_from_game_to_guild(self):
         fpath = path.join(self.working_dir, "logs", "latest.log") if path.exists(
             path.join(self.working_dir, "logs", "latest.log")) else os.path.join(self.working_dir, "server.log")
         server_filter = regex.compile(
@@ -165,7 +164,7 @@ class MinecraftServer(Server):
                 pass
         return message
 
-    async def chat_to_server_from_discord(self):
+    async def chat_from_guild_to_game(self):
         while self.proc.is_running() and not self.bot.is_closed():
             try:
                 msg = await self.bot.wait_for('message', check=self.is_chat_channel, timeout=5)
@@ -289,11 +288,11 @@ class SourceServer(Server):
         async with self.log_lock:
             self.log.append(message)
 
-    async def chat_from_server_to_discord(self):
+    async def chat_from_game_to_guild(self):
         connections = regex.compile(
             r"""(?<=: ")([\w\s]+)(?:<\d><STEAM_0:\d:\d+><.*>") (?:((?:dis)?connected),? (?|address "(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}:\d{2,5})|(\(reason ".+"?)))""")
         chat = regex.compile(
-            r"""(?<=: ")([\w\s]+)(?:<\d+><(?:STEAM_0:\d:\d+|Console)><.*>") (|say|say_team) "([^\|]?.*)\"""")
+            r"""(?<=: ")([\w\s]+)(?:<\d+><(?:STEAM_0:\d:\d+|Console)><.*>)" (|say|say_team) "(?!\|D> )(.*)\"""")
         while True:
             try:
                 lines = []
@@ -323,7 +322,7 @@ class SourceServer(Server):
             finally:
                 await asyncio.sleep(.75)
 
-    async def chat_to_server_from_discord(self):
+    async def chat_from_guild_to_game(self):
         with valvercon.RCON((self.bot.cfg["local_ip"], 22222), self.password) as rcon:
             while self.proc.is_running() and not self.bot.is_closed():
                 try:
@@ -332,15 +331,18 @@ class SourceServer(Server):
                         pass
                     elif msg.clean_content:
                         i = len(msg.author.name)
-                        if len(msg.clean_content) + i > 242:
-                            wrapped = textwrap.wrap(msg.clean_content, width=230 - i, initial_indent=f"|{msg.author.name}: ", subsequent_indent='|')
+                        # if message is longer than 200-some characters
+                        if len(msg.clean_content) > 230 - i:
+                            wrapped = textwrap.wrap(msg.clean_content, width=230 - i,
+                                                    initial_indent=f"{msg.author.name}: ")
                             for wrapped_line in wrapped:
-                                rcon(f"say |{wrapped_line.encode('utf-8')}")
+                                rcon(f"say |D> {wrapped_line}")
+                        # elif shorter than 200-some characters
                         else:
-                            rcon(f"say |{msg.author.name}: {msg.clean_content.encode('utf-8')}")
+                            rcon(f"say |D> {msg.author.name}: {msg.clean_content}")
                         self.bot.bprint(f"Discord | <{msg.author.name}>: {msg.clean_content}")
                     if msg.attachments:
-                        rcon.command(f"say |{msg.author.name}: Image {msg.attachments[0]['filename']}")
+                        rcon.command(f"say |D> {msg.author.name}: Image {msg.attachments[0]['filename']}")
                         self.bot.bprint(
                             f"Discord | {msg.author.name}: Image {msg.attachments[0]['filename']}")
                 except futures.TimeoutError:

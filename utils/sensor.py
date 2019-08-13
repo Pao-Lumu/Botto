@@ -9,21 +9,20 @@ import psutil
 import toml
 
 
-def get_running():
-    current_proc = None
+def get_running() -> psutil.Process:
     try:
         if psutil.WINDOWS:
             for p in psutil.process_iter(attrs=['connections']):
                 for x in p.info['connections']:
                     if x.laddr.port == 22222:
-                        current_proc = p
+                        return p
                 else:
                     continue
         elif psutil.LINUX:
             ps = psutil.Popen("/usr/sbin/ss -tulpn | grep -P :22222 | grep -oP '(?<=pid\=)(\d+)'", shell=True, stdout=PIPE, stderr=DEVNULL)
             pid = ps.stdout.read().decode("utf-8").split('\n')[0]
             if pid:
-                current_proc = psutil.Process(pid=int(pid))
+                return psutil.Process(pid=int(pid))
 
     except AttributeError:
         print('Oh no')
@@ -31,10 +30,6 @@ def get_running():
         print('ERROR')
         print(e)
         pass
-    if current_proc:
-        return current_proc
-    else:
-        return None
 
 
 def get_game_info():
@@ -47,6 +42,7 @@ def get_game_info():
     while looking_for_gameinfo:
         root, current = path.split(cwd)
         if os.path.isfile(path.join(cwd, ".gameinfo.json")):
+            # if there's a old json file, find it, delete it, replace it with TOML, and return the data
             looking_for_gameinfo = False
             with open(path.join(cwd, ".gameinfo.json")) as file:
                 try:
@@ -63,6 +59,7 @@ def get_game_info():
             return process, gi
 
         elif os.path.isfile(path.join(cwd, ".gameinfo.toml")):
+            # if no file, create TOML file
             pathlib.Path(path.join(cwd, ".gameinfo.toml")).touch()
             with open(path.join(cwd, ".gameinfo.toml")) as file:
                 try:
@@ -86,16 +83,16 @@ def get_game_info():
 
 
 def add_to_masterlist(gi):
-    with open('masterlist.json') as ml:
-        master = json.load(ml)
+    with open('masterlist.toml') as file:
+        master = json.load(file)
     if gi["name"] in master.keys():
         pass
     else:
         for name, path in master.items():
             if [gi['folder'], gi['executable']] in path and name is not gi['name']:
                 master.update({gi["name"]: [gi['folder'], gi['executable']]})
-        with open('masterlist.json', 'w') as ml:
-            json.dump(master, ml)
+        with open('masterlist.json', 'w') as file:
+            json.dump(master, file)
 
 # def fix_mc_rcon_problems(server):
 #     fn = os.path.join(server.folder, "server.properties")
