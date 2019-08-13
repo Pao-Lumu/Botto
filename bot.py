@@ -43,7 +43,8 @@ initial_extensions = [
     'modules.admin',
     'modules.music',
     'modules.comrade',
-    'modules.server'
+    'modules.server',
+    'modules.warframe'
 ]
 
 bot = ogbot_base.OGBot(command_prefix=commands.when_mentioned_or(">"), cog_folder="modules",
