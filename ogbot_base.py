@@ -7,6 +7,7 @@ import tracemalloc
 
 import colorama
 import discord
+import psutil
 from colorama import Fore
 from discord.ext import commands
 
@@ -18,6 +19,7 @@ class OGBot(commands.Bot):
         super().__init__(command_prefix=command_prefix, *args, **kwargs)
         tracemalloc.start()
         colorama.init()
+        self.bot_proc = psutil.Process()
         # self.loop = kwargs.pop('loop', asyncio.get_event_loop())
         # self.loop = None
         # self.cog_folder = kwargs.pop('cog_folder')
@@ -79,17 +81,3 @@ class OGBot(commands.Bot):
 
     def run(self, token):
         super().run(token)
-
-    # async def die(self):
-    #     await super().close()
-    #     self.close()
-    #
-    # def close(self):
-    #     try:
-    #         for task in asyncio.all_tasks():
-    #             print(task)
-    #             task.cancel()
-    #         self.loop.stop()
-    #         self.loop.close()
-    #     except Exception as e:
-    #         print(e)
