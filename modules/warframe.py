@@ -1,15 +1,19 @@
-from discord.ext import commands
-import aiohttp
-
 from datetime import datetime
+
+import aiohttp
+import discord
 import pytz
+from discord.ext import commands
+
 
 class Warframe(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(aliases=['barowhen', 'dukey', 'vt'])
+    @commands.command(aliases=['barowhen', 'dukey', 'vt', 'whenthefuckdoesbarokattiercomeyoufuck', 'ducats', 'voidtrader'])
     async def baro(self, ctx):
+        """Tells you where and when Baro Ki'Teer comes in Warframe"""
+
         async with aiohttp.ClientSession() as session:
             async with session.get('https://api.warframestat.us/pc/voidTrader') as resp:
                 info = await resp.json()
@@ -20,30 +24,15 @@ class Warframe(commands.Cog):
                         .strftime("%A, %B %Y at %I:%M %p %Z")
 
         if info['active']:
-            offers = []
+            e = discord.Embed(title="Baro Ki'Teer Offerings")
             for offer in info['inventory']:
-                offers.append(" ~~~ {item} for {ducats} ducats and {credits} credits".format(**offer))
+                e.add_field(name=offer['item'], value=f"{offer['ducats']} ducats + {offer['credits']} credits")
 
-            dukey = """{0} is currently at {1}.
-He's currently offering:
-{2}
-{0} will leave on {3}.
-""".format(info['character'], info['location'], "\n".join(offers), hr_expiry)
+            dukey = "{0} is currently at {1}, and will leave on {2}.".format(info['character'], info['location'], hr_expiry)
 
             await ctx.send(dukey)
         else:
             await ctx.send(f"""{info['character']} will arrive at {info['location']} on {hr_active} and will stay until {hr_expiry}""")
-
-    @commands.group()
-    async def example_group(self, ctx):
-        if ctx.subcommand_passed:
-            pass
-        else:
-            pass
-
-    @example_group.command()
-    async def example_subcommand(self, ctx):
-        pass
 
 
 def setup(bot):
