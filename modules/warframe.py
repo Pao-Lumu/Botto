@@ -29,17 +29,17 @@ class Warframe(commands.Cog):
 
         if info['active']:
             e = discord.Embed(title="Void Trader Offerings", color=c)
-            e.set_footer(text="Nora Night")
+            e.set_footer(text="Baro Ki'Teer")
             for offer in info['inventory']:
                 e.add_field(name=offer['item'], value=f"{offer['ducats']} ducats + {offer['credits']} credits")
 
-            dukey = "{0} is currently at {1}, and will leave on {2}.".format(info['character'], info['location'],
-                                                                             hr_expiry)
+            dukey = "{0} is currently at {1}, and will leave on {2} {3}.".format(info['character'], info['location'],
+                                                                             hr_expiry, info['endString'])
 
             await ctx.send(dukey, embed=e)
         else:
             e = discord.Embed(title='Void Trader',
-                              description=f"""{info['character']} will arrive at {info['location']} on {hr_active} and will stay until {hr_expiry}""",
+                              description=f"""{info['character']} will arrive at {info['location']} on {hr_active} ({info['startString']}) and will stay until {hr_expiry} ({info['endString']})""",
                               color=c)
             await ctx.send(embed=e)
 
