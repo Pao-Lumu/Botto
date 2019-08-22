@@ -70,7 +70,7 @@ class Comrade(commands.Cog):
                 if msg.author.voice and gopnik_voice and not msg.author.voice.afk:
                     self.bot.gop_voice_cd = datetime.now().timestamp()
 
-                    choir = await msg.author.voice_channel.connect()
+                    choir = await msg.author.voice.connect()
                     choir.play(discord.FFmpegPCMAudio("audio/blyat.ogg"))
                     await asyncio.sleep(25)
                     choir.stop()

@@ -18,7 +18,7 @@ class Game:
         while not self.bot.is_closed() and process.is_running():
             try:
                 process.wait(timeout=1)
-                print("hello")
+                print("closed")
                 break
             except psutil.TimeoutExpired:
                 pass
@@ -26,8 +26,11 @@ class Game:
     async def check_server_running(self):
         await self.bot.wait_until_ready(1)
         while not self.bot.is_closed():
-
-            process, data = sensor.get_game_info()
+            try:
+                process, data = sensor.get_game_info()
+            except ProcessLookupError:
+                await asyncio.sleep(1)
+                continue
             if data:
                 self.bot._game_stopped.clear()
                 self.bot._game_running.set()

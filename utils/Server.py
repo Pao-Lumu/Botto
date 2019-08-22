@@ -43,7 +43,7 @@ class Server:
     def __repr__(self):
         return "a game"
 
-    def is_running(self):
+    def is_running(self) -> bool:
         return self.proc.is_running()
 
     async def _log_loop(self): pass
@@ -62,10 +62,14 @@ class Server:
             self.bot.bprint(f"sleep_with_backoff ~ Done waiting for backoff")
 
     @property
-    def status(self):
+    def status(self) -> psutil.Process:
         return self.proc
 
-    def is_chat_channel(self, m):
+    @property
+    def players(self) -> int:
+        return 0
+
+    def is_chat_channel(self, m) -> bool:
         return m.channel == self.bot.chat_channel
 
 
@@ -137,30 +141,22 @@ class MinecraftServer(Server):
                     break
                 await asyncio.sleep(.75)
 
-    def check_for_mentions(self, raw_playermsg):
+    def check_for_mentions(self, raw_playermsg) -> str:
         message = raw_playermsg[0]
-        index = message.find('@')
-        if index >= 0:
+        indexes = [m.start() for m in regex.finditer('@', message)]
+        if indexes:
             try:
-                mention = message[index + 1:]
-                length = len(mention) + 1
-                for ind in range(0, length):
-                    member = discord.utils.get(self.bot.chat_channel.guild.members, name=mention[:ind])
-                    if member:
-                        message = message.replace("@" + mention[:ind], f"<@{member.id}>")
-                        break
-                    elif mention[:ind].lower() == 'here' or mention[:ind].lower() == 'everyone':
-                        message = message.replace("@" + mention[:ind],
-                                                  f"{discord.utils.escape_mentions('@' + mention[:ind])}")
-                    else:
-                        member = discord.utils.get(self.bot.chat_channel.guild.members, nick=mention[:ind])
+                for index in indexes:
+                    mention = message[index + 1:]
+                    length = len(mention) + 1
+                    for ind in range(0, length):
+                        member = discord.utils.find(lambda m: m.name == mention[:ind] or m.nick == mention[:ind],
+                                                    self.bot.chat_channel.members)
                         if member:
                             message = message.replace("@" + mention[:ind], f"<@{member.id}>")
                             break
-                else:
-                    pass
             except Exception as e:
-                self.bot.bprint("ERROR | Server2Guild Exception caught: " + str(e))
+                self.bot.bprint("ERROR | Server2Guild Mentions Exception caught: " + str(e))
                 pass
         return message
 
@@ -306,7 +302,8 @@ class SourceServer(Server):
                     raw_chatmsg = regex.findall(chat, line)
 
                     if raw_chatmsg:
-                        msgs.append(f"{'[TEAM] ' if raw_chatmsg[0][1] is 'say_team' else ''} *[{raw_chatmsg[0][0]}]*: {raw_chatmsg[0][2]}")
+                        msgs.append(
+                            f"{'[TEAM] ' if raw_chatmsg[0][1] is 'say_team' else ''} *[{raw_chatmsg[0][0]}]*: {raw_chatmsg[0][2]}")
                     elif raw_connectionmsg:
                         msgs.append(f"`{' '.join(raw_connectionmsg[0])}`")
                     else:

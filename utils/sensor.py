@@ -18,6 +18,8 @@ def get_running() -> psutil.Process:
                         return p
                 else:
                     continue
+            else:
+                raise ProcessLookupError("Process not running")
         elif psutil.LINUX:
             ps = psutil.Popen("/usr/sbin/ss -tulpn | grep -P :22222 | grep -oP '(?<=pid\=)(\d+)'", shell=True, stdout=PIPE, stderr=DEVNULL)
             pid = ps.stdout.read().decode("utf-8").split('\n')[0]
@@ -26,16 +28,13 @@ def get_running() -> psutil.Process:
 
     except AttributeError:
         print('Oh no')
-    except Exception as e:
-        print('ERROR')
-        print(e)
-        pass
 
 
-def get_game_info():
-    process = get_running()
-    if not process:
-        return None, None
+def get_game_info() -> tuple[psutil.Process, dict]:
+    try:
+        process = get_running()
+    except ProcessLookupError:
+        raise ProcessLookupError("Process not currently running.")
     cwd = process.cwd()
     looking_for_gameinfo = True
 
@@ -43,7 +42,8 @@ def get_game_info():
         root, current = path.split(cwd)
         if os.path.isfile(path.join(cwd, ".gameinfo.json")):
             # if there's a old json file, find it, delete it, replace it with TOML, and return the data
-            looking_for_gameinfo = False
+
+            # LOAD OLD JSON
             with open(path.join(cwd, ".gameinfo.json")) as file:
                 try:
                     gi = json.load(file)
@@ -51,6 +51,7 @@ def get_game_info():
                     print(f"JSON decoding error | {e}")
                     raise json.JSONDecodeError
 
+            # WRITE TO TOML
             pathlib.Path(path.join(cwd, ".gameinfo.toml")).touch()
             with open(path.join(cwd, ".gameinfo.toml"), "w+") as file:
                 toml.dump(gi, file)
@@ -59,8 +60,7 @@ def get_game_info():
             return process, gi
 
         elif os.path.isfile(path.join(cwd, ".gameinfo.toml")):
-            # if no file, create TOML file
-            pathlib.Path(path.join(cwd, ".gameinfo.toml")).touch()
+            # if TOML file, load it, and return the data
             with open(path.join(cwd, ".gameinfo.toml")) as file:
                 try:
                     gi = toml.load(file)
@@ -71,14 +71,15 @@ def get_game_info():
 
         elif "serverfiles" in cwd:
             cwd = root
-            pass
 
         elif "serverfiles" not in cwd:
+            # if the TOML file doesn't exist, create it, load defaults, and save
+            pathlib.Path(path.join(cwd, ".gameinfo.toml")).touch()
             lr = str(datetime.now().utcnow())
-            with open(path.join(cwd, ".gameinfo.json"), "w+") as file:
+            with open(path.join(cwd, ".gameinfo.toml"), "w+") as file:
                 basic = {"name": current.title(), "folder": cwd, "last_run": lr, "rcon": "", "version": "",
                          "executable": process.name()}
-                json.dump(basic, file)
+                toml.dump(basic, file)
                 return process, basic
 
 
