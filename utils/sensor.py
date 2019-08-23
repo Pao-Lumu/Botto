@@ -30,7 +30,7 @@ def get_running() -> psutil.Process:
         print('Oh no')
 
 
-def get_game_info() -> tuple[psutil.Process, dict]:
+def get_game_info() -> tuple:
     try:
         process = get_running()
     except ProcessLookupError:
