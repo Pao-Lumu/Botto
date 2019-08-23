@@ -28,20 +28,17 @@ class Game:
         while not self.bot.is_closed():
             try:
                 process, data = sensor.get_game_info()
+                if data:
+                    self.bot._game_stopped.clear()
+                    self.bot._game_running.set()
+
+                    self.bot.bprint(f"Server Status | Now Playing: {data['name']} {data['version']}")
+                    await self.bot.loop.run_in_executor(None, functools.partial(self.wait_or_when_cancelled, process))
+                    self.bot.bprint(f"Server Status | Offline")
+
+                    self.bot._game_running.clear()
+                    self.bot._game_stopped.set()
             except ProcessLookupError:
-                await asyncio.sleep(1)
-                continue
-            if data:
-                self.bot._game_stopped.clear()
-                self.bot._game_running.set()
-
-                self.bot.bprint(f"Server Status | Now Playing: {data['name']} {data['version']}")
-                await self.bot.loop.run_in_executor(None, functools.partial(self.wait_or_when_cancelled, process))
-                self.bot.bprint(f"Server Status | Offline")
-
-                self.bot._game_running.clear()
-                self.bot._game_stopped.set()
-            else:
                 await asyncio.sleep(5)
 
     async def get_current_server_status(self):

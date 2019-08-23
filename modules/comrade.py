@@ -77,7 +77,7 @@ class Comrade(commands.Cog):
 
                     await choir.disconnect()
             except OSError:
-                print("Hey lotus why don't you eat a fucking dick ~ Zach 2018")
+                self.bot.bprint("Hey lotus why don't you eat a fucking dick ~ Zach 2018")
 
     # Commands
 
@@ -129,7 +129,7 @@ class Comrade(commands.Cog):
             print(e)
             await ctx.send("GET IN VOICE CHAT BLYAT!")
         except OSError:
-            print("Hey lotus why don't you eat a fucking dick")
+            self.bot.bprint("Hey lotus why don't you eat a fucking dick ~ Zach 2018")
 
     @staticmethod
     async def auto_thonk(msg):
