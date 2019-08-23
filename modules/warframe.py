@@ -6,13 +6,15 @@ import discord
 import pytz
 from discord.ext import commands
 
+import baroaliases
+
 
 class Warframe(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
     @commands.command(
-        aliases=['barowhen', 'dukey', 'vt', 'whenthefuckdoesbarokattiercomeyoufuck', 'ducats', 'voidtrader'])
+        aliases=baroaliases.aliases)
     async def baro(self, ctx):
         """Tells you where and when Baro Ki'Teer comes in Warframe"""
 
