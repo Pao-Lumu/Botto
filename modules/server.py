@@ -135,7 +135,11 @@ class ServerControl(commands.Cog):
             string = ""
             mods = ree.raw['modinfo']['modList']
             for x in mods:
-                string += f"{x['modid']}: {x['version']}"
+                if len(string):
+                    await ctx.send(string)
+                    string = ""
+                else:
+                    string += f"{x['modid']}: {x['version']}\n"
             await ctx.send(string)
         except KeyError:
             await ctx.send("Vanilla")
