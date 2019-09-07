@@ -141,7 +141,8 @@ class ServerControl(commands.Cog):
             await ctx.send(embed=e)
         except KeyError:
             await ctx.send("Vanilla")
-        except:
+        except Exception as e:
+            print(e)
             print("oh god oh fuck")
 
     @commands.group()
