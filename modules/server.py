@@ -134,7 +134,10 @@ class ServerControl(commands.Cog):
             ree = query.status()
             raw = ree.raw
             for x in raw:
+                print(x)
                 for k, v in x.items():
+                    print(k)
+                    print(v)
                     e.add_field(name=k, value=v)
         except:
             print("HELP")
