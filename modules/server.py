@@ -132,7 +132,7 @@ class ServerControl(commands.Cog):
         e = discord.Embed()
         try:
             ree = query.status()
-            mods = ree.raw['mods']
+            mods = ree.raw['modinfo']
             for x in mods:
                 print(x)
                 for k, v in x.items():
