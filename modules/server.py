@@ -136,7 +136,7 @@ class ServerControl(commands.Cog):
             mods = ree.raw['modinfo']['modList']
             for x in mods:
                 string += f"{x['modid']}: {x['version']}"
-            await ctx.send()
+            await ctx.send(string)
         except KeyError:
             await ctx.send("Vanilla")
         except Exception as e:
