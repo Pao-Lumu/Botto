@@ -4,6 +4,7 @@ from concurrent import futures
 
 import discord
 import mcrcon
+from mcstatus import MinecraftServer as mc
 from discord.ext import commands
 
 from utils import utilities
@@ -124,6 +125,17 @@ class ServerControl(commands.Cog):
 
         with open(fn, 'w') as f:
             f.writelines(lines)
+
+    @minecraft.command()
+    async def mods(self, ctx):
+        query = mc.lookup("localhost:22222")
+        try:
+            ree = query.query()
+            raw = ree.raw
+            print(raw)
+        except:
+            print(ree)
+        pass
 
     @commands.group()
     async def run(self, ctx):
