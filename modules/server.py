@@ -132,7 +132,11 @@ class ServerControl(commands.Cog):
         try:
             ree = query.status()
             raw = ree.raw
-            print(raw)
+            e = discord.Embed()
+            for x in raw:
+                for k, v in raw.items():
+                    e.add_field(name=k, value=v)
+            await ctx.send(embed=e)
         except:
             print(ree)
         pass
