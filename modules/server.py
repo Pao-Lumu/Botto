@@ -129,13 +129,12 @@ class ServerControl(commands.Cog):
     @minecraft.command()
     async def mods(self, ctx):
         query = mc.lookup("localhost:22222")
-        # e = discord.Embed()
         try:
             ree = query.status()
-            string = ""
+            string = "Mod List:\n\n"
             mods = ree.raw['modinfo']['modList']
             for x in mods:
-                if len(string):
+                if len(string) > 1900:
                     await ctx.send(string)
                     string = ""
                 else:
