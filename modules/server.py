@@ -134,7 +134,7 @@ class ServerControl(commands.Cog):
             ree = query.status()
             mods = ree.raw['modinfo']['modList']
             for x in mods:
-                e.add_field(name=x['modid'], value=x['version'])
+                e.add_field(name=x['modid'], value=x['version'] if x['version'] else "undef")
             await ctx.send(embed=e)
         except KeyError:
             await ctx.send("Vanilla")
