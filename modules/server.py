@@ -132,18 +132,18 @@ class ServerControl(commands.Cog):
         e = discord.Embed()
         try:
             ree = query.status()
-            raw = ree.raw
-            for x in raw:
+            mods = ree.raw['mods']
+            for x in mods:
                 print(x)
                 for k, v in x.items():
                     print(k)
                     print(v)
                     e.add_field(name=k, value=v)
-        except:
-            print("HELP")
-        finally:
             await ctx.send(embed=e)
-        pass
+        except KeyError:
+            await ctx.send("Vanilla")
+        except:
+            print("oh god oh fuck")
 
     @commands.group()
     async def run(self, ctx):
