@@ -130,7 +130,7 @@ class ServerControl(commands.Cog):
     async def mods(self, ctx):
         query = mc.lookup("localhost:22222")
         try:
-            ree = query.query()
+            ree = query.status()
             raw = ree.raw
             print(raw)
         except:
