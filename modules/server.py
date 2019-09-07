@@ -129,13 +129,14 @@ class ServerControl(commands.Cog):
     @minecraft.command()
     async def mods(self, ctx):
         query = mc.lookup("localhost:22222")
-        e = discord.Embed()
+        # e = discord.Embed()
         try:
             ree = query.status()
+            string = ""
             mods = ree.raw['modinfo']['modList']
             for x in mods:
-                e.add_field(name=x['modid'], value=x['version'] if x['version'] else "undef")
-            await ctx.send(embed=e)
+                string += f"{x['modid']}: {x['version']}"
+            await ctx.send()
         except KeyError:
             await ctx.send("Vanilla")
         except Exception as e:
