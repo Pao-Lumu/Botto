@@ -129,16 +129,17 @@ class ServerControl(commands.Cog):
     @minecraft.command()
     async def mods(self, ctx):
         query = mc.lookup("localhost:22222")
+        e = discord.Embed()
         try:
             ree = query.status()
             raw = ree.raw
-            e = discord.Embed()
             for x in raw:
-                for k, v in raw.items():
+                for k, v in x.items():
                     e.add_field(name=k, value=v)
-            await ctx.send(embed=e)
         except:
-            print(ree)
+            print("HELP")
+        finally:
+            await ctx.send(embed=e)
         pass
 
     @commands.group()
