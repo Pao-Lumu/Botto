@@ -13,6 +13,15 @@ class Warframe(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
+    # async def fetch(self, session, url):
+    #     async with session.get(url) as response:
+    #         return await response.text()
+    #
+    # async def get_data(self):
+    #     async with aiohttp.ClientSession() as session:
+    #         html = await self.fetch(session, 'https://api.warframestat.us/pc/')
+    #         return json.loads(html)
+
     @commands.command(
         aliases=baroaliases.aliases)
     async def baro(self, ctx):
@@ -33,10 +42,13 @@ class Warframe(commands.Cog):
             e = discord.Embed(title="Void Trader Offerings", color=c)
             e.set_footer(text="Baro Ki'Teer")
             for offer in info['inventory']:
-                e.add_field(name=offer['item'], value=f"{offer['ducats']} ducats + {offer['credits']} credits")
+                if "Primed" in offer['item'] or "Wraith" in offer['item']:
+                    e.add_field(name=offer['item'], value=f"{offer['ducats']} ducats + {offer['credits']} credits")
+                else:
+                    e.add_field(name=offer['item'], value=f"{offer['ducats']} ducats + {offer['credits']} credits")
 
             dukey = "{0} is currently at {1}, and will leave on {2} {3}.".format(info['character'], info['location'],
-                                                                             hr_expiry, info['endString'])
+                                                                                 hr_expiry, info['endString'])
 
             await ctx.send(dukey, embed=e)
         else:
@@ -57,14 +69,13 @@ class Warframe(commands.Cog):
 
         for challenge in info['activeChallenges']:
             if 'isDaily' in challenge.keys() and challenge['isDaily']:
-                e.add_field(name=f" ~ {challenge['title']} (Daily) ({challenge['reputation']} standing)",
-                            value=f"   {challenge['desc']}", inline=False)
+                misson_type = "(Daily)"
             elif challenge['isElite']:
-                e.add_field(name=f" ~ {challenge['title']} (Weekly Elite) ({challenge['reputation']} standing)",
-                            value=f"   {challenge['desc']}", inline=False)
+                misson_type = "(Elite Weekly)"
             else:
-                e.add_field(name=f" ~ {challenge['title']} (Weekly) ({challenge['reputation']} standing)",
-                            value=f"   {challenge['desc']}", inline=False)
+                misson_type = "(Weekly)"
+            e.add_field(name=f" ~ {challenge['title']} {misson_type} ({challenge['reputation']} standing)",
+                        value=f"~~~{challenge['desc']}", inline=False)
         await ctx.send(embed=e)
 
 

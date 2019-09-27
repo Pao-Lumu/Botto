@@ -2,9 +2,8 @@
 config.toml
 
 # legacy token and config files
-old/config.ini
-old/credentials.json
-old/botcfg.json
+credentials.json
+botcfg.json
 
 # bot logs
 logs/

@@ -3,7 +3,6 @@ import datetime
 import inspect
 import itertools
 import platform
-import tracemalloc
 
 import colorama
 import discord
@@ -17,12 +16,8 @@ class OGBot(commands.Bot):
     def __init__(self, *args, **kwargs):
         command_prefix = kwargs.pop('command_prefix', commands.when_mentioned_or('.'))
         super().__init__(command_prefix=command_prefix, *args, **kwargs)
-        tracemalloc.start()
         colorama.init()
         self.bot_proc = psutil.Process()
-        # self.loop = kwargs.pop('loop', asyncio.get_event_loop())
-        # self.loop = None
-        # self.cog_folder = kwargs.pop('cog_folder')
         self.game = ""
         self.gop_text_cd = 0
         self.gop_voice_cd = 0
@@ -40,13 +35,11 @@ class OGBot(commands.Bot):
         if delay:
             await asyncio.sleep(delay)
 
-    # @debuggable("Waiting for the game to run...")
     async def wait_until_game_running(self, delay=0):
         await self._game_running.wait()
         if delay:
             await asyncio.sleep(delay)
 
-    # @debuggable("Waiting for the game to stop...")
     async def wait_until_game_stopped(self, delay=0):
         await self._game_stopped.wait()
         if delay:

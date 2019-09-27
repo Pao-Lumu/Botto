@@ -21,7 +21,8 @@ def get_running() -> psutil.Process:
             else:
                 raise ProcessLookupError("Process not running")
         elif psutil.LINUX:
-            ps = psutil.Popen("/usr/sbin/ss -tulpn | grep -P :22222 | grep -oP '(?<=pid\=)(\d+)'", shell=True, stdout=PIPE, stderr=DEVNULL)
+            ps = psutil.Popen("/usr/sbin/ss -tulpn | grep -P :22222 | grep -oP '(?<=pid\=)(\d+)'", shell=True,
+                              stdout=PIPE, stderr=DEVNULL)
             pid = ps.stdout.read().decode("utf-8").split('\n')[0]
             if pid:
                 return psutil.Process(pid=int(pid))
