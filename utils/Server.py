@@ -216,6 +216,7 @@ class MinecraftServer(Server):
                 if 'sample' in stats.raw['players']:
                     for x in stats.raw['players']['sample']:
                         names.append(x['name'])
+                    names.sort()
                 if 'modinfo' in stats.raw:
                     mod_count = f"{len(stats.raw['modinfo']['modList'])} mods installed"
                 else:

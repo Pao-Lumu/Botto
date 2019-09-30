@@ -21,7 +21,7 @@ def get_running() -> psutil.Process:
             else:
                 raise ProcessLookupError("Process not running")
         elif psutil.LINUX:
-            ps = psutil.Popen("/usr/sbin/ss -tulpn | grep -P :22222 | grep -oP '(?<=pid\=)(\d+)'", shell=True,
+            ps = psutil.Popen(r"/usr/sbin/ss -tulpn | grep -P :22222 | grep -oP '(?<=pid\=)(\d+)'", shell=True,
                               stdout=PIPE, stderr=DEVNULL)
             pid = ps.stdout.read().decode("utf-8").split('\n')[0]
             if pid:
@@ -56,6 +56,8 @@ def get_game_info() -> tuple:
             pathlib.Path(path.join(cwd, ".gameinfo.toml")).touch()
             with open(path.join(cwd, ".gameinfo.toml"), "w+") as file:
                 toml.dump(gi, file)
+
+            # REMOVE JSON
             os.remove(path.join(cwd, ".gameinfo.json"))
 
             return process, gi
@@ -82,6 +84,8 @@ def get_game_info() -> tuple:
                          "executable": process.name()}
                 toml.dump(basic, file)
                 return process, basic
+        else:
+            print('Hey... This isn\'t supposed to happen...')
 
 
 def add_to_masterlist(gi):
@@ -95,35 +99,3 @@ def add_to_masterlist(gi):
                 master.update({gi["name"]: [gi['folder'], gi['executable']]})
         with open('masterlist.json', 'w') as file:
             json.dump(master, file)
-
-# def fix_mc_rcon_problems(server):
-#     fn = os.path.join(server.folder, "server.properties")
-#     with open(fn, "r") as p:
-#         lines = p.readlines()
-#     qp = False
-#     rp = False
-#     for i, line in enumerate(lines):
-#         if "motd" in line:
-#             lines[i] = "motd=OGBox Server\n"
-#         elif "server-port" in line:
-#             lines[i] = "server-port=22222\n"
-#         elif "enable-rcon" in line:
-#             lines[i] = "enable-rcon=true\n"
-#         elif "enable-query" in line:
-#             lines[i] = "enable-query=true\n"
-#         elif "query.port" in line:
-#             lines[i] = "query.port=22222\n"
-#             qp = True
-#         elif "rcon.port" in line:
-#             lines[i] = "rcon.port=22232\n"
-#             rp = True
-#         else:
-#             pass
-#
-#     if not rp:
-#         lines.append("rcon.port=22232\n")
-#     if not qp:
-#         lines.append("query.port=22222\n")
-#
-#     with open(fn, 'w') as f:
-#         f.writelines(lines)

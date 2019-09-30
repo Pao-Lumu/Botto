@@ -50,6 +50,7 @@ bot = ogbot_base.OGBot(command_prefix=commands.when_mentioned_or(">"), cog_folde
 
 @bot.event
 async def on_ready():
+    print('on_ready took ' + str((datetime.datetime.now() - bot.dt_start).total_seconds()) + ' seconds')
     bot.loop = asyncio.get_running_loop()
     if not hasattr(bot, 'uptime'):
         bot.uptime = datetime.datetime.utcnow()
@@ -218,6 +219,8 @@ async def on_message(message):
 
 
 if __name__ == '__main__':
+    print("starting bot...")
+    start = datetime.datetime.now()
     # TODO: Get TMUX availablity and do stuff accordingly
     try:
         import libtmux
@@ -310,6 +313,8 @@ if __name__ == '__main__':
     bot.cfg = config['bot_configuration']
     game = game.Game(bot)
     try:
-        bot.run(token)
+        cp1 = datetime.datetime.now() - start
+        print('logging setup took ' + str(cp1.total_seconds()) + " seconds")
+        bot.run(token, start_time=start)
     finally:
         sys.exit(1)

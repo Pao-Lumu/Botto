@@ -72,5 +72,6 @@ class OGBot(commands.Bot):
             else:
                 print(f"{Fore.LIGHTYELLOW_EX}{cur_time}{Fore.RESET} ~ {line}", *args)
 
-    def run(self, token):
+    def run(self, token, start_time=datetime.datetime.now()):
+        self.dt_start = start_time
         super().run(token)
