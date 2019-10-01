@@ -50,7 +50,7 @@ bot = ogbot_base.OGBot(command_prefix=commands.when_mentioned_or(">"), cog_folde
 
 @bot.event
 async def on_ready():
-    print('on_ready took ' + str((datetime.datetime.now() - bot.dt_start).total_seconds()) + ' seconds')
+    # print('on_ready took ' + str((datetime.datetime.now() - bot.dt_start).total_seconds()) + ' seconds')
     bot.loop = asyncio.get_running_loop()
     if not hasattr(bot, 'uptime'):
         bot.uptime = datetime.datetime.utcnow()
@@ -218,6 +218,13 @@ async def on_message(message):
     await bot.process_commands(message)
 
 
+@bot.event
+async def on_command_error(ctx, error):
+    print(error)
+    if isinstance(error, commands.CommandOnCooldown):
+        await ctx.send(
+            f"Command is currently on cooldown. This is due to limitations in the API. Try again in {str(error.retry_after)[:5]}s")
+
 if __name__ == '__main__':
     print("starting bot...")
     start = datetime.datetime.now()
@@ -314,7 +321,7 @@ if __name__ == '__main__':
     game = game.Game(bot)
     try:
         cp1 = datetime.datetime.now() - start
-        print('logging setup took ' + str(cp1.total_seconds()) + " seconds")
+        # print('logging setup took ' + str(cp1.total_seconds()) + " seconds")
         bot.run(token, start_time=start)
     finally:
         sys.exit(1)

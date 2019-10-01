@@ -17,13 +17,21 @@ class Warframe(commands.Cog):
     async def fetch(self, session, url):
         async with session.get(url) as response:
             if response.status == 404:
-                raise NameError('Name')
+                raise NameError('That is not a valid item. Please check your spelling.')
             else:
                 return await response.text()
 
-    async def get_item_data(self, name):
+    async def get_item_orders(self, name):
         async with aiohttp.ClientSession() as session:
-            html = await self.fetch(session, "https://api.warframe.market/v1/items/" + name + "/statistics")
+            html = await self.fetch(session,
+                                    "https://api.warframe.market/v1/items/" + name + "/orders")
+            j = json.loads(html)
+            return j
+
+    async def get_item_statistics(self, name):
+        async with aiohttp.ClientSession() as session:
+            html = await self.fetch(session,
+                                    "https://api.warframe.market/v1/items/" + name + "/statistics?include=item")
             j = json.loads(html)
             return j
 
@@ -57,7 +65,7 @@ class Warframe(commands.Cog):
                 if "Primed" in offer['item'] or "Wraith" in offer['item'] or "Prisma" in offer['item']:
                     name = str(offer['item']).lower().replace(' ', '_')
                     try:
-                        resp = await self.get_item_data(name)
+                        resp = await self.get_item_statistics(name)
                         fds = list(map(lambda x: x['wa_price'], resp['payload']['90days']))
                         minimum = resp['payload']['90days']['min_price']
                         maximum = resp['payload']['90days']['max_price']
@@ -94,7 +102,7 @@ class Warframe(commands.Cog):
                 else:
                     misson_type = "(Weekly)"
                 e.add_field(name=f" ~ {challenge['title']} {misson_type} ({challenge['reputation']} standing)",
-                            value=f"~~~{challenge['desc']}", inline=False)
+                            value=f"~~ {challenge['desc']}", inline=False)
             await ctx.send(embed=e)
         else:
             # e = discord.Embed(title="Nightwave Challenges", description="All currently-active Nightwave challenges\n\n")
@@ -102,11 +110,53 @@ class Warframe(commands.Cog):
             await ctx.send("Nightwave is currently inactive.")
 
     @commands.command()
+    @commands.cooldown(1, 5, commands.BucketType.default)
     async def pricecheck(self, ctx, *, item):
         """Check prices of items on warframe.market"""
         name = str(item).lower().replace(' ', '_')
-        x = await self.get_item_data(name)
-        print(x)
+        x = await self.get_item_statistics(name)
+        y = await self.get_item_orders(name)
+
+        for i in x['include']['item']['items_in_set']:
+            if x['include']['item']['id'] == i['id']:
+                item = i
+                break
+
+        two_days = x['payload']['statistics_closed']['48hours']
+
+        td_vol = list()
+        td_avg = list()
+        sell = list()
+        sell_online = list()
+        buy = list()
+        buy_online = list()
+
+        orders = y['payload']['orders']
+        buy.extend(sorted(filter(lambda z: z['order_type'] == "sell", orders), key=lambda y: y['platinum']))
+        buy_online.extend(filter(lambda z: z['user']['status'] == "online" or z['user']['status'] == "ingame", buy))
+        sell.extend(sorted(filter(lambda z: z['order_type'] == "buy", orders), key=lambda y: y['platinum']))
+        sell_online.extend(filter(lambda z: z['user']['status'] == "online" or z['user']['status'] == "ingame", sell))
+
+        for stat in two_days:
+            rank = stat.setdefault('mod_rank', None)
+            if not rank:
+                td_vol.append(stat['volume'])
+                td_avg.append(stat['avg_price'])
+        vol = sum(td_vol)
+        avg = sum(td_avg) / len(td_avg)
+
+        e = discord.Embed(title=item['en']['item_name'],
+                          description=f"{vol} have been sold in the past 48hrs, for an average of {str(round(avg))} platinum.",
+                          url='https://warframe.market/items/' + item['url_name'])
+        e.set_author(name='Warframe.market price check')
+        e.set_image(url='https://warframe.market/static/assets/' + item['icon'])
+        e.set_footer(text='warframe.market',
+                     icon_url='https://warframe.market/static/build/assets/frontend/logo.7c3779fb00edc1ee16531ea55bbd5367.png')
+
+        e.add_field(name='Online Buy Orders start at', value=str(int(sell_online[0]['platinum'])) + "p", inline=False)
+        e.add_field(name='Online Sell Orders start at', value=str(int(buy_online[0]['platinum'])) + "p", inline=False)
+
+        await ctx.send(embed=e)
 
 
 def setup(bot):
