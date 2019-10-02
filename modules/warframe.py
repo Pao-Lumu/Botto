@@ -145,16 +145,16 @@ class Warframe(commands.Cog):
         vol = sum(td_vol)
         avg = sum(td_avg) / len(td_avg)
 
-        e = discord.Embed(title=item['en']['item_name'],
-                          description=f"{vol} have been sold in the past 48hrs, for an average of {str(round(avg))} platinum.",
-                          url='https://warframe.market/items/' + item['url_name'])
+        e = discord.Embed()
+        e.title = item['en']['item_name']
+        e.url = 'https://warframe.market/items/' + item['url_name']
         e.set_author(name='Warframe.market price check')
         e.set_image(url='https://warframe.market/static/assets/' + item['icon'])
         e.set_footer(text='warframe.market',
                      icon_url='https://warframe.market/static/build/assets/frontend/logo.7c3779fb00edc1ee16531ea55bbd5367.png')
-
-        e.add_field(name='Online Buy Orders start at', value=str(int(sell_online[0]['platinum'])) + "p", inline=False)
-        e.add_field(name='Online Sell Orders start at', value=str(int(buy_online[0]['platinum'])) + "p", inline=False)
+        e.description = f"""{vol} have been sold in the past 48hrs, for an average of {str(round(avg))} platinum.
+        Buy Orders start at {str(int(sell_online[0]['platinum']))}p
+        Sell Orders start at {str(int(buy_online[0]['platinum']))}p"""
 
         await ctx.send(embed=e)
 
