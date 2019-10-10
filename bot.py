@@ -38,6 +38,7 @@ discord_logger.addHandler(sh)
 
 initial_extensions = [
     'modules.admin',
+    'modules.santa',
     'modules.music',
     'modules.comrade',
     'modules.server',
