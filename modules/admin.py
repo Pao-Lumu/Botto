@@ -31,5 +31,6 @@ class Admin(commands.Cog):
         msg = ctx.message.clean_content.lstrip(str(ctx.prefix) + str(ctx.command))
         await ctx.send(content=msg)
 
+
 def setup(bot):
     bot.add_cog(Admin(bot))
