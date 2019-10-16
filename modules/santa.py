@@ -172,13 +172,14 @@ Misleading your secret santa and giving them a different one is allowed & encour
             msg = await ctx.send(message)
 
         try:
-            await asyncio.gather(*[msg.add_reaction(reaction) for reaction in reactions])
+            [await x for x in [msg.add_reaction(reaction) for reaction in reactions]]
+
         except Exception as e:
             print('{}: {}'.format(type(e).__name__, e))
-            # TODO IMPLEMENT THIS
             await self.bot.bprint('{}: {}'.format(type(e).__name__, e))
-            # await self.bot('{}: {}'.format(type(e).__name__, e))
-            await ctx.send('Something went wrong. Evan has been notified. (Probably)')
+            await self.bot.get_user(self.bot.owner_id).send('{}: {}'.format(type(e).__name__, e))
+            # ^^ This line is garbage, refactor this.
+            await ctx.send('Something went wrong. Evan has been notified.')
 
         return msg
 
