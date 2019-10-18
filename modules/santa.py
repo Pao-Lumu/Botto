@@ -22,8 +22,8 @@ class Santa(commands.Cog):
     @commands.Cog.listener()
     async def on_add_reaction(self, reaction, author):
         await self.bot.wait_until_ready()
-        # if message.channel.id == self.santa_channel.id and reaction.emoji == '\N{OK HAND SIGN}':
-        #     if message.clean_content[0] != '#' and message.clean_content[0] != '>':
+        # if message.channel.id == self.santa_channel.id and reaction.emoji == '\N{BALLOT BOX}':
+        #
         #         await self.auto_comrade_check(message)
         # await self.auto_thonk(message)
 
@@ -40,7 +40,7 @@ class Santa(commands.Cog):
             if ctx.author.id == self.bot.owner_id:
                 # if table does not exist -> create it
                 if instant:
-                    conn.execute(
+                    cursor.execute(
                         "create table santa(user_id, user_name, gifter_id, gifter_name, giftee_id, giftee_name)")
 
                 with open("modules/ogbox.json") as sec:
@@ -72,27 +72,31 @@ class Santa(commands.Cog):
                     discord_id = lookup[person]
                     gifter = person.capitalize()
                     giftee = people[(x + 1) % len(people)].capitalize()
-                    message = """
-{}, you have been assigned {}'s secret santa.
-If you'd like to ask them their shirt size, shoe size, favorite color, ideal date location, a/s/l (okay maybe not those last two...) use `>ask` 
-To ask everyone in the group the above, use `>askall`
-If your asks you a question, and you want to respond, use `>respond`
+                    e = discord.Embed()
+                    e.title = "{}, you have been assigned {}'s secret santa.".format(gifter, giftee)
+                    e.description = """
+Use `>ask` if you'd like to ask them their shirt size, shoe size, favorite color, etc.
+Use `>respond`, If your secret santa asks you a question via DM, and you want to respond.
+
+Use `>askall` to ask everyone in the group a question.
+
 It's recommended that you go invisible on Discord when you send `>ask` questions, since I can't prevent people from puzzling that out.
 
 Recommended price limit: ~$30
 Secret Santa gifts can be silly or serious.
-Example: For Xmas 2018, Brandon got an autism shirt, Zach got a unicorn plush, and Aero got a DIY shelf for his stuff.
+Example: For Xmas 2018, Brandon got an autism shirt, Zach got a unicorn plush, and Aero got a DIY shelf.
 
 Please try not to give away who you are to your secret santa, as that ruins the fun of the event.
 Misleading your secret santa and giving them a different one is allowed & encouraged.
-""".format(gifter, giftee)
+"""
                     # member = self.bot.get_user(141752316188426241)
                     member = self.bot.get_user(discord_id)
-                    await member.send(content=message)
+                    await member.send(embed=e)
             else:
                 try:
-                    # get stuff from sql db
-                    pass
+                    cursor.execute('select * from santa VALUES where user_id=?', (ctx.author.id,))
+                    u_id, u_name, _, _, g_id, g_name = cursor.fetchone()
+                    await ctx.send("{}, you have been assigned {}'s secret santa.".format(u_name, g_name))
                 except:
                     # Raise NotASecretSantaError
                     pass
@@ -143,8 +147,8 @@ Misleading your secret santa and giving them a different one is allowed & encour
                 reaction = await self.get_yes_no_reaction(preview)
                 if reaction:
                     await ctx.send('Okay, sending...')
-                    # SEND TO QUESTION CHANNEL
-                    await ctx.send(embed=e)
+                    # mm = await self.santa_channel.send(embed=e)
+                    # await mm.add_reaction('\N{BALLOT BOX}')
                     break
                 else:
                     await ctx.send('Okay, please type your question again.')
@@ -198,6 +202,29 @@ Misleading your secret santa and giving them a different one is allowed & encour
             return False
         elif reaction.emoji == '\N{CROSS MARK}':
             raise asyncio.CancelledError
+
+    @commands.command()
+    async def test(self, ctx):
+        e = discord.Embed()
+        e.title = "{}, you are {}'s secret santa.".format("Foo", "Bar")
+        e.description = """
+Use `>ask` if you'd like to ask them their shirt size, shoe size, favorite color, etc.
+Use `>respond` if your secret santa `>ask`s you a question via DM and you want to respond.
+ 
+Use `>askall` to ask all participants a question.
+To respond to an `>askall` question, click/tap the checkmark under it. You should get a DM from this bot explaining how to respond.
+
+It's recommended that you go invisible on Discord when you send `>ask` questions, since I can't prevent people from puzzling things out from who's online.
+
+Recommended price range: <$30, but going slightly over is acceptable.
+Secret Santa gifts can be silly or serious.
+Example: For Xmas 2018, Brandon got an autism shirt, Zach got a unicorn plush, and Aero got a DIY shelf.
+
+Please try not to give away who you are to your secret santa, as that ruins the fun of the event.
+Misleading your secret santa and giving them a different one is allowed & encouraged.
+"""
+
+        await ctx.send(embed=e)
 
     @commands.command()
     async def get_reaction(self, ctx):
