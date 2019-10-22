@@ -22,9 +22,13 @@ class Santa(commands.Cog):
     @commands.Cog.listener()
     async def on_add_reaction(self, reaction, author):
         await self.bot.wait_until_ready()
-        # if message.channel.id == self.santa_channel.id and reaction.emoji == '\N{BALLOT BOX}':
-        #
-        #         await self.auto_comrade_check(message)
+        if reaction.message.channel.id == self.bot.cfg.santa_channel.id and reaction.emoji == '\N{BALLOT BOX}':
+            async with self.hohoholy_blessings:
+                if os.path.exists('borderlands_the_pre.sql'):
+                    instant = False
+                conn = sqlite3.connect('borderlands_the_pre.sql')
+                cursor = conn.cursor()
+
         # await self.auto_thonk(message)
 
     @commands.command()
@@ -110,7 +114,7 @@ Misleading your secret santa and giving them a different one is allowed & encour
             u_id, u_name, _, _, g_id, g_name = cursor.fetchone()
 
             member = self.bot.get_user(int(g_id))
-            msg = "From your gifter:\n {}".format(ctx.message.clean_content.lstrip(str(ctx.prefix) + str(ctx.command)))
+            msg = "From your gifter:\n{}".format(ctx.message.clean_content.lstrip(str(ctx.prefix) + str(ctx.command)))
 
             await member.send(content=msg)
 
@@ -128,18 +132,12 @@ Misleading your secret santa and giving them a different one is allowed & encour
             await member.send(content=msg)
 
     @commands.command(aliases=['question', 'poll'])
-    async def anonquestion(self, ctx):
-        await ctx.send(
-            'Now creating an anonymized question.\nPlease try to keep a professional tone.\nRespond with your question.')
+    async def askall(self, ctx):
         while True:
             e = discord.Embed(color=discord.Color.green())
             e.set_author(name="Someone asked...")
-            try:
-                val = (await self._get_next_message(ctx)).clean_content.lstrip(str(ctx.prefix) + str(ctx.command))
-            except TimeoutError:
-                await ctx.send('Timed out. Please send the `>anonquestion` command again to write a question.')
-                break
-            e.description = val
+            question = "".format(ctx.message.clean_content.lstrip(str(ctx.prefix) + str(ctx.command)))
+            e.description = question
             preview = await self.send_with_yes_no_reactions(ctx,
                                                             message='This is how your question will look. Are you sure you want to send this message?',
                                                             embed=e)
@@ -147,8 +145,21 @@ Misleading your secret santa and giving them a different one is allowed & encour
                 reaction = await self.get_yes_no_reaction(preview)
                 if reaction:
                     await ctx.send('Okay, sending...')
-                    # mm = await self.santa_channel.send(embed=e)
-                    # await mm.add_reaction('\N{BALLOT BOX}')
+                    mm = await self.bot.cfg.santa_channel.send(embed=e)
+                    await mm.add_reaction('\N{BALLOT BOX}')
+
+                    async with self.hohoholy_blessings:
+                        instant = True
+                        if os.path.exists('borderlands_the_pre.sql'):
+                            instant = False
+                        conn = sqlite3.connect('borderlands_the_pre.sql')
+                        cursor = conn.cursor()
+
+                        if instant:
+                            cursor.execute("create table questions(message_id, question, message_responses)")
+
+                        cursor.execute("insert into questions values (?, ?, ?)", (mm.id, question, None))
+                        conn.commit()
                     break
                 else:
                     await ctx.send('Okay, please type your question again.')
