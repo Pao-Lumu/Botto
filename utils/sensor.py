@@ -25,7 +25,11 @@ def get_running() -> psutil.Process:
                               stdout=PIPE, stderr=DEVNULL)
             pid = ps.stdout.read().decode("utf-8").split('\n')[0]
             if pid:
-                return psutil.Process(pid=int(pid))
+                proc = psutil.Process(pid=int(pid))
+                if proc:
+                    return proc
+                else:
+                    raise ProcessLookupError("Process not running or not accessable by bot.")
 
     except AttributeError:
         print('Oh no')
