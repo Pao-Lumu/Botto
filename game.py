@@ -40,8 +40,14 @@ class Game:
             except ProcessLookupError:
                 await asyncio.sleep(5)
                 continue
+            except ValueError:
+                await asyncio.sleep(5)
+                continue
+            except AttributeError:
+                await asyncio.sleep(5)
+                continue
             except Exception as e:
-                print(e)
+                print(str(type(e)) + ": " + str(e))
                 print("This is from the server checker")
 
     async def get_current_server_status(self):
