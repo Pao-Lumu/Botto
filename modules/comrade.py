@@ -1,5 +1,4 @@
 import asyncio
-import random
 import re
 # from utils import checks
 from datetime import datetime
@@ -30,7 +29,7 @@ class Comrade(commands.Cog):
     # Automatics
 
     # async def auto_comrade_check(self, msg):
-    #     if msg.author.bot:
+    #     if msg.rcvr.bot:
     #         return
     #     chance = (datetime.now().timestamp() - self.bot.gop_text_cd) / 1200 - .05
     #     if random.random() + chance <= .95:
@@ -67,10 +66,10 @@ class Comrade(commands.Cog):
     #         await msg.channel.send("*" + "".join(raw) + "\n **_Союз нерушимый республик свободных..._**")
     #         self.bot.gop_text_cd = datetime.now().timestamp()
     #         try:
-    #             if msg.author.voice and gopnik_voice and not msg.author.voice.afk:
+    #             if msg.rcvr.voice and gopnik_voice and not msg.rcvr.voice.afk:
     #                 self.bot.gop_voice_cd = datetime.now().timestamp()
     #
-    #                 choir = await msg.author.voice.connect()
+    #                 choir = await msg.rcvr.voice.connect()
     #                 choir.play(discord.FFmpegPCMAudio("audio/blyat.ogg"))
     #                 await asyncio.sleep(25)
     #                 choir.stop()

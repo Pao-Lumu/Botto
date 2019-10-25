@@ -56,7 +56,7 @@ async def on_ready():
     if not hasattr(bot, 'uptime'):
         bot.uptime = datetime.datetime.utcnow()
     bot.chat_channel = bot.get_channel(bot.cfg['chat_channel'])
-    bot.meme_channel = bot.get_channel(bot.cfg['comrade_channel'])
+    bot.meme_channel = bot.get_channel(bot.cfg['santa_channel'])
     bot.bprint(f"""~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 {pyfiglet.figlet_format(bot.user.name, font='epic')}
 Username: {bot.user.name}  |  ID: {bot.user.id}
@@ -74,7 +74,7 @@ Chat Channel: {bot.chat_channel}  |  Meme Channel: {bot.meme_channel}
 def load_config() -> dict:
     default = {"credentials": {'token': '', 'client_id': ''},
                "bot_configuration": {'tracked_guild_ids': [], 'chat_channel': 0, 'default_rcon_password': '',
-                                     'comrade_channel': 0, 'local_ip': '127.0.0.1'}}
+                                     'santa_channel': 0, 'local_ip': '127.0.0.1'}}
 
     try:
         with open('config.toml') as cfg:
@@ -230,20 +230,20 @@ if __name__ == '__main__':
     print("starting bot...")
     start = datetime.datetime.now()
     # TODO: Get TMUX availablity and do stuff accordingly
-    try:
-        import libtmux
-
-        server = libtmux.Server()
-        if os.environ['TMUX']:
-            panes = server._list_panes()
-
-            windows = [session.windows for session in server.sessions]
-            for pane in panes:
-                if pane['pane_current_command'] == "python3" and "Botto" in pane['pane_current_path']:
-                    bot.t_session = server.get_by_id(pane["session_id"])
-                    bot.t_window = bot.t_session.get_by_id(pane["window_id"])
-                    bot.t_pane = bot.t_window.get_by_id(pane["pane_id"])
-                    break
+    # try:
+    #     import libtmux
+    #
+    #     server = libtmux.Server()
+    #     if os.environ['TMUX']:
+    #         panes = server._list_panes()
+    #
+    #         windows = [session.windows for session in server.sessions]
+    #         for pane in panes:
+    #             if pane['pane_current_command'] == "python3" and "Botto" in pane['pane_current_path']:
+    #                 bot.t_session = server.get_by_id(pane["session_id"])
+    #                 bot.t_window = bot.t_session.get_by_id(pane["window_id"])
+    #                 bot.t_pane = bot.t_window.get_by_id(pane["pane_id"])
+    #                 break
                     # # !/usr/bin/env python3
                     #
                     # import libtmux
@@ -268,17 +268,17 @@ if __name__ == '__main__':
                     #             '/tellraw @a [{"text":"[Discord] ","color":"blue"},{"text":"<USERNAME> ","italic":true,"color":"light_purple"},{"text":"Message","italic":true,"color":"white"}]',
                     #             suppress_history=False)
 
-            bot.in_tmux = True
-            pass
-        else:
-            # ...BUT NOT IN TMUX, SOMEHOW GET IN TMUX, AND NAME WINDOW SOMETHING
-            pass
-    except ImportError:
-        # ELSE IF TMUX/LIBTMUX NOT INSTALLED, PASS
-        pass
-    except KeyError:
-        # IF LIBTMUX INSTALLED BUT TMUX NOT RUNNING, PASS
-        pass
+    #         bot.in_tmux = True
+    #         pass
+    #     else:
+    #         # ...BUT NOT IN TMUX, SOMEHOW GET IN TMUX, AND NAME WINDOW SOMETHING
+    #         pass
+    # except ImportError:
+    #     # ELSE IF TMUX/LIBTMUX NOT INSTALLED, PASS
+    #     pass
+    # except KeyError:
+    #     # IF LIBTMUX INSTALLED BUT TMUX NOT RUNNING, PASS
+    #     pass
     config = load_config()
     if not config:
         exit(-1)
