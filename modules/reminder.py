@@ -48,7 +48,7 @@ class Reminder(commands.Cog):
             print(e)
 
     # @commands.command(aliases=['remindme', 'remindmeto', 'rmt'])
-    # async def remind(self, ctx, *, args):
+    # async def remind(self, receiver, *, args):
     # x = {"reminders": [{"wash the dishes": {"hour":12, "minute": "5", "second": "32"}}]}
     # general format should be: >remindmeto go to bed at 1:00 AM daily/on the weekend/on Wednesday
     # datelookup = {"daily": "", "sunday": "", "monday": "", "tuesday": "",
@@ -74,14 +74,14 @@ class Reminder(commands.Cog):
     # pass
 
     # @commands.group()
-    # async def example_group(self, ctx):
-    #     if ctx.subcommand_passed:
+    # async def example_group(self, receiver):
+    #     if receiver.subcommand_passed:
     #         pass
     #     else:
     #         pass
     #
     # @example_group.command()
-    # async def example_subcommand(self, ctx):
+    # async def example_subcommand(self, receiver):
     #     pass
 
 

@@ -18,6 +18,9 @@ class Santa(commands.Cog):
         self.open_db = None
         self.bot = bot
         self.hohoholy_blessings = asyncio.Lock()
+        with open("modules/ogbox.json") as sec:
+            self.lookup: dict = json.load(sec)
+            self.uplook: dict = {v: k for k, v in self.lookup.items()}
         instant = False if os.path.exists('borderlands_the_pre.sql') else True
         conn = sqlite3.connect('borderlands_the_pre.sql')
         cursor = conn.cursor()
@@ -27,49 +30,75 @@ class Santa(commands.Cog):
 
     @helpers.is_human()
     @commands.Cog.listener()
-    async def on_add_reaction(self, reaction, author: discord.User):
+    async def on_add_reaction(self, reaction: discord.Reaction, author: discord.User):
         await self.bot.wait_until_ready(1)
         if reaction.message.channel.id == self.bot.cfg.santa_channel.id and reaction.emoji == '\N{BALLOT BOX}':
             async with self.hohoholy_blessings:
-                conn = sqlite3.connect('borderlands_the_pre.sql')
-                cursor = conn.cursor()
-
-                cursor.execute("select question, message_responses from questions where message_id=?",
-                               (reaction.message.id,))
                 try:
+                    conn = sqlite3.connect('borderlands_the_pre.sql')
+                    cursor = conn.cursor()
+
+                    cursor.execute("select question, message_responses from questions where message_id=?",
+                                   (reaction.message.id,))
                     q, responses = cursor.fetchone()
                 except ValueError:
-                    pass
-                conn.close()
-            responses = pickle.loads(responses)
+                    raise
+                finally:
+                    conn.close()
+            responses: dict = pickle.loads(responses)
             if str(author.id) not in responses.keys():
-                sent = await author.send('Type your question below.', embed=q)
+                while True:
+                    sent = await author.send('Type your question below.', embed=q)
 
-                def same_channel(msg):
-                    return author == msg.author and msg.channel == sent.channel
+                    def same_channel(msg):
+                        return author == msg.author and msg.channel == sent.channel
 
-                message = await self.bot.wait_for('message', timeout=120.0, check=same_channel)
-                resp = message.clean_content
-                preview = await self.send_with_yes_no_reactions(author, message='Is this correct?')
-                try:
-                    reaction = await self.get_yes_no_reaction(preview)
-                    if reaction:
-                except asyncio.TimeoutError as e:
-                    print('Timed out.')
+                    message = await self.bot.wait_for('message', timeout=120.0, check=same_channel)
+                    resp = message.clean_content
+                    e = discord.Embed(title="Somebody asked...", description=q)
+                    for x, y in responses.items():
+                        e.add_field(name=self.uplook[x], value=y)
+                    e.add_field(name=self.uplook[author.id], value=resp)
+                    preview = await self.send_with_yes_no_reactions(author,
+                                                                    message='Does this look correct? (Click \N{THUMBS UP SIGN} for yes and \N{THUMBS DOWN SIGN} for no)',
+                                                                    embed=e)
+                    try:
+                        y_or_n = await self.get_yes_no_reaction(preview)
+                        if y_or_n:
+                            sent = await author.send('Okay, this message will be sent.')
+                            await reaction.message.edit(embed=e)
+
+                            responses[author.id] = resp
+                            rero = pickle.dumps(responses)
+                            async with self.hohoholy_blessings:
+                                try:
+                                    conn = sqlite3.connect('borderlands_the_pre.sql')
+                                    cursor = conn.cursor()
+
+                                    cursor.execute("UPDATE questions SET message_responses=? WHERE message_id=?",
+                                                   (rero, reaction.message.id,))
+
+                                finally:
+                                    conn.commit()
+                    except asyncio.TimeoutError as e:
+                        print('Timed out.')
+                        break
+                    except Exception as e:
+                        await author.send(f'Something has gone wrong. Evan has been notified.\nError: {type(e)}: {e}')
+                        await self.bot.bprint(f'{type(e)}: {e}')
+                        await self.bot.get_user(self.bot.owner_id).send(f'{type(e)}: {e}')
 
     @commands.command()
     async def secret(self, ctx):
-        """Find out who your secret elf buddy is for this year"""
+        """Find out who your secret santa is for this year"""
         if ctx.author.id == self.bot.owner_id:
             async with self.hohoholy_blessings:
                 conn = sqlite3.connect('borderlands_the_pre.sql')
                 cursor = conn.cursor()
 
-                with open("modules/ogbox.json") as sec:
-                    lookup = json.load(sec)
-                    people = list()
-                    for x, y in lookup.items():
-                        people.append(x)
+                people = list()
+                for x, y in self.lookup.items():
+                    people.append(x)
 
                 continue_go = True
                 while continue_go:
@@ -86,13 +115,14 @@ class Santa(commands.Cog):
                 for x, person in enumerate(people):
                     b, g, a = (x - 1) % len(people), x % len(people), (x + 1) % len(people)
                     the_world = (
-                        lookup[people[b]], people[b], lookup[people[g]], people[g], lookup[people[a]], people[a])
+                        self.lookup[people[b]], people[b], self.lookup[people[g]], people[g], self.lookup[people[a]],
+                        people[a])
                     cursor.execute('insert into santa VALUES (?, ?, ?, ?, ?, ?)', the_world)
                 conn.commit()
                 conn.close()
 
             for x, person in enumerate(people):
-                discord_id = lookup[person]
+                discord_id = self.lookup[person]
                 gifter = person.capitalize()
                 giftee = people[(x + 1) % len(people)].capitalize()
                 e = discord.Embed()
@@ -192,16 +222,17 @@ Misleading your secret santa and giving them a different one is allowed & encour
             except Exception as e:
                 await ctx.send(f'Command failed with error {type(e)}: {e}')
 
-    async def send_with_yes_no_reactions(self, ctx, message: str = None, embed: discord.Embed = None):
-        reactions = ('\N{THUMBS UP SIGN}', '\N{THUMBS DOWN SIGN}', '\N{CROSS MARK}')
+    async def send_with_yes_no_reactions(self, receiver: discord.abc.Messageable, message: str = None,
+                                         embed: discord.Embed = None):
+        reactions = ('\N{THUMBS UP SIGN}', '\N{THUMBS DOWN SIGN}')
 
-        msg = await ctx.send(message, embed=embed)
+        msg = await receiver.send(message, embed=embed)
 
         try:
             [await x for x in [msg.add_reaction(reaction) for reaction in reactions]]
 
         except Exception as e:
-            await ctx.send(f'Something has gone wrong. Evan has been notified.\nError: {type(e)}: {e}')
+            await receiver.send(f'Something has gone wrong. Evan has been notified.\nError: {type(e)}: {e}')
             await self.bot.bprint(f'{type(e)}: {e}')
             await self.bot.get_user(self.bot.owner_id).send(f'{type(e)}: {e}')
 
@@ -256,9 +287,9 @@ Misleading your secret santa and giving them a different one is allowed & encour
         await ctx.send('{}: {}'.format(type(pp).__name__, pp))
 
     # @commands.command()
-    # async def r(self, ctx):
-    #     print(ctx.message.clean_content.lstrip(str(ctx.prefix) + str(ctx.command)))
-    #     print(ctx.message.content.lstrip(str(ctx.prefix) + str(ctx.command)))
+    # async def r(self, receiver):
+    #     print(receiver.message.clean_content.lstrip(str(receiver.prefix) + str(receiver.command)))
+    #     print(receiver.message.content.lstrip(str(receiver.prefix) + str(receiver.command)))
     #     print('\N{PISTOL}')
     #
 
