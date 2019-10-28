@@ -44,59 +44,81 @@ class Santa(commands.Cog):
 
                     cursor.execute("SELECT question, message_responses FROM questions WHERE message_id=?",
                                    (reaction.message_id,))
+                    print('TEST')
                     q, responses = cursor.fetchone()
                 except TypeError:
                     return
                 finally:
                     conn.close()
-            responses = pickle.loads(responses)
-            if str(author.id) not in responses.keys():
-                while True:
-                    sent = await author.send(
-                        'The question you have been asked is:{}\nType your response below.'.format(q),
-                        delete_after=120.0)
+            responses: dict = pickle.loads(responses)
+            while True:
+                sent = await author.send(
+                    'The question you have been asked is:{}\nType your response below.'.format(q),
+                    delete_after=120.0)
 
-                    message = await self.bot.wait_for('message', timeout=120.0, check=lambda
-                        msg: author == msg.author and msg.channel == sent.channel)
-                    e = discord.Embed(title="Somebody asked...", description=q, author='yeet')
+                message = await self.bot.wait_for('message', timeout=120.0, check=lambda
+                    msg: author == msg.author and msg.channel == sent.channel)
+                e = discord.Embed(title="Somebody asked...", description=q)
+                print(responses)
+                responses[str(reaction.user_id)] = message.clean_content
+                print(responses)
+                for x, y in responses.items():
+                    e.add_field(name=self.uplook[int(x)], value=y)
 
-                    responses[author.id] = message.clean_content
-                    for x, y in responses.items():
-                        e.add_field(name=self.uplook[x], value=y)
+                preview = await self.send_with_yes_no_reactions(author,
+                                                                message=f'Does this look correct?({emoji.CHECK_MARK} for yes, {emoji.CROSS_MARK} for no)',
+                                                                embed=e)
+                try:
+                    y_or_n = await self.get_yes_no_reaction(author, preview)
+                    if y_or_n:
+                        await preview.delete()
+                        sent = await author.send('Okay, your response will be sent.\nYou may edit it by reacting to the question again.')
+                        await msg_ref.edit(embed=e)
 
-                    preview = await self.send_with_yes_no_reactions(author,
-                                                                    message=f'Does this look correct?({emoji.CHECK_MARK} for yes, {emoji.CROSS_MARK} for no)',
-                                                                    embed=e)
-                    try:
-                        y_or_n = await self.get_yes_no_reaction(author, preview)
-                        if y_or_n:
-                            await preview.delete()
-                            sent = await author.send('Okay, your response will be sent.\nYou may edit it by reacting to the question again.')
-                            await msg_ref.edit(embed=e)
+                        async with self.hohoholy_blessings:
+                            try:
+                                conn = sqlite3.connect('borderlands_the_pre.sql')
+                                cursor = conn.cursor()
+                                print('TESTyou')
 
-                            async with self.hohoholy_blessings:
-                                try:
-                                    conn = sqlite3.connect('borderlands_the_pre.sql')
-                                    cursor = conn.cursor()
-                                    cursor.execute("SELECT message_responses FROM questions WHERE message_id=?",
-                                                   (reaction.message_id,))
-                                    responses = cursor.fetchone()
-                                    responses[author.id] = message.clean_content
-                                    rero = pickle.dumps(responses)
+                                cursor.execute("SELECT message_responses FROM questions WHERE message_id=?",
+                                               (reaction.message_id,))
+                                print('TESTyou222222')
 
-                                    cursor.execute("UPDATE questions SET message_responses=? WHERE message_id=?",
-                                                   (rero, reaction.message_id,))
-                                finally:
-                                    conn.commit()
-                                    conn.close()
-                                    break
-                        else:
-                            continue
-                    except asyncio.TimeoutError as e:
-                        print('Timed out.')
-                        break
-                    except Exception as e:
-                        await self.send_error(author, e)
+                                responses = pickle.loads(cursor.fetchone()[0])
+                                print(responses)
+                                responses[str(author.id)] = message.clean_content
+                                print(responses)
+                                rero = pickle.dumps(responses)
+
+                                cursor.execute("UPDATE questions SET message_responses=? WHERE message_id=?",
+                                               (rero, reaction.message_id,))
+                                conn.commit()
+
+                                cursor.execute("SELECT message_responses FROM questions WHERE message_id=?",
+                                               (reaction.message_id,))
+                                reeeee = cursor.fetchone()
+                                print('FUCK FUCK FUCK FUCK')
+                                print(reeeee)
+
+                                e = discord.Embed(title="Somebody asked...", description=q)
+
+                                for x, y in responses.items():
+                                    e.add_field(name=self.uplook[x], value=y)
+                            except Exception as e:
+                                print(type(e))
+                                print(e)
+                            finally:
+                                conn.commit()
+                                conn.close()
+                                break
+                    else:
+                        continue
+                except asyncio.TimeoutError as e:
+                    print('Timed out.')
+                    break
+                except Exception as e:
+                    await self.send_error(author, e)
 
     @commands.command()
     async def secret(self, ctx):
