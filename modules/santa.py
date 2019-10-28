@@ -45,7 +45,7 @@ class Santa(commands.Cog):
 
                     cursor.execute("SELECT question, message_responses FROM questions WHERE message_id=?",
                                    (reaction.message_id,))
-                    print('TEST')
+                    
                     q, responses = cursor.fetchone()
                 except TypeError:
                     return
@@ -79,11 +79,9 @@ class Santa(commands.Cog):
                             try:
                                 conn = sqlite3.connect('borderlands_the_pre.sql')
                                 cursor = conn.cursor()
-                                print('TESTyou')
 
                                 cursor.execute("SELECT message_responses FROM questions WHERE message_id=?",
                                                (reaction.message_id,))
-                                print('TESTyou222222')
 
                                 responses = pickle.loads(cursor.fetchone()[0])
                                 responses[str(author.id)] = message.clean_content
@@ -172,8 +170,7 @@ Misleading your secret santa and giving them a different one is allowed & encour
 """
                 # member = self.bot.get_user(141752316188426241)
                 member = self.bot.get_user(discord_id)
-                print('hi')
-                # await member.send(embed=e)
+                await member.send(embed=e)
         else:
             async with self.hohoholy_blessings:
                 conn = sqlite3.connect('borderlands_the_pre.sql')
@@ -193,12 +190,15 @@ Misleading your secret santa and giving them a different one is allowed & encour
     async def ask(self, ctx):
         async with self.hohoholy_blessings:
             try:
+                name = self.uplook[ctx.author.id]
                 conn = sqlite3.connect('borderlands_the_pre.sql')
                 cursor = conn.cursor()
                 cursor.execute('SELECT * FROM santa WHERE user_id=?', (ctx.author.id,))
                 u_id, u_name, _, _, g_id, g_name = cursor.fetchone()
+            except KeyError:
+                await ctx.send("You're not in the secret santa group!")
             except TypeError:
-                print('Either you\' not in the secret santa group, or the secret santa\' ')
+                await ctx.send("Your secret santa has not been assigned!")
             finally:
                 conn.close()
         nn = ctx.message.clean_content.lstrip(str(ctx.prefix) + str(ctx.command)).lstrip()
@@ -208,7 +208,6 @@ Misleading your secret santa and giving them a different one is allowed & encour
             await member.send(content=msg)
         else:
             await ctx.send("Please add a message.")
-
 
     @commands.command()
     async def respond(self, ctx):
