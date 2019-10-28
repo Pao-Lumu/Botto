@@ -164,7 +164,7 @@ class MinecraftServer(Server):
         while self.proc.is_running() and not self.bot.is_closed():
             try:
                 msg = await self.bot.wait_for('message', check=self.is_chat_channel, timeout=5)
-                if not hasattr(msg, 'rcvr') or (hasattr(msg, 'rcvr') and msg.author.bot):
+                if not hasattr(msg, 'author') or (hasattr(msg, 'author') and msg.author.bot):
                     pass
                 elif msg.clean_content:
                     await self._rcon_connect()
@@ -325,7 +325,7 @@ class SourceServer(Server):
             while self.proc.is_running() and not self.bot.is_closed():
                 try:
                     msg = await self.bot.wait_for('message', check=self.is_chat_channel, timeout=5)
-                    if not hasattr(msg, 'rcvr') or (hasattr(msg, 'rcvr') and msg.author.bot):
+                    if not hasattr(msg, 'author') or (hasattr(msg, 'author') and msg.author.bot):
                         pass
                     elif msg.clean_content:
                         i = len(msg.author.name)
