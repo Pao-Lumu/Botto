@@ -7,6 +7,7 @@ import sqlite3
 
 import discord
 from discord.ext import commands
+
 from .emoji import Emoji as emoji
 
 
@@ -58,10 +59,9 @@ class Santa(commands.Cog):
 
                 message = await self.bot.wait_for('message', timeout=120.0, check=lambda
                     msg: author == msg.author and msg.channel == sent.channel)
-                e = discord.Embed(title="Somebody asked...", description=q)
-                print(responses)
                 responses[str(reaction.user_id)] = message.clean_content
-                print(responses)
+
+                e = discord.Embed(title="Somebody asked...", description=q)
                 for x, y in responses.items():
                     e.add_field(name=self.uplook[int(x)], value=y)
 
@@ -86,9 +86,7 @@ class Santa(commands.Cog):
                                 print('TESTyou222222')
 
                                 responses = pickle.loads(cursor.fetchone()[0])
-                                print(responses)
                                 responses[str(author.id)] = message.clean_content
-                                print(responses)
                                 rero = pickle.dumps(responses)
 
                                 cursor.execute("UPDATE questions SET message_responses=? WHERE message_id=?",
@@ -98,13 +96,11 @@ class Santa(commands.Cog):
                                 cursor.execute("SELECT message_responses FROM questions WHERE message_id=?",
                                                (reaction.message_id,))
                                 reeeee = cursor.fetchone()
-                                print('FUCK FUCK FUCK FUCK')
-                                print(reeeee)
 
                                 e = discord.Embed(title="Somebody asked...", description=q)
 
                                 for x, y in responses.items():
-                                    e.add_field(name=self.uplook[x], value=y)
+                                    e.add_field(name=self.uplook[int(x)], value=y)
                             except Exception as e:
                                 print(type(e))
                                 print(e)
