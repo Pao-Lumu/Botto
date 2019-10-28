@@ -45,7 +45,7 @@ class Santa(commands.Cog):
 
                     cursor.execute("SELECT question, message_responses FROM questions WHERE message_id=?",
                                    (reaction.message_id,))
-                    
+
                     q, responses = cursor.fetchone()
                 except TypeError:
                     return
@@ -72,7 +72,8 @@ class Santa(commands.Cog):
                     y_or_n = await self.get_yes_no_reaction(author, preview)
                     if y_or_n:
                         await preview.delete()
-                        sent = await author.send('Okay, your response will be sent.\nYou may edit it by reacting to the question again.')
+                        sent = await author.send(
+                            'Okay, your response will be sent.\nYou may edit it by reacting to the question again.')
                         await msg_ref.edit(embed=e)
 
                         async with self.hohoholy_blessings:
@@ -308,6 +309,7 @@ Misleading your secret santa and giving them a different one is allowed & encour
         print('{}: {} --- {}'.format(type(pp).__name__, pp, pp[0].emoji))
         print(bytes(pp[0].emoji.encode('utf-8')))
         await rcvr.send('{}: {}'.format(type(pp).__name__, pp))
+
 
 # Real Numbers
 # group = {
