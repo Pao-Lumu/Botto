@@ -15,18 +15,27 @@ class Santa(commands.Cog):
     """Secret Santa Stuff, and other relevant things idk"""
 
     def __init__(self, bot):
-        self.open_db = None
         self.bot = bot
         self.hohoholy_blessings = asyncio.Lock()
         with open("modules/ogbox.json") as sec:
             self.lookup: dict = json.load(sec)
             self.uplook: dict = {v: k for k, v in self.lookup.items()}
+
         instant = False if os.path.exists('borderlands_the_pre.sql') else True
         if instant:
-            conn = sqlite3.connect('borderlands_the_pre.sql')
-            cursor = conn.cursor()
-            cursor.execute("CREATE TABLE santa(user_id, user_name, gifter_id, gifter_name, giftee_id, giftee_name)")
-            cursor.execute("CREATE TABLE questions(message_id, question, message_responses)")
+            self.conn = sqlite3.connect('borderlands_the_pre.sql')
+            self.cursor = self.conn.cursor()
+            self.cursor.execute(
+                "CREATE TABLE santa(user_id, user_name, gifter_id, gifter_name, giftee_id, giftee_name)")
+            self.cursor.execute("CREATE TABLE questions(message_id, question, message_responses)")
+            self.conn.commit()
+        else:
+            self.conn = sqlite3.connect('borderlands_the_pre.sql')
+            self.cursor = self.conn.cursor()
+
+    def cog_unload(self):
+        self.conn.commit()
+        self.conn.close()
 
     @commands.Cog.listener()
     async def on_raw_reaction_add(self, reaction: discord.RawReactionActionEvent):
@@ -40,17 +49,12 @@ class Santa(commands.Cog):
 
             async with self.hohoholy_blessings:
                 try:
-                    conn = sqlite3.connect('borderlands_the_pre.sql')
-                    cursor = conn.cursor()
+                    self.cursor.execute("SELECT question, message_responses FROM questions WHERE message_id=?",
+                                        (reaction.message_id,))
 
-                    cursor.execute("SELECT question, message_responses FROM questions WHERE message_id=?",
-                                   (reaction.message_id,))
-
-                    q, responses = cursor.fetchone()
+                    q, responses = self.cursor.fetchone()
                 except TypeError:
                     return
-                finally:
-                    conn.close()
             responses: dict = pickle.loads(responses)
             while True:
                 sent = await author.send(
@@ -66,7 +70,7 @@ class Santa(commands.Cog):
                     e.add_field(name=self.uplook[int(x)], value=y)
 
                 preview = await self.send_with_yes_no_reactions(author,
-                                                                message=f'Does this look correct?({emoji.CHECK_MARK} for yes, {emoji.CROSS_MARK} for no)',
+                                                                message=f'Does this look correct?\n({emoji.CHECK_MARK} for yes, {emoji.CROSS_MARK} for no)',
                                                                 embed=e)
                 try:
                     y_or_n = await self.get_yes_no_reaction(author, preview)
@@ -78,23 +82,16 @@ class Santa(commands.Cog):
 
                         async with self.hohoholy_blessings:
                             try:
-                                conn = sqlite3.connect('borderlands_the_pre.sql')
-                                cursor = conn.cursor()
+                                self.cursor.execute("SELECT message_responses FROM questions WHERE message_id=?",
+                                                    (reaction.message_id,))
 
-                                cursor.execute("SELECT message_responses FROM questions WHERE message_id=?",
-                                               (reaction.message_id,))
-
-                                responses = pickle.loads(cursor.fetchone()[0])
+                                responses = pickle.loads(self.cursor.fetchone()[0])
                                 responses[str(author.id)] = message.clean_content
                                 rero = pickle.dumps(responses)
 
-                                cursor.execute("UPDATE questions SET message_responses=? WHERE message_id=?",
-                                               (rero, reaction.message_id,))
-                                conn.commit()
-
-                                cursor.execute("SELECT message_responses FROM questions WHERE message_id=?",
-                                               (reaction.message_id,))
-                                reeeee = cursor.fetchone()
+                                self.cursor.execute("UPDATE questions SET message_responses=? WHERE message_id=?",
+                                                    (rero, reaction.message_id,))
+                                self.conn.commit()
 
                                 e = discord.Embed(title="Somebody asked...", description=q)
 
@@ -104,8 +101,7 @@ class Santa(commands.Cog):
                                 print(type(e))
                                 print(e)
                             finally:
-                                conn.commit()
-                                conn.close()
+                                self.conn.commit()
                                 break
                     else:
                         continue
@@ -120,9 +116,6 @@ class Santa(commands.Cog):
         """Find out who your secret santa is for this year"""
         if ctx.author.id == self.bot.owner_id:
             async with self.hohoholy_blessings:
-                conn = sqlite3.connect('borderlands_the_pre.sql')
-                cursor = conn.cursor()
-
                 people = list()
                 for x, y in self.lookup.items():
                     people.append(x)
@@ -137,16 +130,15 @@ class Santa(commands.Cog):
                     else:
                         break
 
-                cursor.execute('DELETE FROM santa')
+                self.cursor.execute('DELETE FROM santa')
 
                 for x, person in enumerate(people):
                     b, g, a = (x - 1) % len(people), x % len(people), (x + 1) % len(people)
                     the_world = (
                         self.lookup[people[b]], people[b], self.lookup[people[g]], people[g], self.lookup[people[a]],
                         people[a])
-                    cursor.execute('INSERT INTO santa VALUES (?,?,?,?,?,?)', the_world)
-                conn.commit()
-                conn.close()
+                    self.cursor.execute('INSERT INTO santa VALUES (?,?,?,?,?,?)', the_world)
+                self.conn.commit()
 
             for x, person in enumerate(people):
                 discord_id = self.lookup[person]
@@ -174,34 +166,27 @@ Misleading your secret santa and giving them a different one is allowed & encour
                 await member.send(embed=e)
         else:
             async with self.hohoholy_blessings:
-                conn = sqlite3.connect('borderlands_the_pre.sql')
-                cursor = conn.cursor()
                 try:
-                    cursor.execute('SELECT * FROM santa WHERE user_id=?', (ctx.author.id,))
-                    u_id, u_name, _, _, g_id, g_name = cursor.fetchone()
+                    self.cursor.execute('SELECT * FROM santa WHERE user_id=?', (ctx.author.id,))
+                    u_id, u_name, _, _, g_id, g_name = self.cursor.fetchone()
                     await ctx.send("{}, you have been assigned {}'s secret santa.".format(u_name, g_name))
                 except TypeError:
                     await ctx.send("You're not a secret santa! If you think this is in error, talk to Evan.")
                 except Exception as e:
                     print(f'{type(e)}: {e}')
                     pass
-                conn.close()
 
     @commands.command()
     async def ask(self, ctx):
         async with self.hohoholy_blessings:
             try:
                 name = self.uplook[ctx.author.id]
-                conn = sqlite3.connect('borderlands_the_pre.sql')
-                cursor = conn.cursor()
-                cursor.execute('SELECT * FROM santa WHERE user_id=?', (ctx.author.id,))
-                u_id, u_name, _, _, g_id, g_name = cursor.fetchone()
+                self.cursor.execute('SELECT * FROM santa WHERE user_id=?', (ctx.author.id,))
+                u_id, u_name, _, _, g_id, g_name = self.cursor.fetchone()
             except KeyError:
                 await ctx.send("You're not in the secret santa group!")
             except TypeError:
                 await ctx.send("Your secret santa has not been assigned!")
-            finally:
-                conn.close()
         nn = ctx.message.clean_content.lstrip(str(ctx.prefix) + str(ctx.command)).lstrip()
         if nn:
             member = self.bot.get_user(int(g_id))
@@ -213,10 +198,8 @@ Misleading your secret santa and giving them a different one is allowed & encour
     @commands.command()
     async def respond(self, ctx):
         async with self.hohoholy_blessings:
-            conn = sqlite3.connect('borderlands_the_pre.sql')
-            cursor = conn.cursor()
-            cursor.execute('SELECT * FROM santa WHERE user_id=?', (ctx.author.id,))
-            u_id, u_name, g_id, g_name, _, _ = cursor.fetchone()
+            self.cursor.execute('SELECT * FROM santa WHERE user_id=?', (ctx.author.id,))
+            u_id, u_name, g_id, g_name, _, _ = self.cursor.fetchone()
 
         nn = ctx.message.clean_content.lstrip(str(ctx.prefix) + str(ctx.command)).lstrip()
         if nn:
@@ -244,12 +227,9 @@ Misleading your secret santa and giving them a different one is allowed & encour
                     await mm.add_reaction(emoji.BALLOT_BOX)
 
                     async with self.hohoholy_blessings:
-                        conn = sqlite3.connect('borderlands_the_pre.sql')
-                        cursor = conn.cursor()
-
-                        cursor.execute("INSERT INTO questions VALUES (?,?,?)", (mm.id, question, pickle.dumps(dict())))
-                        conn.commit()
-                        conn.close()
+                        self.cursor.execute("INSERT INTO questions VALUES (?,?,?)",
+                                            (mm.id, question, pickle.dumps(dict())))
+                        self.conn.commit()
                     await s.delete()
                     await ctx.send('Message sent!')
                     break
@@ -300,17 +280,18 @@ Misleading your secret santa and giving them a different one is allowed & encour
         await self.bot.bprint(f'{type(e)}: {e}')
         await self.bot.get_user(self.bot.owner_id).send(f'{type(e)}: {e}')
 
-    @commands.command()
-    async def get_reaction(self, rcvr):
-        def check(_, user):
-            return rcvr.author == user
 
-        pp = await self.bot.wait_for('reaction_add', timeout=120.0, check=check)
-        print('{}: {} --- {}'.format(type(pp).__name__, pp, pp[0].emoji))
-        print(bytes(pp[0].emoji.encode('utf-8')))
-        await rcvr.send('{}: {}'.format(type(pp).__name__, pp))
-
-
+#     @commands.command()
+#     async def get_reaction(self, rcvr):
+#         def check(_, user):
+#             return rcvr.author == user
+#
+#         pp = await self.bot.wait_for('reaction_add', timeout=120.0, check=check)
+#         print('{}: {} --- {}'.format(type(pp).__name__, pp, pp[0].emoji))
+#         print(bytes(pp[0].emoji.encode('utf-8')))
+#         await rcvr.send('{}: {}'.format(type(pp).__name__, pp))
+#
+#
 # Real Numbers
 # group = {
 #     "Evan": 141752316188426241,
