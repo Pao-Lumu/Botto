@@ -1,57 +1,114 @@
 import asyncio
 import json
 import os
+import pickle
 import random
 import sqlite3
 
 import discord
 from discord.ext import commands
-
-from utils import helpers
+from .emoji import Emoji as emoji
 
 
 class Santa(commands.Cog):
-    """Ho ho ho you're a ho."""
+    """Secret Santa Stuff, and other relevant things idk"""
 
     def __init__(self, bot):
+        self.open_db = None
         self.bot = bot
         self.hohoholy_blessings = asyncio.Lock()
-        # self.santa_channel = self.bot.get_channel('')
+        with open("modules/ogbox.json") as sec:
+            self.lookup: dict = json.load(sec)
+            self.uplook: dict = {v: k for k, v in self.lookup.items()}
+        instant = False if os.path.exists('borderlands_the_pre.sql') else True
+        if instant:
+            conn = sqlite3.connect('borderlands_the_pre.sql')
+            cursor = conn.cursor()
+            cursor.execute("CREATE TABLE santa(user_id, user_name, gifter_id, gifter_name, giftee_id, giftee_name)")
+            cursor.execute("CREATE TABLE questions(message_id, question, message_responses)")
 
-    @helpers.is_human()
     @commands.Cog.listener()
-    async def on_add_reaction(self, reaction, author):
-        await self.bot.wait_until_ready()
-        if reaction.message.channel.id == self.bot.cfg.santa_channel.id and reaction.emoji == '\N{BALLOT BOX}':
-            async with self.hohoholy_blessings:
-                if os.path.exists('borderlands_the_pre.sql'):
-                    instant = False
-                conn = sqlite3.connect('borderlands_the_pre.sql')
-                cursor = conn.cursor()
+    async def on_raw_reaction_add(self, reaction: discord.RawReactionActionEvent):
+        author = self.bot.get_user(reaction.user_id)
+        if author.bot:
+            return
+        if reaction.channel_id == self.bot.meme_channel.id and reaction.emoji.name == emoji.BALLOT_BOX:
 
-        # await self.auto_thonk(message)
+            channel = self.bot.get_channel(reaction.channel_id)
+            msg_ref = await channel.fetch_message(reaction.message_id)
+
+            async with self.hohoholy_blessings:
+                try:
+                    conn = sqlite3.connect('borderlands_the_pre.sql')
+                    cursor = conn.cursor()
+
+                    cursor.execute("SELECT question, message_responses FROM questions WHERE message_id=?",
+                                   (reaction.message_id,))
+                    q, responses = cursor.fetchone()
+                except TypeError:
+                    return
+                finally:
+                    conn.close()
+            responses = pickle.loads(responses)
+            if str(author.id) not in responses.keys():
+                while True:
+                    sent = await author.send(
+                        'The question you have been asked is:{}\nType your response below.'.format(q),
+                        delete_after=120.0)
+
+                    message = await self.bot.wait_for('message', timeout=120.0, check=lambda
+                        msg: author == msg.author and msg.channel == sent.channel)
+                    e = discord.Embed(title="Somebody asked...", description=q, author='yeet')
+
+                    responses[author.id] = message.clean_content
+                    for x, y in responses.items():
+                        e.add_field(name=self.uplook[x], value=y)
+
+                    preview = await self.send_with_yes_no_reactions(author,
+                                                                    message=f'Does this look correct?({emoji.CHECK_MARK} for yes, {emoji.CROSS_MARK} for no)',
+                                                                    embed=e)
+                    try:
+                        y_or_n = await self.get_yes_no_reaction(author, preview)
+                        if y_or_n:
+                            await preview.delete()
+                            sent = await author.send('Okay, your response will be sent.\nYou may edit it by reacting to the question again.')
+                            await msg_ref.edit(embed=e)
+
+                            async with self.hohoholy_blessings:
+                                try:
+                                    conn = sqlite3.connect('borderlands_the_pre.sql')
+                                    cursor = conn.cursor()
+                                    cursor.execute("SELECT message_responses FROM questions WHERE message_id=?",
+                                                   (reaction.message_id,))
+                                    responses = cursor.fetchone()
+                                    responses[author.id] = message.clean_content
+                                    rero = pickle.dumps(responses)
+
+                                    cursor.execute("UPDATE questions SET message_responses=? WHERE message_id=?",
+                                                   (rero, reaction.message_id,))
+                                finally:
+                                    conn.commit()
+                                    conn.close()
+                                    break
+                        else:
+                            continue
+                    except asyncio.TimeoutError as e:
+                        print('Timed out.')
+                        break
+                    except Exception as e:
+                        await self.send_error(author, e)
 
     @commands.command()
     async def secret(self, ctx):
-        """Find out who your secret elf buddy is for this year"""
-        async with self.hohoholy_blessings:
-            instant = True
-            if os.path.exists('borderlands_the_pre.sql'):
-                instant = False
-            conn = sqlite3.connect('borderlands_the_pre.sql')
-            cursor = conn.cursor()
+        """Find out who your secret santa is for this year"""
+        if ctx.author.id == self.bot.owner_id:
+            async with self.hohoholy_blessings:
+                conn = sqlite3.connect('borderlands_the_pre.sql')
+                cursor = conn.cursor()
 
-            if ctx.author.id == self.bot.owner_id:
-                # if table does not exist -> create it
-                if instant:
-                    cursor.execute(
-                        "create table santa(user_id, user_name, gifter_id, gifter_name, giftee_id, giftee_name)")
-
-                with open("modules/ogbox.json") as sec:
-                    lookup = json.load(sec)
-                    people = list()
-                    for x, y in lookup.items():
-                        people.append(x)
+                people = list()
+                for x, y in self.lookup.items():
+                    people.append(x)
 
                 continue_go = True
                 while continue_go:
@@ -63,60 +120,77 @@ class Santa(commands.Cog):
                     else:
                         break
 
-                cursor.execute('delete from santa')
+                cursor.execute('DELETE FROM santa')
 
                 for x, person in enumerate(people):
                     b, g, a = (x - 1) % len(people), x % len(people), (x + 1) % len(people)
                     the_world = (
-                        lookup[people[b]], people[b], lookup[people[g]], people[g], lookup[people[a]], people[a])
-                    cursor.execute('insert into santa VALUES (?, ?, ?, ?, ?, ?)', the_world)
+                        self.lookup[people[b]], people[b], self.lookup[people[g]], people[g], self.lookup[people[a]],
+                        people[a])
+                    cursor.execute('INSERT INTO santa VALUES (?,?,?,?,?,?)', the_world)
                 conn.commit()
+                conn.close()
 
-                for x, person in enumerate(people):
-                    discord_id = lookup[person]
-                    gifter = person.capitalize()
-                    giftee = people[(x + 1) % len(people)].capitalize()
-                    e = discord.Embed()
-                    e.title = "{}, you have been assigned {}'s secret santa.".format(gifter, giftee)
-                    e.description = """
-Use `>ask` if you'd like to ask them their shirt size, shoe size, favorite color, etc.
-Use `>respond`, If your secret santa asks you a question via DM, and you want to respond.
+            for x, person in enumerate(people):
+                discord_id = self.lookup[person]
+                gifter = person.capitalize()
+                giftee = people[(x + 1) % len(people)].capitalize()
+                e = discord.Embed()
+                e.title = "{}, you are {}'s secret santa.".format(gifter, giftee)
+                e.description = """
+Use `>ask` if you'd like to ask them their shirt size, shoe size, favorite color, etc. directly
+Use `>respond` if your secret santa `>ask`s you a question via DM and you want to respond.
+ 
+Use `>askall` to ask all participants a question.
+To respond to an `>askall` question, click/tap the checkmark under it. You should get a DM from this bot explaining how to respond.
 
-Use `>askall` to ask everyone in the group a question.
+*It's recommended that you go invisible on Discord when you send `>ask` questions, since I can't prevent people from puzzling things out from who's online.*
 
-It's recommended that you go invisible on Discord when you send `>ask` questions, since I can't prevent people from puzzling that out.
-
-Recommended price limit: ~$30
+Recommended price range: <$30, but going slightly over is acceptable.
 Secret Santa gifts can be silly or serious.
-Example: For Xmas 2018, Brandon got an autism shirt, Zach got a unicorn plush, and Aero got a DIY shelf.
 
 Please try not to give away who you are to your secret santa, as that ruins the fun of the event.
 Misleading your secret santa and giving them a different one is allowed & encouraged.
 """
-                    # member = self.bot.get_user(141752316188426241)
-                    member = self.bot.get_user(discord_id)
-                    await member.send(embed=e)
-            else:
+                # member = self.bot.get_user(141752316188426241)
+                member = self.bot.get_user(discord_id)
+                print('hi')
+                # await member.send(embed=e)
+        else:
+            async with self.hohoholy_blessings:
+                conn = sqlite3.connect('borderlands_the_pre.sql')
+                cursor = conn.cursor()
                 try:
-                    cursor.execute('select * from santa VALUES where user_id=?', (ctx.author.id,))
+                    cursor.execute('SELECT * FROM santa WHERE user_id=?', (ctx.author.id,))
                     u_id, u_name, _, _, g_id, g_name = cursor.fetchone()
                     await ctx.send("{}, you have been assigned {}'s secret santa.".format(u_name, g_name))
-                except:
-                    # Raise NotASecretSantaError
+                except TypeError:
+                    await ctx.send("You're not a secret santa! If you think this is in error, talk to Evan.")
+                except Exception as e:
+                    print(f'{type(e)}: {e}')
                     pass
+                conn.close()
 
     @commands.command()
     async def ask(self, ctx):
         async with self.hohoholy_blessings:
-            conn = sqlite3.connect('borderlands_the_pre.sql')
-            cursor = conn.cursor()
-            cursor.execute('SELECT * FROM santa WHERE user_id=?', (ctx.author.id,))
-            u_id, u_name, _, _, g_id, g_name = cursor.fetchone()
-
+            try:
+                conn = sqlite3.connect('borderlands_the_pre.sql')
+                cursor = conn.cursor()
+                cursor.execute('SELECT * FROM santa WHERE user_id=?', (ctx.author.id,))
+                u_id, u_name, _, _, g_id, g_name = cursor.fetchone()
+            except TypeError:
+                print('Either you\' not in the secret santa group, or the secret santa\' ')
+            finally:
+                conn.close()
+        nn = ctx.message.clean_content.lstrip(str(ctx.prefix) + str(ctx.command)).lstrip()
+        if nn:
             member = self.bot.get_user(int(g_id))
-            msg = "From your gifter:\n{}".format(ctx.message.clean_content.lstrip(str(ctx.prefix) + str(ctx.command)))
-
+            msg = "`>ask` message from your gifter:\n{}".format(nn)
             await member.send(content=msg)
+        else:
+            await ctx.send("Please add a message.")
+
 
     @commands.command()
     async def respond(self, ctx):
@@ -126,156 +200,121 @@ Misleading your secret santa and giving them a different one is allowed & encour
             cursor.execute('SELECT * FROM santa WHERE user_id=?', (ctx.author.id,))
             u_id, u_name, g_id, g_name, _, _ = cursor.fetchone()
 
+        nn = ctx.message.clean_content.lstrip(str(ctx.prefix) + str(ctx.command)).lstrip()
+        if nn:
             member = self.bot.get_user(int(g_id))
-            msg = "From your giftee, {}:\n {}".format(u_name, ctx.message.clean_content.lstrip(
-                str(ctx.prefix) + str(ctx.command)))
+            msg = "`>respond` message from your giftee, {}:\n{}".format(u_name, nn)
             await member.send(content=msg)
+        else:
+            await ctx.send("Please add a message.")
 
     @commands.command(aliases=['question', 'poll'])
     async def askall(self, ctx):
+        rcvr = ctx.author
         while True:
             e = discord.Embed(color=discord.Color.green())
-            e.set_author(name="Someone asked...")
-            question = "".format(ctx.message.clean_content.lstrip(str(ctx.prefix) + str(ctx.command)))
-            e.description = question
-            preview = await self.send_with_yes_no_reactions(ctx,
+            question = ctx.message.clean_content.lstrip(str(ctx.prefix) + str(ctx.command))
+            e.title = '_*Someone asked:*_\n{}'.format(question)
+            preview = await self.send_with_yes_no_reactions(rcvr,
                                                             message='This is how your question will look. Are you sure you want to send this message?',
                                                             embed=e)
             try:
-                reaction = await self.get_yes_no_reaction(preview)
+                reaction = await self.get_yes_no_reaction(rcvr, message=preview)
                 if reaction:
-                    await ctx.send('Okay, sending...')
-                    mm = await self.bot.cfg.santa_channel.send(embed=e)
-                    await mm.add_reaction('\N{BALLOT BOX}')
+                    s = await ctx.send('Sending...')
+                    mm = await self.bot.meme_channel.send(embed=e)
+                    await mm.add_reaction(emoji.BALLOT_BOX)
 
                     async with self.hohoholy_blessings:
-                        instant = True
-                        if os.path.exists('borderlands_the_pre.sql'):
-                            instant = False
                         conn = sqlite3.connect('borderlands_the_pre.sql')
                         cursor = conn.cursor()
 
-                        if instant:
-                            cursor.execute("create table questions(message_id, question, message_responses)")
-
-                        cursor.execute("insert into questions values (?, ?, ?)", (mm.id, question, None))
+                        cursor.execute("INSERT INTO questions VALUES (?,?,?)", (mm.id, question, pickle.dumps(dict())))
                         conn.commit()
+                        conn.close()
+                    await s.delete()
+                    await ctx.send('Message sent!')
                     break
                 else:
                     await ctx.send('Okay, please type your question again.')
+                    continue
             except asyncio.TimeoutError:
-                await ctx.send('Timed out. Please send the `>anonquestion` command again to write a question.')
+                await ctx.send('Timed out. Please send the command again')
                 break
             except asyncio.CancelledError:
-                await ctx.send('Okay, canceled question creation.')
+                await preview.delete()
+                await ctx.send('Okay, canceled question creation.', delete_after=5)
                 break
+            except Exception as e:
+                await self.send_error(ctx, e)
 
-    async def _get_next_message(self, ctx) -> discord.Message:
-        msg = await self.bot.wait_for('message', timeout=120.0,
-                                      check=lambda message: message.channel == ctx.channel and isinstance(
-                                          ctx.channel, discord.DMChannel))
-        return msg
+    async def send_with_yes_no_reactions(self, receiver: discord.abc.Messageable, message: str = None,
+                                         embed: discord.Embed = None):
+        reactions = (emoji.CHECK_MARK, emoji.CROSS_MARK)
 
-    async def send_with_yes_no_reactions(self, ctx, message: str = '', embed: discord.Embed = None):
-        reactions = ('\N{THUMBS UP SIGN}', '\N{THUMBS DOWN SIGN}', '\N{CROSS MARK}')
-
-        if message and embed:
-            msg = await ctx.send(message, embed=embed)
-        elif embed:
-            msg = await ctx.send(embed=embed)
-        else:
-            msg = await ctx.send(message)
+        msg = await receiver.send(message, embed=embed)
 
         try:
             [await x for x in [msg.add_reaction(reaction) for reaction in reactions]]
 
         except Exception as e:
-            print('{}: {}'.format(type(e).__name__, e))
-            await self.bot.bprint('{}: {}'.format(type(e).__name__, e))
-            await self.bot.get_user(self.bot.owner_id).send('{}: {}'.format(type(e).__name__, e))
-            # ^^ This line is garbage, refactor this.
-            await ctx.send('Something went wrong. Evan has been notified.')
+            await self.send_error(receiver, e)
 
         return msg
 
-    async def get_yes_no_reaction(self, ctx, message: discord.Message = None, timeout=120.0):
-        def same_channel(reaction, user):
+    async def get_yes_no_reaction(self, rcvr, message: discord.Message = None, timeout=120.0):
+        def same_channel(rctn, usr):
             if message:
-                return ctx.author == user and reaction.message.channel == ctx.channel and reaction.message == message
+                return rcvr.id == usr.id and rctn.message.channel == rcvr.dm_channel and rctn.message.id == message.id
             else:
-                return ctx.author == user and reaction.message.channel == ctx.channel
+                return rcvr.id == usr.id and rctn.message.channel == rcvr.dm_channel
 
         reaction, author = await self.bot.wait_for('reaction_add', timeout=timeout, check=same_channel)
-
-        if reaction.emoji == '\N{THUMBS UP SIGN}':
+        if reaction.emoji == emoji.CHECK_MARK:
             return True
-        elif reaction.emoji == '\N{THUMBS DOWN SIGN}':
+        elif reaction.emoji == emoji.CROSS_MARK:
             return False
-        elif reaction.emoji == '\N{CROSS MARK}':
+        else:
             raise asyncio.CancelledError
 
-    @commands.command()
-    async def test(self, ctx):
-        e = discord.Embed()
-        e.title = "{}, you are {}'s secret santa.".format("Foo", "Bar")
-        e.description = """
-Use `>ask` if you'd like to ask them their shirt size, shoe size, favorite color, etc.
-Use `>respond` if your secret santa `>ask`s you a question via DM and you want to respond.
- 
-Use `>askall` to ask all participants a question.
-To respond to an `>askall` question, click/tap the checkmark under it. You should get a DM from this bot explaining how to respond.
-
-It's recommended that you go invisible on Discord when you send `>ask` questions, since I can't prevent people from puzzling things out from who's online.
-
-Recommended price range: <$30, but going slightly over is acceptable.
-Secret Santa gifts can be silly or serious.
-Example: For Xmas 2018, Brandon got an autism shirt, Zach got a unicorn plush, and Aero got a DIY shelf.
-
-Please try not to give away who you are to your secret santa, as that ruins the fun of the event.
-Misleading your secret santa and giving them a different one is allowed & encouraged.
-"""
-
-        await ctx.send(embed=e)
+    async def send_error(self, rcvr: discord.abc.Messageable, e):
+        await rcvr.send(f'Something has gone wrong. Evan has been notified.\nError: {type(e)}: {e}')
+        await self.bot.bprint(f'{type(e)}: {e}')
+        await self.bot.get_user(self.bot.owner_id).send(f'{type(e)}: {e}')
 
     @commands.command()
-    async def get_reaction(self, ctx):
+    async def get_reaction(self, rcvr):
         def check(_, user):
-            return ctx.author == user
+            return rcvr.author == user
 
         pp = await self.bot.wait_for('reaction_add', timeout=120.0, check=check)
         print('{}: {} --- {}'.format(type(pp).__name__, pp, pp[0].emoji))
-        await ctx.send('{}: {}'.format(type(pp).__name__, pp))
+        print(bytes(pp[0].emoji.encode('utf-8')))
+        await rcvr.send('{}: {}'.format(type(pp).__name__, pp))
 
-    # @commands.command()
-    # async def r(self, ctx):
-    #     print(ctx.message.clean_content.lstrip(str(ctx.prefix) + str(ctx.command)))
-    #     print(ctx.message.content.lstrip(str(ctx.prefix) + str(ctx.command)))
-    #     print('\N{PISTOL}')
-    #
+# Real Numbers
+# group = {
+#     "Evan": 141752316188426241,
+#     "Brandon": 146777902501855232,
+#     "Steven": 155794959365046273,
+#     "David": 158704434954764288,
+#     "Zach": 159388909346750465,
+#     "Aero": 239192698836221952,
+#     "Jeromie": 249639501004144640,
+#     "CJ": 530099291478556701
+# }
 
-    # Real Numbers
-    # {
-    #     "Evan": 141752316188426241,
-    #     "Brandon": 146777902501855232,
-    #     "Steven": 155794959365046273,
-    #     "David": 158704434954764288,
-    #     "Zach": 159388909346750465,
-    #     "Aero": 239192698836221952,
-    #     "Jeromie": 249639501004144640,
-    #     "CJ": 530099291478556701
-    # }
-
-    # Fake Numbers for testing
-    # {
-    #     "Evan": 141752316188426241,
-    #     "Brandon": 141752316188426241,
-    #     "Steven": 141752316188426241,
-    #     "David": 141752316188426241,
-    #     "Zach": 141752316188426241,
-    #     "Aero": 141752316188426241,
-    #     "Jeromie": 141752316188426241,
-    #     "CJ": 141752316188426241
-    # }
+# Fake Numbers for testing
+# group = {
+#     "Evan": 141752316188426241,
+#     "Brandon": 141752316188426241,
+#     "Steven": 141752316188426241,
+#     "David": 141752316188426241,
+#     "Zach": 141752316188426241,
+#     "Aero": 141752316188426241,
+#     "Jeromie": 141752316188426241,
+#     "CJ": 141752316188426241
+# }
 
 
 # Okay, I guess I'll do any further updates on the bot in here:

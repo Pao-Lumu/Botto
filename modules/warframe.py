@@ -139,9 +139,9 @@ class Warframe(commands.Cog):
         e.set_image(url='https://warframe.market/static/assets/' + item['icon'])
         e.set_footer(text='warframe.market',
                      icon_url='https://warframe.market/static/build/assets/frontend/logo.7c3779fb00edc1ee16531ea55bbd5367.png')
-        e.description = f"""{vol} have been sold in the past 48hrs, for an average of {str(round(avg))} platinum.
-        Buy Orders start at {str(int(sell_online[0]['platinum']))}p
-        Sell Orders start at {str(int(buy_online[0]['platinum']))}p"""
+        e.description = f"""{vol} {item['en']['item_name']}s sold in the past 48hrs, for {round(avg)}p on average.
+        Buy Orders start at {int(sell_online[0]['platinum'])}p or less.
+        Sell Orders start at {int(buy_online[0]['platinum'])}p or more."""
 
         await ctx.send(embed=e)
 

@@ -1,5 +1,4 @@
 import asyncio
-import random
 import re
 # from utils import checks
 from datetime import datetime

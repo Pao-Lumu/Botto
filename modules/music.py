@@ -253,7 +253,7 @@ class Music(commands.Cog):
         Uses YTDL to automatically search and retrieve a song.
         Parameters
         ------------
-        ctx: discord.ext.Context
+        receiver: discord.ext.Context
         search: str [Required]
             The song to search and retrieve using YTDL. This could be a simple search, an ID or URL.
             :param ctx:
