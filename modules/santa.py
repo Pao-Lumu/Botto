@@ -51,15 +51,13 @@ class Santa(commands.Cog):
                 try:
                     self.cursor.execute("SELECT question, message_responses FROM questions WHERE message_id=?",
                                         (reaction.message_id,))
-
                     q, responses = self.cursor.fetchone()
                 except TypeError:
                     return
             responses: dict = pickle.loads(responses)
             while True:
                 sent = await author.send(
-                    'The question you have been asked is:{}\nType your response below.'.format(q),
-                    delete_after=120.0)
+                    'The question you have been asked is:{}\nType your response below.'.format(q), delete_after=120.0)
 
                 message = await self.bot.wait_for('message', timeout=120.0, check=lambda
                     msg: author == msg.author and msg.channel == sent.channel)
@@ -67,7 +65,7 @@ class Santa(commands.Cog):
 
                 e = discord.Embed(title="Somebody asked...", description=q)
                 for x, y in responses.items():
-                    e.add_field(name=self.uplook[int(x)], value=y)
+                    e.add_field(name=self.uplook[int(x)], value=y, inline=False)
 
                 preview = await self.send_with_yes_no_reactions(author,
                                                                 message=f'Does this look correct?\n({emoji.CHECK_MARK} for yes, {emoji.CROSS_MARK} for no)',
@@ -94,9 +92,9 @@ class Santa(commands.Cog):
                                 self.conn.commit()
 
                                 e = discord.Embed(title="Somebody asked...", description=q)
-
                                 for x, y in responses.items():
-                                    e.add_field(name=self.uplook[int(x)], value=y)
+                                    e.add_field(name=self.uplook[int(x)], value=y, inline=False)
+
                             except Exception as e:
                                 print(type(e))
                                 print(e)
@@ -123,12 +121,11 @@ class Santa(commands.Cog):
                 continue_go = True
                 while continue_go:
                     random.shuffle(people)
-                    for x in range(len(people)):
-                        g, r = x % len(people), (x + 1) % len(people)
-                        if 'Evan' in (people[g], people[r]) and 'Zach' in (people[g], people[r]):
-                            break
-                    else:
-                        break
+                    used_combos = [('Evan', 'Aero'), ('Aero', 'Zach'), ('Zach', 'Brandon'), ('Brandon', 'Jeromie'),
+                                   ('Jeromie', 'Steven'), ('Steven', 'David'), ('David', 'Evan')]
+                    banned_combos = [('Evan', 'Zach')]
+
+                    continue_go = self.check_for_combos(people, used_combos, banned_combos)
 
                 self.cursor.execute('DELETE FROM santa')
 
@@ -250,7 +247,7 @@ Misleading your secret santa and giving them a different one is allowed & encour
                                          embed: discord.Embed = None):
         reactions = (emoji.CHECK_MARK, emoji.CROSS_MARK)
 
-        msg = await receiver.send(message, embed=embed)
+        msg = await receiver.send(message, embed=embed, delete_after=120.0)
 
         try:
             [await x for x in [msg.add_reaction(reaction) for reaction in reactions]]
@@ -280,6 +277,17 @@ Misleading your secret santa and giving them a different one is allowed & encour
         await self.bot.bprint(f'{type(e)}: {e}')
         await self.bot.get_user(self.bot.owner_id).send(f'{type(e)}: {e}')
 
+    @staticmethod
+    def check_for_combos(check_list, ban_list, superban_list):
+        for x, g in enumerate(check_list):
+            r = check_list[(x + 1) % len(check_list)]
+            if (g, r) in ban_list:
+                break
+            if (g, r) in superban_list or (r, g) in superban_list:
+                break
+        else:
+            return False
+        return True
 
 #     @commands.command()
 #     async def get_reaction(self, rcvr):
@@ -315,14 +323,6 @@ Misleading your secret santa and giving them a different one is allowed & encour
 #     "Jeromie": 141752316188426241,
 #     "CJ": 141752316188426241
 # }
-
-
-# Okay, I guess I'll do any further updates on the bot in here:
-# ~ People will be able to ask questions to the entire group anonymously, and everyone will be required to participate.
-#  Everyone will also be able to see everyone else's answers.
-# ~ Questions to be answered will show up in a channel in this server.
-# ~ You will be able to click a reaction button to give a response via DM's (This is for keeping the channel clean, everyone who responds will have their name given.)
-
 
 def setup(bot):
     bot.add_cog(Santa(bot))
