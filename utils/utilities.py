@@ -14,11 +14,13 @@ async def success_embed(msg):
     e.description = msg
     return e
 
+
 async def info_embed(msg):
     e = discord.Embed(color=discord.Color.lighter_grey())
     e.set_author(name="Information:")
     e.description = msg
     return e
+
 
 async def wip_embed():
     e = discord.Embed(color=discord.Color.dark_orange())

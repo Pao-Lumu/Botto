@@ -1,6 +1,8 @@
 # bot token file
 credentials.json
+
 # compiled files
-*.pyc
+*.py[c0d]
 __pycache__/
+*.log
 

@@ -1,30 +1,38 @@
+import asyncio
 import datetime
 import json
 import logging
 import os
 import sys
 import traceback
+import random
 
 import discord
 from discord.ext import commands
+
+import botto
+from funcs.bday_loop import BDLoop
+
+if len(sys.argv) > 1:
+    os.chdir(sys.argv[1])
 
 discord_logger = logging.getLogger('discord')
 discord_logger.setLevel(logging.CRITICAL)
 log = logging.getLogger()
 log.setLevel(logging.INFO)
-handler = logging.FileHandler(filename='botto.log', encoding='utf-8', mode='w')
+handler = logging.FileHandler(filename='botto.log', encoding='utf-8', mode='r+')
 log.addHandler(handler)
 
 initial_extensions = [
-    # 'modules.account',
     'modules.pasta',
     'modules.admin',
     'modules.vote',
     'modules.birthday',
-    'modules.reactions'
+    'modules.reactions',
+    'modules.misc'
 ]
 
-bot = commands.Bot(command_prefix=">>")
+bot = botto.Botto(command_prefix="]", cog_folder="modules")
 
 
 @bot.event
@@ -36,23 +44,30 @@ async def on_command_error(error, ctx):
     elif isinstance(error, commands.CommandInvokeError):
         print('In {0.command.qualified_name}:'.format(ctx), file=sys.stderr)
         traceback.print_tb(error.original.__traceback__)
-        print('{0.__class__.__name__}: {0}'.format(error.original), file=sys.stderr)
+        print('{0.__class__.__name__}: {0}'.format(
+            error.original), file=sys.stderr)
 
 
 @bot.event
 async def on_ready():
-    await bot.change_presence(game=discord.Game(name="with fire"))
+    await randomize_presence()
     print('Logged in as:')
     print('Username: ' + bot.user.name)
     print('ID: ' + bot.user.id)
     print('------')
     if not hasattr(bot, 'uptime'):
         bot.uptime = datetime.datetime.utcnow()
+    print("Starting birthday announcement loop...")
+    asyncio.ensure_future(BDLoop(bot).bday_loop(), loop=bot.loop)
+    print("Done!")
 
 
-# @bot.event
-# async def on_reaction():
-#     print
+async def randomize_presence():
+    x = random.randint(0, 9)
+    presences = ["with fire", "with its food", "Half-Life 3", "Cards Against Humanity", "you like a damn fiddle!",
+                 "The Blame Game", "with itself", "by itself", "MCR while crying over a picture of Miki",
+                 "its trap card!"]
+    await bot.change_presence(game=discord.Game(name=presences[x]))
 
 
 @bot.event
@@ -65,10 +80,6 @@ async def on_message(message):
     if message.author.bot:
         return
     await bot.process_commands(message)
-
-# @bot.event
-# async def on_server_join(server):
-#     await bot.process_commands()
 
 
 def load_credentials():
@@ -87,8 +98,10 @@ if __name__ == '__main__':
     debug = any('debug' in arg.lower() for arg in sys.argv)
     if debug:
         bot.command_prefix = '$'
-        token = credentials.get('debug_token', credentials['token'])
+        token = credentials['debug_token']
+        bot.client_id = credentials['debug_client_id']
     else:
+        token = ""
         try:
             token = credentials['token']
         except TypeError:
@@ -103,10 +116,18 @@ if __name__ == '__main__':
         try:
             bot.load_extension(extension)
         except Exception as e:
-            print('Failed to load extension {}\n{}: {}'.format(extension, type(e).__name__, e))
-            log.error('Failed to load extension {}\n{}: {}'.format(extension, type(e).__name__, e))
+            print('Failed to load extension {}\n{}: {}'.format(
+                extension, type(e).__name__, e))
+            log.error('Failed to load extension {}\n{}: {}'.format(
+                extension, type(e).__name__, e))
 
-    bot.run(token)
+    e = True
+    while e:
+        try:
+            bot.run(token)
+        except TimeoutError:
+            print("Failed to connect to Discord. Retrying in a few seconds.")
+
     handlers = log.handlers[:]
     for hdlr in handlers:
         hdlr.close()
