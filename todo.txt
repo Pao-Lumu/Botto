@@ -1,0 +1,10 @@
+~ Games
+~~ Discord-gameserver integration
+~~~ MED PRIORITY: Allow clean server launches and shutdowns from Discord
+~~~ MED-LOW PRIORITY: Improve guild<-->server chat, implement for all/most games
+~~~ LOW PRIORITY, Minecraft Specfic: Show people who're online in sidebar and a typing status
+
+
+~ LOW PRIORITY: Soundboard
+~~ Let Brandon create soundboard things
+~~ Use ?XMLRPC? to give him a UI on his desktop to play it.

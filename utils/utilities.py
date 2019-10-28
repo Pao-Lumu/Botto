@@ -25,5 +25,6 @@ async def info_embed(msg):
 async def wip_embed():
     e = discord.Embed(color=discord.Color.dark_orange())
     e.set_author(name="🛠️ This command is under construction.")
-    e.description = "Unfortunately, this command isn't available just yet. Try again at a later date."
+    e.description = """This command isn't available yet.
+Be sure to bug Evan about it because he loves that, and absolutely will not tell you to kill yourself."""
     return e
