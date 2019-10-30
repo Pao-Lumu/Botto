@@ -206,12 +206,22 @@ Misleading your secret santa and giving them a different one is allowed & encour
         else:
             await ctx.send("Please add a message.")
 
-    @commands.command(aliases=['question', 'poll'])
-    async def askall(self, ctx):
+    @commands.command(aliases=['poll'])
+    async def askall(self, ctx: commands.Context):
         rcvr = ctx.author
         while True:
+            if ctx.channel.type is not discord.ChannelType.private:
+                await ctx.send('Please ask questions in DMs.')
+                return
+
+            question: str = ctx.message.clean_content.lstrip(str(ctx.prefix) + str(ctx.invoked_with)).lstrip()
+
+            qtest = question.replace('_', '').replace('*', '').replace('~~', '').lstrip()
+            if qtest == '':
+                await ctx.send('Invalid content. Try again.')
+                return
+
             e = discord.Embed(color=discord.Color.green())
-            question = ctx.message.clean_content.lstrip(str(ctx.prefix) + str(ctx.command))
             e.title = '_*Someone asked:*_\n{}'.format(question)
             preview = await self.send_with_yes_no_reactions(rcvr,
                                                             message='This is how your question will look. Are you sure you want to send this message?',
