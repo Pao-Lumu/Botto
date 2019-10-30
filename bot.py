@@ -224,7 +224,7 @@ async def on_command_error(ctx, error):
     print(error)
     if isinstance(error, commands.CommandOnCooldown):
         await ctx.send(
-            f"Command is currently on cooldown. This is due to limitations in the API. Try again in {str(error.retry_after)[:5]}s")
+            f"Command is currently on cooldown. This is due to the limitations of the bot. Try again in {str(error.retry_after)[:5]}s")
 
 if __name__ == '__main__':
     print("starting bot...")
