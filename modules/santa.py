@@ -226,41 +226,56 @@ Misleading your secret santa and giving them a different one is allowed & encour
             await ctx.send("Please add a message.")
 
     @commands.command(aliases=['question', 'poll'])
-    async def askall(self, ctx):
+    async def askall(self, ctx: commands.Context):
         rcvr = ctx.author
+        message = ctx.message
         while True:
-            e = discord.Embed(color=discord.Color.green())
-            question = ctx.message.clean_content.lstrip(str(ctx.prefix) + str(ctx.command))
-            e.title = '_*Someone asked:*_\n{}'.format(question)
-            preview = await self.send_with_yes_no_reactions(rcvr,
-                                                            message='This is how your question will look. Are you sure you want to send this message?',
-                                                            embed=e)
             try:
-                reaction = await self.get_yes_no_reaction(rcvr, message=preview)
-                if reaction:
-                    s = await ctx.send('Sending...')
-                    mm = await self.bot.meme_channel.send(embed=e)
-                    await mm.add_reaction(emoji.BALLOT_BOX)
 
-                    async with self.hohoholy_blessings:
-                        conn = sqlite3.connect('borderlands_the_pre.sql')
-                        cursor = conn.cursor()
-
-                        cursor.execute("INSERT INTO questions VALUES (?,?,?)", (mm.id, question, pickle.dumps(dict())))
-                        conn.commit()
-                        conn.close()
-                    await s.delete()
-                    await ctx.send('Message sent!')
-                    break
-                else:
-                    await ctx.send('Okay, please type your question again.')
+                if not message:
+                    message = await self.bot.wait_for('message', timeout=120.0, check=lambda
+                        msg: rcvr == msg.author and msg.channel == ctx.channel)
+                e = discord.Embed(color=discord.Color.green())
+                question = message.clean_content.lstrip(str(ctx.prefix) + str(ctx.command))
+                for x in ctx.command.aliases:
+                    question = question.lstrip(str(x))
+                    print(x)
+                if question == '':
+                    await ctx.send('Please type your question.')
+                    message = ''
                     continue
+                e.title = '_*Someone asked:*_\n{}'.format(question)
+                preview = await self.send_with_yes_no_reactions(rcvr,
+                                                                message='This is how your question will look. Are you sure you want to send this message?',
+                                                                embed=e)
+                try:
+                    reaction = await self.get_yes_no_reaction(rcvr, message=preview)
+                    if reaction:
+                        s = await ctx.send('Sending...')
+                        mm = await self.bot.meme_channel.send(embed=e)
+                        await mm.add_reaction(emoji.BALLOT_BOX)
+
+                        async with self.hohoholy_blessings:
+                            conn = sqlite3.connect('borderlands_the_pre.sql')
+                            cursor = conn.cursor()
+
+                            cursor.execute("INSERT INTO questions VALUES (?,?,?)", (mm.id, question, pickle.dumps(dict())))
+                            conn.commit()
+                            conn.close()
+                        await s.delete()
+                        await ctx.send('Message sent!')
+                        break
+                    else:
+                        await ctx.send('Okay, please type your question again.')
+                        message = ''
+                        continue
+                except asyncio.CancelledError:
+                    await preview.delete()
+                    await ctx.send('Okay, canceled question creation.', delete_after=10)
+                    break
+
             except asyncio.TimeoutError:
-                await ctx.send('Timed out. Please send the command again')
-                break
-            except asyncio.CancelledError:
-                await preview.delete()
-                await ctx.send('Okay, canceled question creation.', delete_after=5)
+                await ctx.send('Timed out. Please send the command again.')
                 break
             except Exception as e:
                 await self.send_error(ctx, e)
