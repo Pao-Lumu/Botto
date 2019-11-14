@@ -38,7 +38,7 @@ class Warframe(commands.Cog):
     @commands.command(
         aliases=baroaliases.aliases)
     async def baro(self, ctx):
-        """Tells you where and when Baro Ki'Teer comes in Warframe"""
+        """Tells you where and when Baro Ki'Teer is coming on PC Warframe, and what he's selling when he is here."""
 
         async with aiohttp.ClientSession() as session:
             async with session.get('https://api.warframestat.us/pc/voidTrader') as resp:
@@ -58,20 +58,17 @@ class Warframe(commands.Cog):
         else:
             e = discord.Embed(title="Void Trader Offerings", color=c)
             e.set_footer(text="Baro Ki'Teer")
-            e.description = "Please wait, getting prices..."
-            msg = await ctx.send(embed=e)
-
             for offer in info['inventory']:
                 e.add_field(name=offer['item'], value=f"{offer['ducats']} ducats + {offer['credits']} credits")
 
             dukey = "{0} is currently at {1}, and will leave on {2} {3}.".format(info['character'], info['location'],
                                                                                  hr_expiry, info['endString'])
 
-            await msg.edit(content=dukey, embed=e)
+            await ctx.send(dukey, embed=e)
 
     @commands.command()
     async def nightwave(self, ctx):
-        """Lists all the missions for Nightwave at the moment"""
+        """Lists all current Nightwave missions"""
 
         async with aiohttp.ClientSession() as session:
             async with session.get('https://api.warframestat.us/pc/nightwave') as resp:
@@ -92,8 +89,6 @@ class Warframe(commands.Cog):
                             value=f"~~ {challenge['desc']}", inline=False)
             await ctx.send(embed=e)
         else:
-            # e = discord.Embed(title="Nightwave Challenges", description="All currently-active Nightwave challenges\n\n")
-            # e.set_footer(text="Nora Night")
             await ctx.send("Nightwave is currently inactive.")
 
     @commands.command()
@@ -140,8 +135,8 @@ class Warframe(commands.Cog):
         e.set_footer(text='warframe.market',
                      icon_url='https://warframe.market/static/build/assets/frontend/logo.7c3779fb00edc1ee16531ea55bbd5367.png')
         e.description = f"""{vol} {item['en']['item_name']}s sold in the past 48hrs, for {round(avg)}p on average.
-        Buy Orders start at {int(sell_online[0]['platinum'])}p or less.
-        Sell Orders start at {int(buy_online[0]['platinum'])}p or more."""
+        Active Buy Orders start at {int(sell_online[0]['platinum'])}p or less.
+        Active Sell Orders start at {int(buy_online[0]['platinum'])}p or more."""
 
         await ctx.send(embed=e)
 

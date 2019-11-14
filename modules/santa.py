@@ -57,7 +57,7 @@ class Santa(commands.Cog):
             responses: dict = pickle.loads(responses)
             while True:
                 sent = await author.send(
-                    'The question you have been asked is:{}\nType your response below.'.format(q), delete_after=120.0)
+                    'The question you have been asked is: {}\nType your response below.'.format(q), delete_after=120.0)
 
                 message = await self.bot.wait_for('message', timeout=120.0, check=lambda
                     msg: author == msg.author and msg.channel == sent.channel)
@@ -68,7 +68,7 @@ class Santa(commands.Cog):
                     e.add_field(name=self.uplook[int(x)], value=y, inline=False)
 
                 preview = await self.send_with_yes_no_reactions(author,
-                                                                message=f'Does this look correct?\n({emoji.CHECK_MARK} for yes, {emoji.CROSS_MARK} for no)',
+                                                                message=f'Does this look correct?\n({emoji.THUMBS_UP} for yes, {emoji.THUMBS_DOWN} for no)',
                                                                 embed=e)
                 try:
                     y_or_n = await self.get_yes_no_reaction(author, preview)
@@ -209,53 +209,57 @@ Misleading your secret santa and giving them a different one is allowed & encour
     @commands.command(aliases=['poll'])
     async def askall(self, ctx: commands.Context):
         rcvr = ctx.author
+        message = ctx.message
         while True:
-            if ctx.channel.type is not discord.ChannelType.private:
-                await ctx.send('Please ask questions in DMs.')
-                return
-
-            question: str = ctx.message.clean_content.lstrip(str(ctx.prefix) + str(ctx.invoked_with)).lstrip()
-
-            qtest = question.replace('_', '').replace('*', '').replace('~~', '').lstrip()
-            if qtest == '':
-                await ctx.send('Invalid content. Try again.')
-                return
-
-            e = discord.Embed(color=discord.Color.green())
-            e.title = '_*Someone asked:*_\n{}'.format(question)
-            preview = await self.send_with_yes_no_reactions(rcvr,
-                                                            message='This is how your question will look. Are you sure you want to send this message?',
-                                                            embed=e)
             try:
-                reaction = await self.get_yes_no_reaction(rcvr, message=preview)
-                if reaction:
-                    s = await ctx.send('Sending...')
-                    mm = await self.bot.meme_channel.send(embed=e)
-                    await mm.add_reaction(emoji.BALLOT_BOX)
 
-                    async with self.hohoholy_blessings:
-                        self.cursor.execute("INSERT INTO questions VALUES (?,?,?)",
-                                            (mm.id, question, pickle.dumps(dict())))
-                        self.conn.commit()
-                    await s.delete()
-                    await ctx.send('Message sent!')
-                    break
-                else:
-                    await ctx.send('Okay, please type your question again.')
+                if not message:
+                    message = await self.bot.wait_for('message', timeout=120.0, check=lambda
+                        msg: rcvr == msg.author and msg.channel == ctx.channel)
+                e = discord.Embed(color=discord.Color.green())
+                question = message.clean_content.lstrip(str(ctx.prefix) + str(ctx.command))
+                for x in ctx.command.aliases:
+                    question = question.lstrip(str(x))
+                if question == '':
+                    await ctx.send('Please type your question.')
+                    message = ''
                     continue
+                e.title = '_*Someone asked:*_\n{}'.format(question)
+                preview = await self.send_with_yes_no_reactions(rcvr,
+                                                                message='This is how your question will look. Are you sure you want to send this message?',
+                                                                embed=e, extra_reactions=(emoji.CROSS_MARK,))
+                try:
+                    reaction = await self.get_yes_no_reaction(rcvr, message=preview)
+                    if reaction:
+                        s = await ctx.send('Sending...')
+                        mm = await self.bot.meme_channel.send(embed=e)
+                        await mm.add_reaction(emoji.BALLOT_BOX)
+
+                        async with self.hohoholy_blessings:
+                            self.cursor.execute("INSERT INTO questions VALUES (?,?,?)", (mm.id, question, pickle.dumps(dict())))
+                            self.conn.commit()
+                        await s.delete()
+                        await ctx.send('Message sent!')
+                        break
+                    else:
+                        await ctx.send('Okay, please type your question again.')
+                        message = ''
+                        continue
+                except asyncio.CancelledError:
+                    await preview.delete()
+                    await ctx.send('Okay, canceled question creation.', delete_after=10)
+                    break
             except asyncio.TimeoutError:
-                await ctx.send('Timed out. Please send the command again')
-                break
-            except asyncio.CancelledError:
-                await preview.delete()
-                await ctx.send('Okay, canceled question creation.', delete_after=5)
+                await ctx.send('Timed out. Please send the command again.')
                 break
             except Exception as e:
                 await self.send_error(ctx, e)
 
     async def send_with_yes_no_reactions(self, receiver: discord.abc.Messageable, message: str = None,
-                                         embed: discord.Embed = None):
-        reactions = (emoji.CHECK_MARK, emoji.CROSS_MARK)
+                                         embed: discord.Embed = None, extra_reactions: tuple = ()):
+        reactions = [emoji.THUMBS_UP, emoji.THUMBS_DOWN]
+
+        reactions.extend(extra_reactions)
 
         msg = await receiver.send(message, embed=embed, delete_after=120.0)
 
@@ -275,9 +279,9 @@ Misleading your secret santa and giving them a different one is allowed & encour
                 return rcvr.id == usr.id and rctn.message.channel == rcvr.dm_channel
 
         reaction, author = await self.bot.wait_for('reaction_add', timeout=timeout, check=same_channel)
-        if reaction.emoji == emoji.CHECK_MARK:
+        if reaction.emoji == emoji.THUMBS_UP:
             return True
-        elif reaction.emoji == emoji.CROSS_MARK:
+        elif reaction.emoji == emoji.THUMBS_DOWN:
             return False
         else:
             raise asyncio.CancelledError
@@ -333,6 +337,7 @@ Misleading your secret santa and giving them a different one is allowed & encour
 #     "Jeromie": 141752316188426241,
 #     "CJ": 141752316188426241
 # }
+
 
 def setup(bot):
     bot.add_cog(Santa(bot))
