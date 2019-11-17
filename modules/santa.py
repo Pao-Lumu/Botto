@@ -122,7 +122,7 @@ class Santa(commands.Cog):
                     random.shuffle(people)
                     used_combos = [('Evan', 'Aero'), ('Aero', 'Zach'), ('Zach', 'Brandon'), ('Brandon', 'Jeromie'),
                                    ('Jeromie', 'Steven'), ('Steven', 'David'), ('David', 'Evan')]
-                    banned_combos = [('Evan', 'Zach')]
+                    banned_combos = [('Evan', 'Zach'), ('CJ', 'Forester'), ('CJ', 'Tim')]
 
                     continue_go = self.check_for_combos(people, used_combos, banned_combos)
 
