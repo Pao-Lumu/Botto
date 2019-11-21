@@ -43,7 +43,6 @@ class Santa(commands.Cog):
         if author.bot:
             return
         if reaction.channel_id == self.bot.meme_channel.id and reaction.emoji.name == emoji.BALLOT_BOX:
-
             channel = self.bot.get_channel(reaction.channel_id)
             msg_ref = await channel.fetch_message(reaction.message_id)
 
@@ -123,7 +122,7 @@ class Santa(commands.Cog):
                     random.shuffle(people)
                     used_combos = [('Evan', 'Aero'), ('Aero', 'Zach'), ('Zach', 'Brandon'), ('Brandon', 'Jeromie'),
                                    ('Jeromie', 'Steven'), ('Steven', 'David'), ('David', 'Evan')]
-                    banned_combos = [('Evan', 'Zach')]
+                    banned_combos = [('Evan', 'Zach'), ('CJ', 'Forester'), ('CJ', 'Tim')]
 
                     continue_go = self.check_for_combos(people, used_combos, banned_combos)
 
@@ -208,12 +207,15 @@ Misleading your secret santa and giving them a different one is allowed & encour
 
     @commands.command(aliases=['poll'])
     async def askall(self, ctx: commands.Context):
+        if ctx.channel.type is not discord.ChannelType.private:
+            await ctx.send('Please use DMs to set up polls.')
+            return
         rcvr = ctx.author
         message = ctx.message
         while True:
             try:
-
                 if not message:
+                    await ctx.send('Please type your question.')
                     message = await self.bot.wait_for('message', timeout=120.0, check=lambda
                         msg: rcvr == msg.author and msg.channel == ctx.channel)
                 e = discord.Embed(color=discord.Color.green())
@@ -221,7 +223,6 @@ Misleading your secret santa and giving them a different one is allowed & encour
                 for x in ctx.command.aliases:
                     question = question.lstrip(str(x))
                 if question == '':
-                    await ctx.send('Please type your question.')
                     message = ''
                     continue
                 e.title = '_*Someone asked:*_\n{}'.format(question)
@@ -236,7 +237,8 @@ Misleading your secret santa and giving them a different one is allowed & encour
                         await mm.add_reaction(emoji.BALLOT_BOX)
 
                         async with self.hohoholy_blessings:
-                            self.cursor.execute("INSERT INTO questions VALUES (?,?,?)", (mm.id, question, pickle.dumps(dict())))
+                            self.cursor.execute("INSERT INTO questions VALUES (?,?,?)",
+                                                (mm.id, question, pickle.dumps(dict())))
                             self.conn.commit()
                         await s.delete()
                         await ctx.send('Message sent!')
@@ -302,6 +304,7 @@ Misleading your secret santa and giving them a different one is allowed & encour
         else:
             return False
         return True
+
 
 #     @commands.command()
 #     async def get_reaction(self, rcvr):
