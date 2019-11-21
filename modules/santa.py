@@ -95,15 +95,14 @@ class Santa(commands.Cog):
                                     e.add_field(name=self.uplook[int(x)], value=y, inline=False)
 
                             except Exception as e:
-                                print(type(e))
-                                print(e)
+                                await self.send_error(author, e)
                             finally:
                                 self.conn.commit()
                                 break
                     else:
                         continue
-                except asyncio.TimeoutError as e:
-                    print('Timed out.')
+                except asyncio.TimeoutError:
+                    author.send('Timed out. Please try again.')
                     break
                 except Exception as e:
                     await self.send_error(author, e)
@@ -169,14 +168,14 @@ Misleading your secret santa and giving them a different one is allowed & encour
                 except TypeError:
                     await ctx.send("You're not a secret santa! If you think this is in error, talk to Evan.")
                 except Exception as e:
-                    print(f'{type(e)}: {e}')
+                    await self.send_error(ctx, e)
                     pass
 
     @commands.command()
     async def ask(self, ctx):
         async with self.hohoholy_blessings:
             try:
-                name = self.uplook[ctx.author.id]
+                # name = self.uplook[ctx.author.id]
                 self.cursor.execute('SELECT * FROM santa WHERE user_id=?', (ctx.author.id,))
                 u_id, u_name, _, _, g_id, g_name = self.cursor.fetchone()
             except KeyError:
@@ -262,18 +261,14 @@ Misleading your secret santa and giving them a different one is allowed & encour
         reactions = [emoji.THUMBS_UP, emoji.THUMBS_DOWN]
 
         reactions.extend(extra_reactions)
-        print(reactions)
 
         msg = await receiver.send(message, embed=embed, delete_after=120.0)
 
         try:
             for x in reactions:
-                print(x)
                 await msg.add_reaction(x)
 
         except Exception as e:
-            print(type(e))
-            print(e)
             await self.send_error(receiver, e)
 
         return msg
