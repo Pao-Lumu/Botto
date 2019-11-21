@@ -3,7 +3,7 @@ from pip._internal import main as pipmain
 _all_ = [
     "aiofiles >= 0.4.0",
     "colorama >= 0.4.1",
-    "discord.py[voice] >= 1.2.2",
+    "discord.py[voice] >= 1.2.5",
     "mcrcon >= 0.5.2",
     "mcstatus >= 2.2.1",
     "pyfiglet >= 0.8.post1",

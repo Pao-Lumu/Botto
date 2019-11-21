@@ -244,7 +244,7 @@ Misleading your secret santa and giving them a different one is allowed & encour
                         await ctx.send('Message sent!')
                         break
                     else:
-                        await ctx.send('Okay, please type your question again.')
+                        await ctx.send('Okay, restarting...')
                         message = ''
                         continue
                 except asyncio.CancelledError:
@@ -262,13 +262,18 @@ Misleading your secret santa and giving them a different one is allowed & encour
         reactions = [emoji.THUMBS_UP, emoji.THUMBS_DOWN]
 
         reactions.extend(extra_reactions)
+        print(reactions)
 
         msg = await receiver.send(message, embed=embed, delete_after=120.0)
 
         try:
-            [await x for x in [msg.add_reaction(reaction) for reaction in reactions]]
+            for x in reactions:
+                print(x)
+                await msg.add_reaction(x)
 
         except Exception as e:
+            print(type(e))
+            print(e)
             await self.send_error(receiver, e)
 
         return msg
