@@ -120,7 +120,8 @@ class Santa(commands.Cog):
                 while continue_go:
                     random.shuffle(people)
                     used_combos = [('Evan', 'Aero'), ('Aero', 'Zach'), ('Zach', 'Brandon'), ('Brandon', 'Jeromie'),
-                                   ('Jeromie', 'Steven'), ('Steven', 'David'), ('David', 'Evan')]
+                                   ('Jeromie', 'Steven'), ('Steven', 'David'),
+                                   ('David', 'Evan')]  # combos from previous years
                     banned_combos = [('Evan', 'Zach'), ('CJ', 'Forester'), ('CJ', 'Tim')]
 
                     continue_go = self.check_for_combos(people, used_combos, banned_combos)
@@ -137,8 +138,8 @@ class Santa(commands.Cog):
 
             for x, person in enumerate(people):
                 discord_id = self.lookup[person]
-                gifter = person.capitalize()
-                giftee = people[(x + 1) % len(people)].capitalize()
+                gifter = person
+                giftee = people[(x + 1) % len(people)]
                 e = discord.Embed()
                 e.title = "{}, you are {}'s secret santa.".format(gifter, giftee)
                 e.description = """
@@ -156,7 +157,6 @@ Secret Santa gifts can be silly or serious.
 Please try not to give away who you are to your secret santa, as that ruins the fun of the event.
 Misleading your secret santa and giving them a different one is allowed & encouraged.
 """
-                # member = self.bot.get_user(141752316188426241)
                 member = self.bot.get_user(discord_id)
                 await member.send(embed=e)
         else:
