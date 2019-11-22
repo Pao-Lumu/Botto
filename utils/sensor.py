@@ -45,10 +45,11 @@ def get_game_info() -> tuple:
 
     while looking_for_gameinfo:
         root, current = path.split(cwd)
-        if os.path.isfile(path.join(cwd, ".gameinfo.json")):
-            # if there's a old json file, find it, delete it, replace it with TOML, and return the data
-
-            # LOAD OLD JSON
+        json_path = path.join(cwd, ".gameinfo.json")
+        toml_path = path.join(cwd, ".gameinfo.toml")
+        # I. If old json file found: Load it, create a TOML file with its data, delete it, and return its data
+        if os.path.isfile(json_path):
+            # 1. LOAD OLD JSON
             with open(path.join(cwd, ".gameinfo.json")) as file:
                 try:
                     gi = json.load(file)
@@ -56,18 +57,17 @@ def get_game_info() -> tuple:
                     print(f"JSON decoding error | {e}")
                     raise json.JSONDecodeError
 
-            # WRITE TO TOML
+            # 2. WRITE TO TOML
             pathlib.Path(path.join(cwd, ".gameinfo.toml")).touch()
             with open(path.join(cwd, ".gameinfo.toml"), "w+") as file:
                 toml.dump(gi, file)
 
-            # REMOVE JSON
+            # 3. REMOVE JSON
             os.remove(path.join(cwd, ".gameinfo.json"))
-
             return process, gi
 
-        elif os.path.isfile(path.join(cwd, ".gameinfo.toml")):
-            # if TOML file, load it, and return the data
+        # II. If TOML file found: load it, and return the data
+        elif os.path.isfile(toml_path):
             with open(path.join(cwd, ".gameinfo.toml")) as file:
                 try:
                     gi = toml.load(file)
@@ -92,14 +92,14 @@ def get_game_info() -> tuple:
             print('Hey... This isn\'t supposed to happen...')
 
 
-def add_to_masterlist(gi):
+def add_to_masterlist(game_info):
     with open('masterlist.toml') as file:
-        master = json.load(file)
-    if gi["name"] in master.keys():
+        masterlist = toml.load(file)
+    if game_info["name"] in masterlist.keys():
         pass
     else:
-        for name, path in master.items():
-            if [gi['folder'], gi['executable']] in path and name is not gi['name']:
-                master.update({gi["name"]: [gi['folder'], gi['executable']]})
-        with open('masterlist.json', 'w') as file:
-            json.dump(master, file)
+        for game_name, game_path in masterlist.items():
+            if [game_info['folder'], game_info['executable']] in game_path and game_name is not game_info['name']:
+                masterlist.update({game_info["name"]: [game_info['folder'], game_info['executable']]})
+        with open('masterlist.toml', 'w') as file:
+            toml.dump(masterlist, file)

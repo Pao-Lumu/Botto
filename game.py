@@ -20,7 +20,7 @@ class Game:
                 process.wait(timeout=1)
                 break
             except psutil.TimeoutExpired:
-                pass
+                continue
 
     async def check_server_running(self):
         await self.bot.wait_until_ready(1)
@@ -37,15 +37,15 @@ class Game:
 
                     self.bot._game_running.clear()
                     self.bot._game_stopped.set()
-            except ProcessLookupError:
+            except ProcessLookupError or ValueError or AttributeError:
                 await asyncio.sleep(5)
                 continue
-            except ValueError:
-                await asyncio.sleep(5)
-                continue
-            except AttributeError:
-                await asyncio.sleep(5)
-                continue
+            # except ValueError:
+            #     await asyncio.sleep(5)
+            #     continue
+            # except AttributeError:
+            #     await asyncio.sleep(5)
+            #     continue
             except Exception as e:
                 print(str(type(e)) + ": " + str(e))
                 print("This is from the server checker")
