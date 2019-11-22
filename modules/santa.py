@@ -62,7 +62,7 @@ class Santa(commands.Cog):
                     msg: author == msg.author and msg.channel == sent.channel)
                 responses[str(reaction.user_id)] = message.clean_content
 
-                e = discord.Embed(title="Somebody asked...", description=q)
+                e = discord.Embed(title="Somebody asked...", description='{}\n\n`VVVV Responses VVVV`'.format(q))
                 for x, y in responses.items():
                     e.add_field(name=self.uplook[int(x)], value=y, inline=False)
 
