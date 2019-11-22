@@ -225,7 +225,7 @@ Misleading your secret santa and giving them a different one is allowed & encour
                     message = ''
                     continue
                 e.title = '_*Someone asked:*_'
-                e.description = '{}\n\nVVVV Responses VVVV'.format(question)
+                e.description = '{}\n\n`VVVV Responses VVVV`'.format(question)
                 preview = await self.send_with_yes_no_reactions(rcvr,
                                                                 message='This is how your question will look. Are you sure you want to send this message?',
                                                                 embed=e, extra_reactions=(emoji.CROSS_MARK,))
