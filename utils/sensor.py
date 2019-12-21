@@ -92,11 +92,11 @@ def get_game_info() -> tuple:
             print('Hey... This isn\'t supposed to happen...')
 
 
-def add_to_masterlist(game_info):
+def add_to_masterlist(game_info: dict):
     with open('masterlist.toml') as file:
         masterlist = toml.load(file)
     if game_info["name"] in masterlist.keys():
-        pass
+        return
     else:
         for game_name, game_path in masterlist.items():
             if [game_info['folder'], game_info['executable']] in game_path and game_name is not game_info['name']:

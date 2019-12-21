@@ -4,8 +4,8 @@ from concurrent import futures
 
 import discord
 import mcrcon
-from mcstatus import MinecraftServer as mc
 from discord.ext import commands
+from mcstatus import MinecraftServer as mc
 
 from utils import utilities
 
@@ -14,6 +14,11 @@ class ServerControl(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
+
+    @commands.command()
+    async def masterlist(self, ctx):
+        # get stuff from masterlist
+        pass
 
     @commands.group(aliases=['mc'])
     async def minecraft(self, ctx):
