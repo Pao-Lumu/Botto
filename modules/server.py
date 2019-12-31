@@ -4,6 +4,7 @@ from concurrent import futures
 
 import discord
 import mcrcon
+import toml
 from discord.ext import commands
 from mcstatus import MinecraftServer as mc
 
@@ -17,7 +18,15 @@ class ServerControl(commands.Cog):
 
     @commands.command()
     async def masterlist(self, ctx):
-        # get stuff from masterlist
+        with open('masterlist.toml') as file:
+            masterlist = toml.load(file)
+            for folder, items in masterlist.items():
+                print(f"""~~~~~~~~~~
+Game Name: {items['name'].title()}
+Folder: {folder}
+Items: {items}
+
+""")
         pass
 
     @commands.group(aliases=['mc'])
