@@ -17,6 +17,7 @@ import valve.source
 from discord import Forbidden
 from mcstatus import MinecraftServer as mc
 from valve.source.a2s import ServerQuerier as src
+from  collections import Iterable
 
 valvercon.RCONMessage.ENCODING = "utf-8"
 
@@ -158,6 +159,15 @@ class MinecraftServer(Server):
                 pass
         return message
 
+    def remove_nestings(self, l):
+        output = []
+        for i in l:
+            if type(i) == list:
+                output.extend(self.remove_nestings(i))
+            else:
+                output.append(i)
+        return output
+
     async def chat_from_guild_to_game(self):
         while self.proc.is_running() and not self.bot.is_closed():
             try:
@@ -187,7 +197,7 @@ class MinecraftServer(Server):
                             content[index] = line
                     if long:
                         # flatten list into a single layer
-                        content = list(itertools.chain(*content))
+                        content = self.remove_nestings(content)
 
                     async with self.rcon_lock:
                         for line in content:
