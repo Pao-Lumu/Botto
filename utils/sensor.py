@@ -32,7 +32,6 @@ def get_running() -> psutil.Process:
                     return proc
                 else:
                     raise ProcessLookupError('Process not running or not accessable by bot.')
-
     except AttributeError:
         print('Oh no')
 
@@ -40,9 +39,9 @@ def get_running() -> psutil.Process:
 def get_game_info() -> tuple:
     try:
         process = get_running()
+        cwd = process.cwd()
     except ProcessLookupError:
         raise ProcessLookupError('Process not running or not accessible by bot.')
-    cwd = process.cwd()
     looking_for_gameinfo = True
 
     while looking_for_gameinfo:
