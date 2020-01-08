@@ -14,13 +14,16 @@ class Game:
         self.bot.loop.create_task(self.check_server_running())
         self.bot.loop.create_task(self.get_current_server_status())
 
-    def wait_or_when_cancelled(self, process):
-        while not self.bot.is_closed() and process.is_running():
+    def wait_or_when_cancelled(self, process, bot_proc):
+        while True:
             try:
                 process.wait(timeout=1)
                 break
             except psutil.TimeoutExpired:
-                pass
+                if bot_proc.is_running():
+                    continue
+                else:
+                    break
 
     async def check_server_running(self):
         await self.bot.wait_until_ready(1)
@@ -37,15 +40,15 @@ class Game:
 
                     self.bot._game_running.clear()
                     self.bot._game_stopped.set()
-            except ProcessLookupError:
+            except ProcessLookupError or ValueError or AttributeError:
                 await asyncio.sleep(5)
                 continue
-            except ValueError:
-                await asyncio.sleep(5)
-                continue
-            except AttributeError:
-                await asyncio.sleep(5)
-                continue
+            # except ValueError:
+            #     await asyncio.sleep(5)
+            #     continue
+            # except AttributeError:
+            #     await asyncio.sleep(5)
+            #     continue
             except Exception as e:
                 print(str(type(e)) + ": " + str(e))
                 print("This is from the server checker")

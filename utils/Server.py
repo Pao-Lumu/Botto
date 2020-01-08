@@ -3,7 +3,7 @@ import datetime
 import itertools
 import os
 import socket
-import textwrap
+import textwrap as tw
 from concurrent import futures
 from os import path
 
@@ -59,7 +59,7 @@ class Server:
     async def sleep_with_backoff(self, tries, wait_time=5):
         await asyncio.sleep(wait_time * tries)
         if self.bot.debug:
-            self.bot.bprint(f"sleep_with_backoff ~ Done waiting for backoff")
+            self.bot.bprint("sleep_with_backoff ~ Done waiting for backoff")
 
     @property
     def status(self) -> psutil.Process:
@@ -111,7 +111,7 @@ class MinecraftServer(Server):
                 print(e)
 
     async def read_server_log(self, fpath, player_filter, server_filter):
-        size = os.stat(fpath)
+        date = datetime.datetime.now().day
         async with aiofiles.open(fpath) as log:
             await log.seek(0, 2)
             while self.proc.is_running() and not self.bot.is_closed():
@@ -134,10 +134,8 @@ class MinecraftServer(Server):
                 for msg in msgs:
                     self.bot.bprint(f"{self.bot.game} | {''.join(msg)}")
 
-                if size < os.stat(fpath):
-                    size = os.stat(fpath)
-                elif size > os.stat(fpath):
-                    print("BREAKIN' OUT BOYS!")
+                if date != datetime.datetime.now().day:
+                    await asyncio.sleep(10)
                     break
                 await asyncio.sleep(.75)
 
@@ -168,27 +166,33 @@ class MinecraftServer(Server):
                     pass
                 elif msg.clean_content:
                     await self._rcon_connect()
-                    content = regex.sub(r'<(:\w+:)\d+>', r'\1', msg.clean_content).split(
-                        '\n')  # splits on messages lines
+                    content = regex.sub(r'<(:\w+:)\d+>', r'\1', msg.clean_content).split('\n')  # split on msg newlines
                     long = False
                     for index, line in enumerate(content):
-                        command = f"§9§l{msg.author.name}§r: {line}"
-                        if len(command) >= 100:
-                            if not index:
-                                content[index] = textwrap.wrap(line, width=90,
-                                                               initial_indent=f"§9§l{msg.author.name}§r: ")
+                        data = f"§9§l{msg.author.name}§r: {line}"
+                        if len(data) >= 100:
+                            # if length of prefix + msg > 100 chars...
+                            if index is 0:
+                                # ...and current line is the first line, split the line, adding a prefix...
+                                content[index] = tw.wrap(line, width=90, initial_indent=f"§9§l{msg.author.name}§r: ")
                             else:
-                                content[index] = textwrap.wrap(line, width=90)
+                                # ...else, just split the line, without the prefix.
+                                content[index] = tw.wrap(line, width=90)
                             long = True
-                        elif not index:
-                            content[index] = command
+                        elif index is 0:
+                            # ...else, if less than 100 chars and on the first line, set to data variable
+                            content[index] = data
                         else:
+                            # ...else, just return the line
                             content[index] = line
                     if long:
-                        content = itertools.chain.from_iterable(content)
+                        # flatten list into a single layer
+                        content = list(itertools.chain(*content))
+
                     async with self.rcon_lock:
                         for line in content:
-                            x = self.rcon.command(f"say {line}")
+                            self.rcon.command(f"say {line}")
+
                     self.bot.bprint(f"Discord | <{msg.author.name}>: {' '.join(content)}")
             except mcrcon.MCRconException as e:
                 print(e)
@@ -331,8 +335,8 @@ class SourceServer(Server):
                         i = len(msg.author.name)
                         # if message is longer than 200-some characters
                         if len(msg.clean_content) > 230 - i:
-                            wrapped = textwrap.wrap(msg.clean_content, width=230 - i,
-                                                    initial_indent=f"{msg.author.name}: ")
+                            wrapped = tw.wrap(msg.clean_content, width=230 - i,
+                                              initial_indent=f"{msg.author.name}: ")
                             for wrapped_line in wrapped:
                                 rcon(f"say |D> {wrapped_line}")
                         # elif shorter than 200-some characters
