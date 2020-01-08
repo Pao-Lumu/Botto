@@ -3,7 +3,6 @@ import discord
 import asyncio
 from discord.ext import commands
 from utils import helpers
-from datetime import datetime
 
 
 class Admin(commands.Cog):
@@ -40,7 +39,6 @@ class Admin(commands.Cog):
     async def kanye(self, ctx: commands.Context):
         try:
             if ctx.author.voice.channel and not ctx.author.voice.afk:
-                # if ctx.author.voice.channel is not self.bot.voice.channel:
                 vc = await ctx.author.voice.channel.connect()
                 if 'cursed' in ctx.message.clean_content:
                     vc.play(discord.FFmpegPCMAudio(source="audio/kanye_singing_cursed.ogg"))
