@@ -14,13 +14,16 @@ class Game:
         self.bot.loop.create_task(self.check_server_running())
         self.bot.loop.create_task(self.get_current_server_status())
 
-    def wait_or_when_cancelled(self, process):
-        while not self.bot.is_closed() and process.is_running():
+    def wait_or_when_cancelled(self, process, bot_proc):
+        while True:
             try:
                 process.wait(timeout=1)
                 break
             except psutil.TimeoutExpired:
-                continue
+                if bot_proc.is_running():
+                    continue
+                else:
+                    break
 
     async def check_server_running(self):
         await self.bot.wait_until_ready(1)

@@ -51,7 +51,6 @@ bot = ogbot_base.OGBot(command_prefix=commands.when_mentioned_or(">"), cog_folde
 
 @bot.event
 async def on_ready():
-    # print('on_ready took ' + str((datetime.datetime.now() - bot.dt_start).total_seconds()) + ' seconds')
     bot.loop = asyncio.get_running_loop()
     if not hasattr(bot, 'uptime'):
         bot.uptime = datetime.datetime.utcnow()
@@ -226,6 +225,7 @@ async def on_command_error(ctx, error):
         await ctx.send(
             f"Command is currently on cooldown. This is due to the limitations of the bot. Try again in {str(error.retry_after)[:5]}s")
 
+
 if __name__ == '__main__':
     print("starting bot...")
     start = datetime.datetime.now()
@@ -244,29 +244,29 @@ if __name__ == '__main__':
     #                 bot.t_window = bot.t_session.get_by_id(pane["window_id"])
     #                 bot.t_pane = bot.t_window.get_by_id(pane["pane_id"])
     #                 break
-                    # # !/usr/bin/env python3
-                    #
-                    # import libtmux
-                    # import os
-                    # from pprint import pprint
-                    #
-                    # server = libtmux.Server()
-                    # panes = server._list_panes()
-                    # pprint(panes)
-                    # for pane in panes:
-                    #     if pane['pane_current_command'] == 'python3' and "mine" in pane['pane_current_path']:
-                    #         t_session = server.get_by_id(pane["session_id"])
-                    #         t_window = t_session.get_by_id(pane["window_id"])
-                    #         t_pane = t_window.get_by_id(pane["pane_id"])
-                    #         print(type(t_pane))
-                    #         print("WE MUXING")
-                    #     elif pane['pane_current_command'] == 'java':
-                    #         m_session = server.get_by_id(pane["session_id"])
-                    #         m_window = t_session.get_by_id(pane["window_id"])
-                    #         m_pane = t_window.get_by_id(pane["pane_id"])
-                    #         m_pane.send_keys(
-                    #             '/tellraw @a [{"text":"[Discord] ","color":"blue"},{"text":"<USERNAME> ","italic":true,"color":"light_purple"},{"text":"Message","italic":true,"color":"white"}]',
-                    #             suppress_history=False)
+    # # !/usr/bin/env python3
+    #
+    # import libtmux
+    # import os
+    # from pprint import pprint
+    #
+    # server = libtmux.Server()
+    # panes = server._list_panes()
+    # pprint(panes)
+    # for pane in panes:
+    #     if pane['pane_current_command'] == 'python3' and "mine" in pane['pane_current_path']:
+    #         t_session = server.get_by_id(pane["session_id"])
+    #         t_window = t_session.get_by_id(pane["window_id"])
+    #         t_pane = t_window.get_by_id(pane["pane_id"])
+    #         print(type(t_pane))
+    #         print("WE MUXING")
+    #     elif pane['pane_current_command'] == 'java':
+    #         m_session = server.get_by_id(pane["session_id"])
+    #         m_window = t_session.get_by_id(pane["window_id"])
+    #         m_pane = t_window.get_by_id(pane["pane_id"])
+    #         m_pane.send_keys(
+    #             '/tellraw @a [{"text":"[Discord] ","color":"blue"},{"text":"<USERNAME> ","italic":true,"color":"light_purple"},{"text":"Message","italic":true,"color":"white"}]',
+    #             suppress_history=False)
 
     #         bot.in_tmux = True
     #         pass

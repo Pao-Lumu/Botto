@@ -106,6 +106,7 @@ Items: {items}
     @commands.is_owner()
     @minecraft.command()
     async def repair(self, ctx):
+        mc_defaults = {'motd': 'OGBox Server', 'server-port': '22222', 'enable-rcon': 'true', 'enable-query': 'true'}
         if 'Minecraft' not in str(self.bot.game):
             await ctx.send("Minecraft not running")
         fn = os.path.join(self.bot.game.working_dir, "server.properties")
@@ -114,15 +115,10 @@ Items: {items}
         qp, rp = False, False
 
         for i, line in enumerate(lines):
-            if "motd" in line:
-                lines[i] = "motd=OGBox Server\n"
-            elif "server-port" in line:
-                lines[i] = "server-port=22222\n"
-            elif "enable-rcon" in line:
-                lines[i] = "enable-rcon=true\n"
-            elif "enable-query" in line:
-                lines[i] = "enable-query=true\n"
-            elif "query.port" in line:
+            for k, v in mc_defaults.items():
+                if k in line:
+                    lines[i] = f"{k}={v}\n"
+            if "query.port" in line:
                 lines[i] = "query.port=22222\n"
                 qp = True
             elif "rcon.port" in line:
