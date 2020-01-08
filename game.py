@@ -14,7 +14,8 @@ class Game:
         self.bot.loop.create_task(self.check_server_running())
         self.bot.loop.create_task(self.get_current_server_status())
 
-    def wait_or_when_cancelled(self, process, bot_proc):
+    def wait_or_when_cancelled(self, process, bot_pid):
+        bot_proc = psutil.Process()
         while True:
             try:
                 process.wait(timeout=1)
@@ -35,7 +36,8 @@ class Game:
                     self.bot._game_running.set()
 
                     self.bot.bprint(f"Server Status | Now Playing: {data['name']} {data['version']}")
-                    await self.bot.loop.run_in_executor(None, functools.partial(self.wait_or_when_cancelled, process))
+                    await self.bot.loop.run_in_executor(None, functools.partial(self.wait_or_when_cancelled, process,
+                                                                                self.bot_proc.pid))
                     self.bot.bprint(f"Server Status | Offline")
 
                     self.bot._game_running.clear()
