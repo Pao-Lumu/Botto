@@ -37,7 +37,7 @@ class Game:
 
                     self.bot.bprint(f"Server Status | Now Playing: {data['name']} {data['version']}")
                     await self.bot.loop.run_in_executor(None, functools.partial(self.wait_or_when_cancelled, process,
-                                                                                self.bot_proc.pid))
+                                                                                self.bot.bot_proc.pid))
                     self.bot.bprint(f"Server Status | Offline")
 
                     self.bot._game_running.clear()
