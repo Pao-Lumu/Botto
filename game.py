@@ -42,15 +42,15 @@ class Game:
 
                     self.bot._game_running.clear()
                     self.bot._game_stopped.set()
-            except ProcessLookupError or ValueError or AttributeError:
+            except ProcessLookupError:
                 await asyncio.sleep(5)
                 continue
-            # except ValueError:
-            #     await asyncio.sleep(5)
-            #     continue
-            # except AttributeError:
-            #     await asyncio.sleep(5)
-            #     continue
+            except ValueError:
+                await asyncio.sleep(5)
+                continue
+            except AttributeError:
+                await asyncio.sleep(5)
+                continue
             except Exception as e:
                 print(str(type(e)) + ": " + str(e))
                 print("This is from the server checker")
