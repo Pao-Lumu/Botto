@@ -11,6 +11,7 @@ import sys
 import discord
 import pyfiglet
 import toml
+# noinspection PyPackageRequirements
 from discord.ext import commands
 
 import game
@@ -20,21 +21,6 @@ from utils import helpers
 
 if len(sys.argv) > 1:
     os.chdir(sys.argv[1])
-
-# Setup Logging
-
-log = logging.getLogger()
-discord_logger = logging.getLogger('discord')
-discord_logger.setLevel(logging.CRITICAL)
-
-sh = logging.StreamHandler(sys.stderr)
-sh.setLevel(logging.CRITICAL)
-
-fmt = logging.Formatter('%(asctime)s - %(message)s', datefmt="%Y-%m-%d %H:%M:%S")
-
-sh.setFormatter(fmt)
-log.addHandler(sh)
-discord_logger.addHandler(sh)
 
 initial_extensions = [
     'modules.admin',
@@ -163,7 +149,6 @@ async def on_member_update(vor, ab):
         else:
             changes.append((ctype, states['nick'][2].format(ab.nick)))
 
-    # print(changes)
     for ctype, msg in changes:
         log.warning(f"{ctype.upper()} - {ab.name} {msg}")
 
@@ -223,12 +208,39 @@ async def on_command_error(ctx, error):
     print(error)
     if isinstance(error, commands.CommandOnCooldown):
         await ctx.send(
-            f"Command is currently on cooldown. This is due to the limitations of the bot. Try again in {str(error.retry_after)[:5]}s")
+            f"Command is on cooldown. This is due to API limitations. Try again in {str(error.retry_after)[:5]}s")
 
 
 if __name__ == '__main__':
     print("starting bot...")
     start = datetime.datetime.now()
+
+    # Setup Logging
+
+    fmt = logging.Formatter('%(asctime)s - %(message)s', datefmt="%Y-%m-%d %H:%M:%S")
+
+    sh = logging.StreamHandler(sys.stderr)
+    sh.setFormatter(fmt)
+    sh.setLevel(logging.CRITICAL)
+
+    log = logging.getLogger()
+    log.addHandler(sh)
+    discord_logger = logging.getLogger('discord')
+    discord_logger.setLevel(logging.CRITICAL)
+    discord_logger.addHandler(sh)
+
+    log_path = os.path.join("logs", "ogbot.log")
+    if not os.path.exists(log_path):
+        os.makedirs("logs", exist_ok=True)
+        with open(log_path, "x") as f:
+            pass
+
+    fh = logging.handlers.TimedRotatingFileHandler(filename=log_path, when="midnight", encoding='utf-8')
+    fh.setFormatter(fmt)
+    discord_logger.addHandler(fh)
+    log.addHandler(fh)
+    # log.warning("LOADED LOGS!")
+
     # TODO: Get TMUX availablity and do stuff accordingly
     # try:
     #     import libtmux
@@ -308,21 +320,15 @@ if __name__ == '__main__':
         with open(log_path, "x") as f:
             pass
 
-    fh = logging.handlers.TimedRotatingFileHandler(filename=log_path, when="midnight", encoding='utf-8')
-    fh.setLevel(logging.ERROR)
     if bot.debug:
         sh.setLevel(logging.DEBUG)
         discord_logger.setLevel(logging.DEBUG)
-    discord_logger.addHandler(fh)
-    fh.setFormatter(fmt)
-    log.addHandler(fh)
 
     bot.log = log
     bot.cfg = config['bot_configuration']
     game = game.Game(bot)
     try:
         cp1 = datetime.datetime.now() - start
-        # print('logging setup took ' + str(cp1.total_seconds()) + " seconds")
         bot.run(token, start_time=start)
     finally:
         sys.exit(1)
