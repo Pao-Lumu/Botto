@@ -109,31 +109,31 @@ async def on_member_update(vor, ab):
     if vor.status == ab.status:
         pass
     else:
-        ctype = 'status'
+        c_type = 'status'
         if ab.status is discord.Status.offline:
-            changes.append((ctype, states[ctype][1]))
+            changes.append((c_type, states[c_type][1]))
         elif vor.status is discord.Status.offline:
-            changes.append((ctype, states[ctype][0].format(ab.status)))
+            changes.append((c_type, states[c_type][0].format(ab.status)))
         else:
-            changes.append((ctype, states[ctype][2].format(vor.status, ab.status)))
+            changes.append((c_type, states[c_type][2].format(vor.status, ab.status)))
 
     if bef == aft:
         pass
     else:
-        ctype = 'activities'
+        c_type = 'activities'
         diff = aft.symmetric_difference(bef)
         for a in diff:
             if a.type == discord.ActivityType.listening:
                 if a in aft:
-                    changes.append((ctype, states['activities'][a.type.name][0].format(
+                    changes.append((c_type, states['activities'][a.type.name][0].format(
                         *[a.title, a.artist] if hasattr(a, 'title') else [a.name])))
                 elif len(diff) % 2 == 1:
-                    changes.append((ctype, states[ctype][a.type.name][1].format(a.name)))
+                    changes.append((c_type, states[c_type][a.type.name][1].format(a.name)))
 
             elif a.ob in vor.activities:
-                changes.append((ctype, states[ctype][a.type.name][1].format(a.name)))
+                changes.append((c_type, states[c_type][a.type.name][1].format(a.name)))
             elif a.ob in ab.activities:
-                changes.append((ctype, states['activities'][a.type.name][0].format(
+                changes.append((c_type, states['activities'][a.type.name][0].format(
                     *[a.title, a.artist] if hasattr(a, 'title') else [a.name])))
         else:
             pass
@@ -141,16 +141,16 @@ async def on_member_update(vor, ab):
     if vor.nick == ab.nick:
         pass
     else:
-        ctype = 'nick'
+        c_type = 'nick'
         if not vor.nick:
-            changes.append((ctype, states['nick'][0].format(ab.nick)))
+            changes.append((c_type, states['nick'][0].format(ab.nick)))
         elif not ab.nick:
-            changes.append((ctype, states['nick'][1]))
+            changes.append((c_type, states['nick'][1]))
         else:
-            changes.append((ctype, states['nick'][2].format(ab.nick)))
+            changes.append((c_type, states['nick'][2].format(ab.nick)))
 
-    for ctype, msg in changes:
-        log.warning(f"{ctype.upper()} - {ab.name} {msg}")
+    for c_type, msg in changes:
+        log.warning(f"{c_type.upper()} - {ab.name} {msg}")
 
 
 @bot.event

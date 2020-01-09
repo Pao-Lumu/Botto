@@ -42,6 +42,8 @@ def get_game_info() -> tuple:
         cwd = process.cwd()
     except ProcessLookupError:
         raise ProcessLookupError('Process not running or not accessible by bot.')
+    except AttributeError:
+        return None, None
     looking_for_gameinfo = True
 
     while looking_for_gameinfo:
