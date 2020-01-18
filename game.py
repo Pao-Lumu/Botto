@@ -1,5 +1,6 @@
 import asyncio
 import functools
+import time
 
 import psutil
 
@@ -19,6 +20,7 @@ class Game:
         while True:
             try:
                 process.wait(timeout=1)
+                time.sleep(1)
                 break
             except psutil.TimeoutExpired:
                 if bot_proc.is_running():
