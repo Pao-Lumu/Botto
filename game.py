@@ -32,9 +32,9 @@ class Game:
         await self.bot.wait_until_ready(1)
         while not self.bot.is_closed():
             try:
+                await asyncio.sleep(1)
                 process, data = sensor.get_game_info()
                 if process and data:
-                    await asyncio.sleep(1)
                     self.bot._game_stopped.clear()
                     self.bot._game_running.set()
 
