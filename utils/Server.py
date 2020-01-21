@@ -17,7 +17,7 @@ import valve.source
 from discord import Forbidden
 from mcstatus import MinecraftServer as mc
 from valve.source.a2s import ServerQuerier as src
-from  collections import Iterable
+from collections import Iterable
 
 valvercon.RCONMessage.ENCODING = "utf-8"
 
@@ -31,6 +31,7 @@ class Server:
         self.port = kwargs.pop('port', '22222')
         self.password = kwargs.pop('rcon') if kwargs['rcon'] else self.bot.cfg["default_rcon_password"]
         self.working_dir = kwargs.pop('folder', '')
+        self._repr = "a game"
 
         self.rcon_port = kwargs.pop('rcon_port', 22232)
         self.rcon = None
@@ -42,7 +43,7 @@ class Server:
         self.bot.loop.create_task(self.update_server_information())
 
     def __repr__(self):
-        return "a game"
+        return self._repr
 
     def is_running(self) -> bool:
         return self.proc.is_running()
@@ -75,12 +76,11 @@ class Server:
 
 
 class MinecraftServer(Server):
-    def __init__(self, bot, process, *args, **kwargs):
-        self.motd = kwargs.pop('motd', "A Minecraft Server")
-        super().__init__(bot, process, *args, **kwargs)
 
-    def __repr__(self):
-        return "Minecraft"
+    def __init__(self, bot, process, *args, **kwargs):
+        super().__init__(bot, process, *args, **kwargs)
+        self.motd = kwargs.pop('motd', "A Minecraft Server")
+        self._repr = "Minecraft"
 
     async def _rcon_connect(self):
         if not self.rcon:
@@ -279,9 +279,7 @@ class SourceServer(Server):
         self.log = list()
         self.log_lock = asyncio.Lock()
         self.bot.loop.create_task(self._log_loop())
-
-    def __repr__(self):
-        return "Source"
+        self._repr = "Source"
 
     async def _log_loop(self):
         port = 22242
