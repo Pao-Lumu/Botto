@@ -53,7 +53,7 @@ Chat Channel: {bot.chat_channel}  |  Meme Channel: {bot.meme_channel}
     try:
         await bot.cli.start()
     finally:
-        raise KeyboardInterrupt
+        await bot.close()
 
 
 def load_config() -> dict:
