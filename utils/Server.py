@@ -1,6 +1,5 @@
 import asyncio
 import datetime
-import itertools
 import os
 import socket
 import textwrap as tw
@@ -17,7 +16,6 @@ import valve.source
 from discord import Forbidden
 from mcstatus import MinecraftServer as mc
 from valve.source.a2s import ServerQuerier as src
-from collections import Iterable
 
 valvercon.RCONMessage.ENCODING = "utf-8"
 
@@ -239,8 +237,7 @@ class MinecraftServer(Server):
                     stats = server.query()
                     version, online, max_p = stats.software.version, stats.players.online, stats.players.max
                 player_count = f"({online}/{max_p} players)" if not failed else ""
-                cur_status = f"""Playing: Minecraft {version} {player_count}
-{'[' if names else ''}{', '.join(names)}{']' if names else ''}"""
+                cur_status = f"Playing: Minecraft {version} {player_count}\n{'[' if names else ''}{', '.join(names)}{']' if names else ''}"
                 await self.bot.chat_channel.edit(topic=cur_status)
                 await self.bot.set_bot_status(f'{self.bot.game} {version}', mod_count, player_count)
             except BrokenPipeError:
@@ -302,7 +299,7 @@ class SourceServer(Server):
             r"""(?<=: ")([\w\s]+)(?:<\d><STEAM_0:\d:\d+><.*>") (?:((?:dis)?connected),? (?|address "(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}:\d{2,5})|(\(reason ".+"?)))""")
         chat = regex.compile(
             r"""(?<=: ")([\w\s]+)(?:<\d+><(?:STEAM_0:\d:\d+|Console)><.*>)" (|say|say_team) "(?!\|D> )(.*)\"""")
-        while True:
+        while self.bot.is_game_running:
             try:
                 lines = []
                 async with self.log_lock:
