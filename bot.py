@@ -103,7 +103,10 @@ async def on_member_update(vor, ab):
               "nick": ["set their nickname to {}", "deleted their nickname", "changed their nickname to {}"],
               "activities": {'playing': ["started playing {}", "stopped playing {}"],
                              'streaming': ["is streaming {}", "stopped streaming {}"],
-                             'listening': ["is listening to {} by {} on Spotify", "stopped listening to {}"]}}
+                             'listening': ["is listening to {} by {} on Spotify", "stopped listening to {}"],
+                             'watching': ["is watching {}", "stopped watching {}"],
+                             'custom': ["set custom status to `{}`", "cleared custom status of `{}`",
+                                        "changed custom status from `{}` to `{}`"]}}
 
     changes = []
     if vor.status == ab.status:
@@ -122,8 +125,32 @@ async def on_member_update(vor, ab):
     else:
         c_type = 'activities'
         diff = aft.symmetric_difference(bef)
+        # print(diff)
+        # diff_types = list(map(lambda x: x.type, diff))
+        pos = list(filter(lambda x: x.type == discord.ActivityType.custom, diff))
+        if len(pos) == 0:
+            pass
+        elif len(pos) == 1:
+            a = discord.ActivityType.custom
+            if pos[0] in vor.activities:
+                changes.append((c_type, states[c_type][a.name][0].format(
+                    f"{pos[0].emoji.name + ' ' if pos[0].emoji else ''}{pos[0].name}")))
+            elif pos[0] in ab.activities:
+                changes.append((c_type, states[c_type][a.name][1].format(
+                    f"{pos[0].emoji.name + ' ' if pos[0].emoji else ''}{pos[0].name}")))
+        elif len(pos) == 2:
+            a = discord.ActivityType.custom
+            changes.append((c_type, states[c_type][a.name][2].format(
+                f"{':' + pos[0].emoji.name + ': ' if pos[0].emoji else ''}{pos[0].name}",
+                f"{':' + pos[1].emoji.name + ': ' if pos[1].emoji else ''}{pos[1].name}")))
+        else:
+            print(pos)
+            print(len(pos))
+
         for a in diff:
-            if a.type == discord.ActivityType.listening:
+            if a.type == discord.ActivityType.custom:
+                pass
+            elif a.type == discord.ActivityType.listening:
                 if a in aft:
                     changes.append((c_type, states['activities'][a.type.name][0].format(
                         *[a.title, a.artist] if hasattr(a, 'title') else [a.name])))
