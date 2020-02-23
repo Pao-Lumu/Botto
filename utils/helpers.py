@@ -1,4 +1,4 @@
-from discord import Activity, Spotify, ActivityType, DMChannel, TextChannel, VoiceChannel
+from discord import Activity, Spotify, CustomActivity, ActivityType, DMChannel, TextChannel, VoiceChannel
 from discord.ext.commands import Command
 
 import utils.errors
@@ -14,6 +14,8 @@ class MiniActivity:
             self.artist = ob.artist
             self.title = ob.title
             self.track_id = ob.track_id
+        if isinstance(ob, CustomActivity):
+            self.emoji = ob.emoji
 
     def __eq__(self, other):
         try:
