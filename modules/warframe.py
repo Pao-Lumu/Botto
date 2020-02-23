@@ -7,7 +7,7 @@ import discord
 import pytz
 from discord.ext import commands
 
-import baroaliases
+from aliases.warframe import Warframe as aliases
 
 
 class Warframe(commands.Cog):
@@ -23,22 +23,19 @@ class Warframe(commands.Cog):
 
     async def get_item_orders(self, name):
         async with aiohttp.ClientSession() as session:
-            html = await self.fetch(session,
-                                    "https://api.warframe.market/v1/items/" + name + "/orders")
+            html = await self.fetch(session, f"https://api.warframe.market/v1/items/{name}/orders")
             j = json.loads(html)
             return j
 
     async def get_item_statistics(self, name):
         async with aiohttp.ClientSession() as session:
-            html = await self.fetch(session,
-                                    "https://api.warframe.market/v1/items/" + name + "/statistics?include=item")
+            html = await self.fetch(session, f"https://api.warframe.market/v1/items/{name}/statistics?include=item")
             j = json.loads(html)
             return j
 
-    @commands.command(
-        aliases=baroaliases.aliases)
+    @commands.command(aliases=aliases.BARO)
     async def baro(self, ctx):
-        """Tells you where and when Baro Ki'Teer is coming on PC Warframe, and what he's selling when he is here."""
+        """Tells you where and when Baro Ki'Teer is coming to Warframe, and what he's selling when he is here."""
 
         async with aiohttp.ClientSession() as session:
             async with session.get('https://api.warframestat.us/pc/voidTrader') as resp:
@@ -51,9 +48,10 @@ class Warframe(commands.Cog):
 
         c = discord.Colour.from_rgb(random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
         if not info['active']:
-            e = discord.Embed(title='Void Trader',
-                              description=f"""{info['character']} will arrive at {info['location']} on {hr_active} ({info['startString']}) and will stay until {hr_expiry} ({info['endString']})""",
-                              color=c)
+            e = discord.Embed(title='Void Trader', color=c,
+                              description="{} will arrive at {} on {} ({}) and will stay until {} ({})".format(
+                                  info['character'], info['location'], hr_active, info['startString'], hr_expiry,
+                                  info['endString']))
             await ctx.send(embed=e)
         else:
             e = discord.Embed(title="Void Trader Offerings", color=c)

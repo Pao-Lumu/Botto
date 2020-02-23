@@ -1,6 +1,5 @@
 import asyncio
 import datetime
-import itertools
 import os
 import socket
 import textwrap as tw
@@ -17,7 +16,6 @@ import valve.source
 from discord import Forbidden
 from mcstatus import MinecraftServer as mc
 from valve.source.a2s import ServerQuerier as src
-from  collections import Iterable
 
 valvercon.RCONMessage.ENCODING = "utf-8"
 
@@ -31,6 +29,7 @@ class Server:
         self.port = kwargs.pop('port', '22222')
         self.password = kwargs.pop('rcon') if kwargs['rcon'] else self.bot.cfg["default_rcon_password"]
         self.working_dir = kwargs.pop('folder', '')
+        self._repr = "a game"
 
         self.rcon_port = kwargs.pop('rcon_port', 22232)
         self.rcon = None
@@ -42,7 +41,7 @@ class Server:
         self.bot.loop.create_task(self.update_server_information())
 
     def __repr__(self):
-        return "a game"
+        return self._repr
 
     def is_running(self) -> bool:
         return self.proc.is_running()
@@ -75,12 +74,11 @@ class Server:
 
 
 class MinecraftServer(Server):
-    def __init__(self, bot, process, *args, **kwargs):
-        self.motd = kwargs.pop('motd', "A Minecraft Server")
-        super().__init__(bot, process, *args, **kwargs)
 
-    def __repr__(self):
-        return "Minecraft"
+    def __init__(self, bot, process, *args, **kwargs):
+        super().__init__(bot, process, *args, **kwargs)
+        self.motd = kwargs.pop('motd', "A Minecraft Server")
+        self._repr = "Minecraft"
 
     async def _rcon_connect(self):
         if not self.rcon:
@@ -239,8 +237,7 @@ class MinecraftServer(Server):
                     stats = server.query()
                     version, online, max_p = stats.software.version, stats.players.online, stats.players.max
                 player_count = f"({online}/{max_p} players)" if not failed else ""
-                cur_status = f"""Playing: Minecraft {version} {player_count}
-{'[' if names else ''}{', '.join(names)}{']' if names else ''}"""
+                cur_status = f"Playing: Minecraft {version} {player_count}\n{'[' if names else ''}{', '.join(names)}{']' if names else ''}"
                 await self.bot.chat_channel.edit(topic=cur_status)
                 await self.bot.set_bot_status(f'{self.bot.game} {version}', mod_count, player_count)
             except BrokenPipeError:
@@ -279,9 +276,7 @@ class SourceServer(Server):
         self.log = list()
         self.log_lock = asyncio.Lock()
         self.bot.loop.create_task(self._log_loop())
-
-    def __repr__(self):
-        return "Source"
+        self._repr = "Source"
 
     async def _log_loop(self):
         port = 22242
@@ -304,7 +299,7 @@ class SourceServer(Server):
             r"""(?<=: ")([\w\s]+)(?:<\d><STEAM_0:\d:\d+><.*>") (?:((?:dis)?connected),? (?|address "(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}:\d{2,5})|(\(reason ".+"?)))""")
         chat = regex.compile(
             r"""(?<=: ")([\w\s]+)(?:<\d+><(?:STEAM_0:\d:\d+|Console)><.*>)" (|say|say_team) "(?!\|D> )(.*)\"""")
-        while True:
+        while self.bot.is_game_running:
             try:
                 lines = []
                 async with self.log_lock:
