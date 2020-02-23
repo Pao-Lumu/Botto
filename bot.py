@@ -135,23 +135,23 @@ async def on_member_update(vor, ab):
             pass
         else:
             a = discord.ActivityType.custom.name
-            if pos[0] in vor.activities:
-                if len(pos) == 1:
+            if len(pos) == 1:
+                if pos[0] in vor.activities:
                     changes.append((c_type, states[c_type][a][1].format(
-                        f"{pos[0].emoji.name + ' ' if pos[0].emoji else ''}{pos[0].name if pos[0].name else ''}")))
-                elif len(pos) == 2:
-                    changes.append((c_type, states[c_type][a][2].format(
-                        f"{':' + pos[0].emoji.name + ': ' if pos[0].emoji else ''}{pos[0].name if pos[0].name else ''}",
-                        f"{':' + pos[1].emoji.name + ': ' if pos[1].emoji else ''}{pos[1].name if pos[1].name else ''}")))
-            elif pos[0] in ab.activities:
-
-                if len(pos) == 1:
+                        ':' + pos[0].emoji.name + ':' if pos[0].emoji else '' + ' ' + pos[0].name if pos[
+                            0].name else '')))
+                elif pos[0] in ab.activities:
                     changes.append((c_type, states[c_type][a][0].format(
-                        f"{pos[0].emoji.name + ' ' if pos[0].emoji else ''}{pos[0].name if pos[0].name else ''}")))
-                elif len(pos) == 2:
-                    changes.append((c_type, states[c_type][a][2].format(
-                        f"{':' + pos[1].emoji.name + ': ' if pos[1].emoji else ''}{pos[1].name if pos[1].name else ''}",
-                        f"{':' + pos[0].emoji.name + ': ' if pos[0].emoji else ''}{pos[0].name if pos[0].name else ''}")))
+                        ':' + pos[0].emoji.name + ':' if pos[0].emoji else '' + ' ' + pos[0].name if pos[
+                            0].name else '')))
+
+            elif len(pos) == 2:
+                af = ':' + pos[0].emoji.name + ':' if pos[0].emoji else '' + ' ' + pos[0].name if pos[0].name else ''
+                bf = ':' + pos[1].emoji.name + ':' if pos[1].emoji else '' + ' ' + pos[1].name if pos[1].name else ''
+                if pos[0] in vor.activities:
+                    changes.append((c_type, states[c_type][a][2].format(af, bf)))
+                elif pos[0] in ab.activities:
+                    changes.append((c_type, states[c_type][a][2].format(bf, af)))
             else:
                 print(pos)
                 print(len(pos))
