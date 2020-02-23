@@ -139,18 +139,18 @@ async def on_member_update(vor, ab):
             if len(pos) == 1:
                 if pos[0] in vor.activities:
                     changes.append((c_type, a_states[a][1].format(
-                        ':' + pos[0].emoji.name + ':' if pos[0].emoji else '' + ' ' if pos[0].name and pos[
-                            0].emoji else '' + pos[0].name if pos[0].name else '')))
+                        (':' + pos[0].emoji.name + ':' if pos[0].emoji else '') + (' ' if pos[0].name and pos[
+                            0].emoji else '') + (pos[0].name if pos[0].name else ''))))
                 elif pos[0] in ab.activities:
                     changes.append((c_type, a_states[a][0].format(
-                        ':' + pos[0].emoji.name + ':' if pos[0].emoji else '' + ' ' if pos[0].name and pos[
-                            0].emoji else '' + pos[0].name if pos[0].name else '')))
+                        (':' + pos[0].emoji.name + ':' if pos[0].emoji else '') + (' ' if pos[0].name and pos[
+                            0].emoji else '') + (pos[0].name if pos[0].name else ''))))
 
             elif len(pos) == 2:
-                af = ':' + pos[0].emoji.name + ':' if pos[0].emoji else '' + ' ' if pos[0].name and pos[
-                    0].emoji else '' + pos[0].name if pos[0].name else ''
-                bf = ':' + pos[1].emoji.name + ':' if pos[1].emoji else '' + ' ' if pos[1].name and pos[
-                    1].emoji else '' + pos[1].name if pos[1].name else ''
+                af = (':' + pos[0].emoji.name + ':' if pos[0].emoji else '') + (' ' if pos[0].name and pos[
+                    0].emoji else '') + (pos[0].name if pos[0].name else '')
+                bf = (':' + pos[1].emoji.name + ':' if pos[1].emoji else '') + (' ' if pos[1].name and pos[
+                    1].emoji else '') + (pos[1].name if pos[1].name else '')
                 if pos[0] in vor.activities:
                     changes.append((c_type, a_states[a][2].format(af, bf)))
                 elif pos[0] in ab.activities:
