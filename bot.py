@@ -124,8 +124,9 @@ async def on_member_update(vor, ab):
         pass
     else:
         c_type = 'activities'
+        a_states = states[c_type]
         diff = aft.symmetric_difference(bef)
-        # print(diff)
+
         #
         # I genuinely hate the following patch of code and I want it to die.
         #
@@ -137,21 +138,23 @@ async def on_member_update(vor, ab):
             a = discord.ActivityType.custom.name
             if len(pos) == 1:
                 if pos[0] in vor.activities:
-                    changes.append((c_type, states[c_type][a][1].format(
-                        ':' + pos[0].emoji.name + ':' if pos[0].emoji else '' + ' ' + pos[0].name if pos[
-                            0].name else '')))
+                    changes.append((c_type, a_states[a][1].format(
+                        ':' + pos[0].emoji.name + ':' if pos[0].emoji else '' + ' ' if pos[0].name and pos[
+                            0].emoji else '' + pos[0].name if pos[0].name else '')))
                 elif pos[0] in ab.activities:
-                    changes.append((c_type, states[c_type][a][0].format(
-                        ':' + pos[0].emoji.name + ':' if pos[0].emoji else '' + ' ' + pos[0].name if pos[
-                            0].name else '')))
+                    changes.append((c_type, a_states[a][0].format(
+                        ':' + pos[0].emoji.name + ':' if pos[0].emoji else '' + ' ' if pos[0].name and pos[
+                            0].emoji else '' + pos[0].name if pos[0].name else '')))
 
             elif len(pos) == 2:
-                af = ':' + pos[0].emoji.name + ':' if pos[0].emoji else '' + ' ' + pos[0].name if pos[0].name else ''
-                bf = ':' + pos[1].emoji.name + ':' if pos[1].emoji else '' + ' ' + pos[1].name if pos[1].name else ''
+                af = ':' + pos[0].emoji.name + ':' if pos[0].emoji else '' + ' ' if pos[0].name and pos[
+                    0].emoji else '' + pos[0].name if pos[0].name else ''
+                bf = ':' + pos[1].emoji.name + ':' if pos[1].emoji else '' + ' ' if pos[1].name and pos[
+                    1].emoji else '' + pos[1].name if pos[1].name else ''
                 if pos[0] in vor.activities:
-                    changes.append((c_type, states[c_type][a][2].format(af, bf)))
+                    changes.append((c_type, a_states[a][2].format(af, bf)))
                 elif pos[0] in ab.activities:
-                    changes.append((c_type, states[c_type][a][2].format(bf, af)))
+                    changes.append((c_type, a_states[a][2].format(bf, af)))
             else:
                 print(pos)
                 print(len(pos))
@@ -164,10 +167,10 @@ async def on_member_update(vor, ab):
                     changes.append((c_type, states['activities'][a.type.name][0].format(
                         *[a.title, a.artist] if hasattr(a, 'title') else [a.name])))
                 elif len(diff) % 2 == 1:
-                    changes.append((c_type, states[c_type][a.type.name][1].format(a.name)))
+                    changes.append((c_type, a_states[a.type.name][1].format(a.name)))
 
             elif a.ob in vor.activities:
-                changes.append((c_type, states[c_type][a.type.name][1].format(a.name)))
+                changes.append((c_type, a_states[a.type.name][1].format(a.name)))
             elif a.ob in ab.activities:
                 changes.append((c_type, states['activities'][a.type.name][0].format(
                     *[a.title, a.artist] if hasattr(a, 'title') else [a.name])))
