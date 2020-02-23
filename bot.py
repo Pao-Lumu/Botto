@@ -105,8 +105,8 @@ async def on_member_update(vor, ab):
                              'streaming': ["is streaming {}", "stopped streaming {}"],
                              'listening': ["is listening to {} by {} on Spotify", "stopped listening to {}"],
                              'watching': ["is watching {}", "stopped watching {}"],
-                             'custom': ["set custom status to `{}`", "cleared custom status of `{}`",
-                                        "changed custom status from `{}` to `{}`"]}}
+                             'custom': ["set their custom status to `{}`", "cleared their custom status of `{}`",
+                                        "changed their custom status from `{}` to `{}`"]}}
 
     changes = []
     if vor.status == ab.status:
@@ -125,24 +125,32 @@ async def on_member_update(vor, ab):
     else:
         c_type = 'activities'
         diff = aft.symmetric_difference(bef)
-        # print(diff)
-        # diff_types = list(map(lambda x: x.type, diff))
+        print(diff)
+        #
+        # I genuinely hate the following patch of code and I want it to die.
+        #
+
         pos = list(filter(lambda x: x.type == discord.ActivityType.custom, diff))
         if len(pos) == 0:
             pass
-        elif len(pos) == 1:
+        elif pos[0] in vor.activities:
             a = discord.ActivityType.custom
-            if pos[0] in vor.activities:
+            if len(pos) == 1:
                 changes.append((c_type, states[c_type][a.name][0].format(
-                    f"{pos[0].emoji.name + ' ' if pos[0].emoji else ''}{pos[0].name}")))
-            elif pos[0] in ab.activities:
+                    f"{pos[1].emoji.name + ' ' if pos[1].emoji else ''}{pos[1].name}")))
+            elif len(pos) == 2:
+                changes.append((c_type, states[c_type][a.name][2].format(
+                    f"{':' + pos[0].emoji.name + ': ' if pos[0].emoji else ''}{pos[0].name}",
+                    f"{':' + pos[1].emoji.name + ': ' if pos[1].emoji else ''}{pos[1].name}")))
+        elif pos[0] in ab.activities:
+            a = discord.ActivityType.custom
+            if len(pos) == 1:
                 changes.append((c_type, states[c_type][a.name][1].format(
                     f"{pos[0].emoji.name + ' ' if pos[0].emoji else ''}{pos[0].name}")))
-        elif len(pos) == 2:
-            a = discord.ActivityType.custom
-            changes.append((c_type, states[c_type][a.name][2].format(
-                f"{':' + pos[0].emoji.name + ': ' if pos[0].emoji else ''}{pos[0].name}",
-                f"{':' + pos[1].emoji.name + ': ' if pos[1].emoji else ''}{pos[1].name}")))
+            elif len(pos) == 2:
+                changes.append((c_type, states[c_type][a.name][2].format(
+                    f"{':' + pos[1].emoji.name + ': ' if pos[1].emoji else ''}{pos[1].name}",
+                    f"{':' + pos[0].emoji.name + ': ' if pos[0].emoji else ''}{pos[0].name}")))
         else:
             print(pos)
             print(len(pos))
@@ -190,7 +198,7 @@ async def on_user_update(vor, ab):
             pass
         else:
             msg = f'{vor.name} changed their {key[y]} from {z[0]} to {z[1]}.'
-            log.warning(f"{y} - {ab.name} {msg}")
+            log.warning(f"{key[y].upper()} - {msg}")
     pass
 
 
@@ -198,16 +206,11 @@ async def on_user_update(vor, ab):
 async def on_voice_state_update(member, vor, ab):
     if member.guild.id != 442600877434601472:
         return
-    states = {"deaf": {"set": "is now server-deafened",
-                       "unset": "in no longer server-deafened"},
-              "mute": {"set": "is now muted",
-                       "unset": "is no longer server-muted"},
-              "self_deaf": {"set": "deafened themselves",
-                            "unset": "undeafened themselves"},
-              "self_mute": {"set": "muted themselves",
-                            "unset": "unmuted themselves"},
-              "channel": {"set": "joined {}", "update": "moved from {} to {}",
-                          "unset": "left {}"}}
+    states = {"deaf": {"set": "is now server-deafened", "unset": "in no longer server-deafened"},
+              "mute": {"set": "is now muted", "unset": "is no longer server-muted"},
+              "self_deaf": {"set": "deafened themselves", "unset": "undeafened themselves"},
+              "self_mute": {"set": "muted themselves", "unset": "unmuted themselves"},
+              "channel": {"set": "joined {}", "update": "moved from {} to {}", "unset": "left {}"}}
 
     for key, value in states.items():
         before = getattr(vor, key)
