@@ -125,7 +125,7 @@ async def on_member_update(vor, ab):
     else:
         c_type = 'activities'
         diff = aft.symmetric_difference(bef)
-        print(diff)
+        # print(diff)
         #
         # I genuinely hate the following patch of code and I want it to die.
         #
@@ -133,27 +133,28 @@ async def on_member_update(vor, ab):
         pos = list(filter(lambda x: x.type == discord.ActivityType.custom, diff))
         if len(pos) == 0:
             pass
-        elif pos[0] in vor.activities:
-            a = discord.ActivityType.custom
-            if len(pos) == 1:
-                changes.append((c_type, states[c_type][a.name][0].format(
-                    f"{pos[1].emoji.name + ' ' if pos[1].emoji else ''}{pos[1].name}")))
-            elif len(pos) == 2:
-                changes.append((c_type, states[c_type][a.name][2].format(
-                    f"{':' + pos[0].emoji.name + ': ' if pos[0].emoji else ''}{pos[0].name}",
-                    f"{':' + pos[1].emoji.name + ': ' if pos[1].emoji else ''}{pos[1].name}")))
-        elif pos[0] in ab.activities:
-            a = discord.ActivityType.custom
-            if len(pos) == 1:
-                changes.append((c_type, states[c_type][a.name][1].format(
-                    f"{pos[0].emoji.name + ' ' if pos[0].emoji else ''}{pos[0].name}")))
-            elif len(pos) == 2:
-                changes.append((c_type, states[c_type][a.name][2].format(
-                    f"{':' + pos[1].emoji.name + ': ' if pos[1].emoji else ''}{pos[1].name}",
-                    f"{':' + pos[0].emoji.name + ': ' if pos[0].emoji else ''}{pos[0].name}")))
         else:
-            print(pos)
-            print(len(pos))
+            a = discord.ActivityType.custom.name
+            if pos[0] in vor.activities:
+                if len(pos) == 1:
+                    changes.append((c_type, states[c_type][a][1].format(
+                        f"{pos[0].emoji.name + ' ' if pos[0].emoji else ''}{pos[0].name if pos[0].name else ''}")))
+                elif len(pos) == 2:
+                    changes.append((c_type, states[c_type][a][2].format(
+                        f"{':' + pos[0].emoji.name + ': ' if pos[0].emoji else ''}{pos[0].name if pos[0].name else ''}",
+                        f"{':' + pos[1].emoji.name + ': ' if pos[1].emoji else ''}{pos[1].name if pos[1].name else ''}")))
+            elif pos[0] in ab.activities:
+
+                if len(pos) == 1:
+                    changes.append((c_type, states[c_type][a][0].format(
+                        f"{pos[0].emoji.name + ' ' if pos[0].emoji else ''}{pos[0].name if pos[0].name else ''}")))
+                elif len(pos) == 2:
+                    changes.append((c_type, states[c_type][a][2].format(
+                        f"{':' + pos[1].emoji.name + ': ' if pos[1].emoji else ''}{pos[1].name if pos[1].name else ''}",
+                        f"{':' + pos[0].emoji.name + ': ' if pos[0].emoji else ''}{pos[0].name if pos[0].name else ''}")))
+            else:
+                print(pos)
+                print(len(pos))
 
         for a in diff:
             if a.type == discord.ActivityType.custom:
