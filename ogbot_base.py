@@ -14,6 +14,7 @@ from discord.ext import commands
 class OGBot(commands.Bot):
 
     def __init__(self, *args, **kwargs):
+        self.dt_start = None
         command_prefix = kwargs.pop('command_prefix', commands.when_mentioned_or('.'))
         super().__init__(command_prefix=command_prefix, *args, **kwargs)
         colorama.init()
@@ -45,7 +46,7 @@ class OGBot(commands.Bot):
         if delay:
             await asyncio.sleep(delay)
 
-    async def set_bot_status(self, line1: str, line2: str, line3: str, *args, **kwargs):
+    async def set_bot_status(self, line1: str, line2: str, line3: str):
         padder = [line1.replace(' ', '\u00a0'), ''.join(list(itertools.repeat('\u3000', 40 - len(line1))))
                   + line2.replace(' ', '\u00a0'), ''.join(list(itertools.repeat('\u3000', 40 - len(line2))))
                   + line3.replace(' ', '\u00a0')]

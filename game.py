@@ -1,6 +1,5 @@
 import asyncio
 import functools
-import time
 
 import psutil
 
@@ -15,7 +14,8 @@ class Game:
         self.bot.loop.create_task(self.check_server_running())
         self.bot.loop.create_task(self.get_current_server_status())
 
-    def wait_or_when_cancelled(self, process):
+    @staticmethod
+    def wait_or_when_cancelled(process):
         bot_proc = psutil.Process()
         while True:
             try:

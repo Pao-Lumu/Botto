@@ -14,7 +14,8 @@ class Warframe(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    async def fetch(self, session, url):
+    @staticmethod
+    async def fetch(session, url):
         async with session.get(url) as response:
             if response.status == 404:
                 raise NameError('That is not a valid item. Please check your spelling.')
@@ -112,9 +113,9 @@ class Warframe(commands.Cog):
         buy_online = list()
 
         orders = y['payload']['orders']
-        buy.extend(sorted(filter(lambda z: z['order_type'] == "sell", orders), key=lambda y: y['platinum']))
+        buy.extend(sorted(filter(lambda z: z['order_type'] == "sell", orders), key=lambda order: order['platinum']))
         buy_online.extend(filter(lambda z: z['user']['status'] == "online" or z['user']['status'] == "ingame", buy))
-        sell.extend(sorted(filter(lambda z: z['order_type'] == "buy", orders), key=lambda y: y['platinum']))
+        sell.extend(sorted(filter(lambda z: z['order_type'] == "buy", orders), key=lambda order: order['platinum']))
         sell_online.extend(filter(lambda z: z['user']['status'] == "online" or z['user']['status'] == "ingame", sell))
 
         for stat in two_days:

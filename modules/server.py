@@ -17,7 +17,7 @@ class ServerControl(commands.Cog):
         self.bot = bot
 
     @commands.command()
-    async def masterlist(self, ctx):
+    async def masterlist(self, ctx: commands.Context):
         with open('masterlist.toml') as file:
             masterlist = toml.load(file)
             for folder, items in masterlist.items():
@@ -27,16 +27,17 @@ Folder: {folder}
 Items: {items}
 
 """)
+        await ctx.send('Sent a debug to the console!')
         pass
 
     @commands.group(aliases=['mc'])
-    async def minecraft(self, ctx):
+    async def minecraft(self, ctx: commands.Context):
         if not ctx.subcommand_passed:
             pass
 
     @commands.is_owner()
     @minecraft.command(aliases=['opt', 'option', 'opts'])
-    async def options(self, ctx, *, setting: str = None):
+    async def options(self, ctx: commands.Context, *, setting: str = None):
         config = self.parse_config_file()
         try:
             if not setting:
@@ -86,7 +87,7 @@ Items: {items}
 
     @commands.is_owner()
     @minecraft.command(aliases=['cmd', 'console', 'con'])
-    async def command(self, ctx, *, concmd: str):
+    async def command(self, ctx: commands.Context, *, concmd: str):
         try:
             password = self.bot.gameinfo["rcon"] if self.bot.gameinfo["rcon"] else self.bot.cfg["default_rcon_password"]
         except KeyError:
@@ -105,7 +106,7 @@ Items: {items}
 
     @commands.is_owner()
     @minecraft.command()
-    async def repair(self, ctx):
+    async def repair(self, ctx: commands.Context):
         mc_defaults = {'motd': 'OGBox Server', 'server-port': '22222', 'enable-rcon': 'true', 'enable-query': 'true'}
         if 'Minecraft' not in str(self.bot.game):
             await ctx.send("Minecraft not running")
@@ -137,7 +138,7 @@ Items: {items}
             f.writelines(lines)
 
     @minecraft.command()
-    async def mods(self, ctx):
+    async def mods(self, ctx: commands.Context):
         query = mc.lookup("localhost:22222")
         try:
             ree = query.status()
@@ -157,10 +158,10 @@ Items: {items}
             print("oh god oh fuck")
 
     @commands.group()
-    async def run(self, ctx):
+    async def run(self, ctx: commands.Context):
         # TODO: Find a way to document the executables of each server and use that to create a shutdown/startup thing
         if not ctx.subcommand_passed:
-            ctx.send(embed=utilities.wip_embed())
+            await ctx.send(embed=await utilities.wip_embed())
             pass
 
     # HELPER METHODS

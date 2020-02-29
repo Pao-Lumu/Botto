@@ -7,18 +7,18 @@ class Example(commands.Cog):
         pass
 
     @commands.command()
-    async def example_command(self, ctx):
+    async def example_command(self, ctx: commands.Context):
         pass
 
     @commands.group()
-    async def example_group(self, ctx):
+    async def example_group(self, ctx: commands.Context):
         if ctx.subcommand_passed:
             pass
         else:
             pass
 
     @example_group.command()
-    async def example_subcommand(self, ctx):
+    async def example_subcommand(self, ctx: commands.Context):
         pass
 
 

@@ -32,13 +32,15 @@ class Responder(commands.Cog):
 
     @helpers.is_human()
     @commands.group(aliases=['sb', 'sound'])
-    async def soundboard(self, ctx, sound):
+    async def soundboard(self, ctx: commands.Context, sound):
         """Literally just for Brandon"""
         if not ctx.subcommand_passed:
             print("list")
+        else:
+            print(sound)
 
     @soundboard.command(aliases=["ul", "u"])
-    async def upload(self, ctx, name=""):
+    async def upload(self, ctx: commands.Context, name=""):
         """Upload audio to soundboard"""
         valid_extensions = ['ogg', 'mp3', 'wav', 'm4a', 'webm', 'wma']
         filename = ""

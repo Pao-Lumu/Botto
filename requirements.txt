@@ -10,3 +10,4 @@ youtube_dl>=2019.6.8
 psutil
 regex
 pytz
+aiohttp

@@ -397,13 +397,15 @@ class SrcdsLoggingProtocol(asyncio.DatagramProtocol):
 
     def connection_made(self, transport):
         print("Connected to Server")
+        # noinspection PyAttributeOutsideInit
         self.transport = transport
 
     def datagram_received(self, packet, addr):
         message = self.parse(packet)
         self.callback1(self.callback2(message))
 
-    def parse(self, packet: bytes):
+    @staticmethod
+    def parse(packet: bytes):
         packet_len = len(packet)
 
         if packet_len < 7:

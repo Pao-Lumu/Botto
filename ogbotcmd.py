@@ -100,7 +100,8 @@ Loaded cogs: {", ".join(self.bot.cogs.keys())}""")
         """Prints all vars in self.bot"""
         pprint(self.vars)
 
-    def do_debug_input(self, line):
+    @staticmethod
+    def do_debug_input(line):
         """Echos any command line input"""
         print(type(line))
         print(line)
@@ -145,8 +146,8 @@ is_bot: {} | Avatar: {}""".format(z.name, z.id, z.bot, z.avatar_url)
                 if inspect.iscoroutinefunction(func):
                     print('e')
 
-                    def mrsa(result):
-                        print(result)
+                    def mrsa(rslt):
+                        print(rslt)
 
                     self.loop.create_task(self._exec_async(func, callback=mrsa))
 
@@ -227,7 +228,8 @@ Sent on {m.created_at.strftime('%a, %b %d, %Y at %I:%M:%S %p')}"""
                     print(e.__class__)
                     print(dir(e))
 
-    async def _exec_async(self, method, parameters=None, callback=None):
+    @staticmethod
+    async def _exec_async(method, parameters=None, callback=None):
         try:
             if parameters:
                 result = await asyncio.wait_for(method(*parameters), timeout=10)
@@ -273,10 +275,12 @@ Sent on {m.created_at.strftime('%a, %b %d, %Y at %I:%M:%S %p')}"""
         offs = len(mline) - len(text)
         return [s[offs:] for s in self.vars if s.startswith(mline)]
 
-    def do_exit(self, line):
+    @staticmethod
+    def do_exit(line):
         return True
 
-    def do_stop(self, line):
+    @staticmethod
+    def do_stop(line):
         return True
 
     def cmdloop(self, intro=None):
