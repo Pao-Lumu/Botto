@@ -1,7 +1,9 @@
 # noinspection PyPackageRequirements
-import discord
 import asyncio
+
+import discord
 from discord.ext import commands
+
 from utils import helpers
 
 
@@ -51,6 +53,29 @@ class Admin(commands.Cog):
         except AttributeError as e:
             print(e)
             await ctx.send("Not in voice chat.")
+        except OSError as e:
+            print(e)
+            self.bot.bprint("Hey lotus why don't you eat a fucking dick ~ Zach 2018")
+
+    @helpers.is_human()
+    @commands.command()
+    async def play_meme(self, ctx: commands.Context):
+        if not ctx.message.clean_content:
+            await ctx.send("List of music:")
+        try:
+            if ctx.author.voice.channel and not ctx.author.voice.afk:
+                vc = await ctx.author.voice.channel.connect()
+                if 'cursed' in ctx.message.clean_content:
+                    vc.play(discord.FFmpegPCMAudio(source="audio/kanye_singing_cursed.ogg"))
+                else:
+                    vc.play(discord.FFmpegPCMAudio("audio/kanye_singing.ogg"))
+                await asyncio.sleep(30)
+                vc.stop()
+
+                await vc.disconnect()
+        except AttributeError as e:
+            print(e)
+            await ctx.send("Not in a voice channel, or unable to access current voice channel.")
         except OSError as e:
             print(e)
             self.bot.bprint("Hey lotus why don't you eat a fucking dick ~ Zach 2018")
