@@ -1,4 +1,7 @@
-from discord import Activity, Spotify, CustomActivity, ActivityType, DMChannel, TextChannel, VoiceChannel
+from contextlib import asynccontextmanager
+
+from discord import Activity, Spotify, CustomActivity, ActivityType, DMChannel, TextChannel, VoiceChannel, \
+    ClientException
 from discord.ext.commands import Command
 
 import utils.errors
@@ -85,3 +88,37 @@ def is_human():
         return True
 
     return check(predicate)
+
+
+class VoiceChatContext:
+    def __init__(self, ctx):
+        self.ctx = ctx
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        await print("Bye!")
+
+    async def __aenter__(self):
+        pass
+
+    @asynccontextmanager
+    async def is_valid_voicechat(self):
+        try:
+            if self.ctx.author.voice.channel and not self.ctx.author.voice.afk:
+                vc = await self.ctx.author.voice.channel.connect()
+                try:
+                    yield vc
+                finally:
+                    vc.stop()
+                    await vc.disconnect()
+
+            elif self.ctx.author.voice.afk:
+                await self.ctx.send("Bot cannot play music in AFK channels. Move to a non-AFK channel and try again.")
+        except ClientException as e:
+            print(e)
+            await self.ctx.send("Bot's host system is missing required programs. Please notify the administrator.")
+        except AttributeError as e:
+            print(e)
+            await self.ctx.send("Not in a voice channel, or unable to access current voice channel.")
+        except OSError as e:
+            print(e)
+            print("Hey lotus why don't you eat a fucking dick ~ Zach 2018")

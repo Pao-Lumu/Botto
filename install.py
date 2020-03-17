@@ -1,14 +1,19 @@
 from pip._internal import main as pipmain
 
 _all_ = [
+    "toml",
     "aiofiles >= 0.4.0",
     "colorama >= 0.4.1",
-    "discord.py[voice] >= 1.2.5",
+    "discord.py[voice] >= 1.3.2",
     "mcrcon >= 0.5.2",
     "mcstatus >= 2.2.1",
     "pyfiglet >= 0.8.post1",
     "python-valve >= 0.2.1",
-    "youtube_dl >= 2019.6.8"
+    "youtube_dl",
+    "psutil",
+    "regex",
+    "pytz",
+    "aiohttp"
 ]
 
 windows = []
