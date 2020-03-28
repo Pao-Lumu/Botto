@@ -33,36 +33,24 @@ class Admin(commands.Cog):
         else:
             await ctx.send('\N{OK HAND SIGN}')
 
+    @helpers.is_human()
     @commands.command()
-    async def echo(self, ctx):
-        msg = ctx.message.clean_content.lstrip(str(ctx.prefix) + str(ctx.command))
+    async def echo(self, ctx, *, msg):
         await ctx.send(content=msg)
 
     @helpers.is_human()
     @commands.command()
     async def kanye(self, ctx: commands.Context):
-        try:
-            if ctx.author.voice.channel and not ctx.author.voice.afk:
-                vc = await ctx.author.voice.channel.connect()
-                if 'cursed' in ctx.message.clean_content:
-                    vc.play(discord.FFmpegPCMAudio(source="audio/kanye_singing_cursed.ogg"))
-                else:
-                    vc.play(discord.FFmpegPCMAudio("audio/kanye_singing.ogg"))
-                await asyncio.sleep(30)
-                vc.stop()
-
-                await vc.disconnect()
-        except AttributeError as e:
-            print(e)
-            await ctx.send("Not in voice chat.")
-        except OSError as e:
-            print(e)
-            self.bot.bprint("Hey lotus why don't you eat a fucking dick ~ Zach 2018")
+        async with helpers.VoiceChatContext(ctx).is_valid_voicechat() as vc:
+            if 'cursed' in ctx.message.clean_content:
+                vc.play(discord.FFmpegPCMAudio(source="audio/kanye_singing_cursed.ogg"))
+            else:
+                vc.play(discord.FFmpegPCMAudio("audio/kanye_singing.ogg"))
+            await asyncio.sleep(30)
 
     @helpers.is_human()
     @commands.command()
     async def play_meme(self, ctx: commands.Context, *, msg):
-        # msg = ctx.message.clean_content
         x = list(map(clean_string, get_music()))
         if not msg:
             e = discord.Embed(title="List of audio clips")
@@ -70,13 +58,13 @@ class Admin(commands.Cog):
                 e.add_field(name=fn, value='~~~')
             await ctx.send("List of audio clips:", embed=e)
         else:
-            print(msg)
-            print(x)
             if msg in x:
                 async with helpers.VoiceChatContext(ctx).is_valid_voicechat() as vc:
-                    print(vc)
                     vc.play(discord.FFmpegPCMAudio(source=f"audio/{ctx.message.clean_content}.ogg"))
-                    await asyncio.sleep(30)
+                    while vc.is_playing():
+                        if False or not vc:  # EVENT THAT ALLOWS FOR A BREAK
+                            break
+                        await asyncio.sleep(1)
             else:
                 e = discord.Embed(title="Audio File Not Found.")
                 possible = []
@@ -90,15 +78,8 @@ class Admin(commands.Cog):
                     e.description = "Check your spelling."
                 await ctx.send(embed=e)
 
-        #     except AttributeError as e:
-        #     print(e)
-        #     await ctx.send("Not in a voice channel, or unable to access current voice channel.")
-        # except OSError as e:
-        # print(e)
-        # self.bot.bprint("Hey lotus why don't you eat a fucking dick ~ Zach 2018")
 
-
-def get_similarity(a, b, truncate=False, *args, **kwargs):
+def get_similarity(a, b, truncate=False, *args):
     if truncate:
         smol = len(a) if len(a) <= len(b) else len(b)
         return SequenceMatcher(None, a[:smol], b[:smol]).ratio()
