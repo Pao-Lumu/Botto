@@ -36,9 +36,9 @@ class Server:
         self.rcon_lock = asyncio.Lock()
         self.last_reconnect = datetime.datetime(1, 1, 1)
 
-        self.bot.loop.create_task(self.chat_from_game_to_guild())
-        self.bot.loop.create_task(self.chat_from_guild_to_game())
-        self.bot.loop.create_task(self.update_server_information())
+        # self.bot.loop.create_task(self.chat_from_game_to_guild())
+        # self.bot.loop.create_task(self.chat_from_guild_to_game())
+        # self.bot.loop.create_task(self.update_server_information())
 
     def __repr__(self):
         return self._repr
@@ -77,6 +77,9 @@ class MinecraftServer(Server):
 
     def __init__(self, bot, process, *args, **kwargs):
         super().__init__(bot, process, *args, **kwargs)
+        self.bot.loop.create_task(self.chat_from_game_to_guild())
+        self.bot.loop.create_task(self.chat_from_guild_to_game())
+        self.bot.loop.create_task(self.update_server_information())
         self.motd = kwargs.pop('motd', "A Minecraft Server")
         self._repr = "Minecraft"
 
@@ -273,6 +276,9 @@ class MinecraftServer(Server):
 class SourceServer(Server):
     def __init__(self, bot, process: psutil.Process, *args, **kwargs):
         super().__init__(bot, process, *args, **kwargs)
+        self.bot.loop.create_task(self.chat_from_game_to_guild())
+        self.bot.loop.create_task(self.chat_from_guild_to_game())
+        self.bot.loop.create_task(self.update_server_information())
         self.log = list()
         self.log_lock = asyncio.Lock()
         self.bot.loop.create_task(self._log_loop())
@@ -317,7 +323,7 @@ class SourceServer(Server):
 
                     if raw_chatmsg:
                         msgs.append(
-                            f"{'[TEAM] ' if raw_chatmsg[0][1] is 'say_team' else ''} *[{raw_chatmsg[0][0]}]*: {raw_chatmsg[0][2]}")
+                            f"{'[TEAM] ' if raw_chatmsg[0][1] == 'say_team' else ''} *[{raw_chatmsg[0][0]}]*: {raw_chatmsg[0][2]}")
                     elif raw_connectionmsg:
                         msgs.append(f"`{' '.join(raw_connectionmsg[0])}`")
                     else:
