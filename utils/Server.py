@@ -307,19 +307,23 @@ class SourceServer(Server):
         chat = regex.compile(
             r"""(?<=: ")([\w\s]+)(?:<\d+><(?:STEAM_0:\d:\d+|Console)><.*>)" (|say|say_team) "(?!\|D> )(.*)\"""")
         while self.bot.is_game_running:
+            print("hello?")
             try:
+                print("this?")
                 lines = []
+                print("should?")
                 async with self.log_lock:
+                    print("work?")
                     if self.log:
                         lines = self.log
                         self.log = []
+                print("maybe?")
                 msgs = list()
+                print("maybe???")
                 for line in lines:
+                    print("maybe?????")
                     raw_connectionmsg = regex.findall(connections, line)
                     raw_chatmsg = regex.findall(chat, line)
-
-                    print(raw_connectionmsg)
-                    print(raw_chatmsg)
 
                     if raw_chatmsg:
                         msgs.append(
