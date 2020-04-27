@@ -317,7 +317,7 @@ class SourceServer(Server):
                 for line in lines:
                     raw_connectionmsg = regex.findall(connections, line)
                     raw_chatmsg = regex.findall(chat, line)
-                    print(raw_chatmsg)
+                    self.bot.bprint(raw_chatmsg)
 
                     if raw_chatmsg:
                         msgs.append(
