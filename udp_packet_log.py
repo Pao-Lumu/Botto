@@ -76,9 +76,8 @@ class Crap:
                     raw_connectionmsg = regex.findall(connections, line)
                     raw_chatmsg = regex.findall(chat, line)
 
-
                     if raw_chatmsg:
-                        msgs.append(f"{'[TEAM] ' if raw_chatmsg[0][1] is 'say_team' else ''}{raw_chatmsg[0][0]}: {raw_chatmsg[0][2]}")
+                        msgs.append(f"{'[TEAM] ' if raw_chatmsg[0][1] == 'say_team' else ''}{raw_chatmsg[0][0]}: {raw_chatmsg[0][2]}")
                     elif raw_connectionmsg:
                         # putting this here prevents people for just typing out the connection format and faking a connection
                         msgs.append(f"`{' '.join(raw_connectionmsg[0])}`")
