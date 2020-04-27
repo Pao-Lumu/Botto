@@ -326,7 +326,7 @@ class SourceServer(Server):
                     self.bot.bprint(f"{self.bot.game} | {''.join(msg)}")
                 continue
             except Exception as e:
-                print("Caught Unexpected exception" + str(e))
+                print("Caught Unexpected exception" + str(e) + "(" + str(type(e)) + ")")
             finally:
                 await asyncio.sleep(.75)
 
@@ -356,7 +356,7 @@ class SourceServer(Server):
                 except futures.TimeoutError:
                     pass
                 except Exception as e:
-                    print("Caught Unexpected exception" + str(e))
+                    print("Caught Unexpected exception" + str(e) + "(" + str(type(e)) + ")")
 
     async def update_server_information(self):
         while self.proc.is_running() and not self.bot.is_closed():
