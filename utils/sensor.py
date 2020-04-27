@@ -31,7 +31,7 @@ def get_running() -> psutil.Process:
                 if proc.username() == psutil.Process().username():
                     return proc
                 else:
-                    raise ProcessLookupError('Process not running or not accessable by bot.')
+                    raise ProcessLookupError('Process not running or not accessible by bot.')
     except AttributeError:
         print('Oh no')
 
@@ -114,7 +114,7 @@ def get_game_version(proc: psutil.Process):
         server = mc.lookup('localhost:22222')
         info = server.status(retries=2)
         return info.version
-    elif proc.is_running() and proc.exe() == 'srcds_linux':
+    elif proc.is_running() and 'srcds_linux' in proc.exe():
         try:
             with src(('127.0.0.1', 22222)) as server:
                 return server.info().get('version')

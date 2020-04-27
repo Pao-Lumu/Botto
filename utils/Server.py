@@ -277,6 +277,7 @@ class SourceServer(Server):
         self.log_lock = asyncio.Lock()
         self.bot.loop.create_task(self._log_loop())
         self._repr = "Source"
+        self.readable_name = kwargs.setdefault('name', 'Source Server')
 
     async def _log_loop(self):
         port = 22242
@@ -366,10 +367,10 @@ class SourceServer(Server):
                 cur_map = info["map"]
                 cur_p = info["player_count"]
                 max_p = info["max_players"]
-                cur_status = f"Playing: Garry's Mod - {mode} on map {cur_map} ({cur_p}/{max_p} players)"
+                cur_status = f"Playing: {self.readable_name} - {mode} on map {cur_map} ({cur_p}/{max_p} players)"
 
                 await self.bot.chat_channel.edit(topic=cur_status)
-                await self.bot.set_bot_status("Garry's Mod", f"{mode} on {cur_map} ({cur_p}/{max_p})",
+                await self.bot.set_bot_status(self.readable_name, f"{mode} on {cur_map} ({cur_p}/{max_p})",
                                               f"CPU: {self.proc.cpu_percent()}% | Mem: {round(self.proc.memory_percent(), 2)}%")
             except discord.Forbidden:
                 print("Bot lacks permission to edit channels. (discord.Forbidden)")
