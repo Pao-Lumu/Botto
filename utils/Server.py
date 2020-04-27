@@ -353,7 +353,7 @@ class SourceServer(Server):
                         rcon.command(f"say |D> {msg.author.name}: Image {msg.attachments[0]['filename']}")
                         self.bot.bprint(
                             f"Discord | {msg.author.name}: Image {msg.attachments[0]['filename']}")
-                except futures.TimeoutError:
+                except asyncio.exceptions.TimeoutError:
                     pass
                 except Exception as e:
                     print("Caught Unexpected exception" + str(e) + "(" + str(type(e)) + ")")
