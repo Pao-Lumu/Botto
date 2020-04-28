@@ -86,11 +86,12 @@ def get_game_info() -> tuple:
             # if the TOML file doesn't exist, create it, load defaults, and save
             pathlib.Path(path.join(cwd, ".gameinfo.toml")).touch()
             lr = str(datetime.now().utcnow())
+            basic = {'name': current.title(), 'folder': cwd, 'last_run': int(lr), 'rcon': '', 'version': '',
+                     'executable': process.name(), 'command': process.cmdline()}
             with open(path.join(cwd, ".gameinfo.toml"), "w+") as file:
-                basic = {'name': current.title(), 'folder': cwd, 'last_run': int(lr), 'rcon': '', 'version': '',
-                         'executable': process.name(), 'command': process.cmdline()}
+                print(toml.dumps(basic))
                 toml.dump(basic, file)
-                return process, basic
+            return process, basic
         else:
             print("Hey... This isn't supposed to happen...")
 
