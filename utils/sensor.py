@@ -47,30 +47,12 @@ def get_game_info() -> tuple:
     looking_for_gameinfo = True
 
     while looking_for_gameinfo:
+        print(cwd)
         root, current = path.split(cwd)
         json_path = path.join(cwd, '.gameinfo.json')
         toml_path = path.join(cwd, '.gameinfo.toml')
-        # I. If old json file found: Load it, create a TOML file with its data, delete it, and return its data
-        if path.isfile(json_path):
-            # 1. LOAD OLD JSON
-            with open(path.join(cwd, '.gameinfo.json')) as file:
-                try:
-                    gi = json.load(file)
-                except json.JSONDecodeError as e:
-                    print(f'JSON decoding error | {e}')
-                    raise json.JSONDecodeError
 
-            # 2. WRITE TO TOML
-            pathlib.Path(path.join(cwd, ".gameinfo.toml")).touch()
-            with open(path.join(cwd, ".gameinfo.toml"), "w+") as file:
-                toml.dump(gi, file)
-
-            # 3. REMOVE JSON
-            os.remove(path.join(cwd, ".gameinfo.json"))
-            return process, gi
-
-        # II. If TOML file found: load it, and return the data
-        elif os.path.isfile(toml_path):
+        if os.path.isfile(toml_path):
             with open(path.join(cwd, ".gameinfo.toml")) as file:
                 try:
                     gi = toml.load(file)
@@ -83,15 +65,18 @@ def get_game_info() -> tuple:
             cwd = root
 
         elif "serverfiles" not in cwd:
-            # if the TOML file doesn't exist, create it, load defaults, and save
-            pathlib.Path(path.join(cwd, ".gameinfo.toml")).touch()
-            lr = str(datetime.now().utcnow())
-            basic = {'name': current.title(), 'folder': cwd, 'last_run': int(lr), 'rcon': '', 'version': '',
-                     'executable': process.name(), 'command': process.cmdline()}
-            with open(path.join(cwd, ".gameinfo.toml"), "w+") as file:
-                print(toml.dumps(basic))
-                toml.dump(basic, file)
-            return process, basic
+            try:
+                # if the TOML file doesn't exist, create it, load defaults, and save
+                pathlib.Path(path.join(cwd, ".gameinfo.toml")).touch()
+                lr = str(datetime.now().utcnow())
+                basic = {'name': current.title(), 'folder': cwd, 'last_run': int(lr), 'rcon': '', 'version': '',
+                         'executable': process.name(), 'command': process.cmdline()}
+                with open(path.join(cwd, ".gameinfo.toml"), "w+") as file:
+                    print(toml.dumps(basic))
+                    toml.dump(basic, file)
+                return process, basic
+            except Exception as e:
+                print(f"Exception {type(e)}: {e}")
         else:
             print("Hey... This isn't supposed to happen...")
 
