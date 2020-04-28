@@ -303,9 +303,9 @@ class SourceServer(Server):
 
     async def chat_from_game_to_guild(self):
         connections = regex.compile(
-            r"""(?<=: ")([\w\s]+)(?:<\d><STEAM_0:\d:\d+><.*>") (?:((?:dis)?connected),? (?|address "(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}:\d{2,5})|(\(reason ".+"?)))""")
+            r"""(?<=: ")([\w\s]+)(<\d><(?:STEAM_0:\d:\d+|\[U:\d:\d+\])><.*>)" (?:((?:dis)?connected),? (?|address "(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}:\d{2,5})|(\(reason ".+"?)))""")
         chat = regex.compile(
-            r"""(?<=: ")([\w\s]+)(?:<\d+><(?:STEAM_0:\d:\d+|Console)><.*>)" (|say|say_team) "(?!\|D> )(.*)\"""")
+            r"""(?<=: ")([\w\s]+)(?:<\d+><(?:STEAM_0:\d:\d+|Console|\[U:\d:\d+\])><.*>)" (|say|say_team) "(?!\|D> )(.*)\"""")
         while self.bot.is_game_running:
             try:
                 lines = []
@@ -317,7 +317,8 @@ class SourceServer(Server):
                 for line in lines:
                     raw_connectionmsg = connections.findall(line)
                     raw_chatmsg = chat.findall(line)
-                    # self.bot.bprint(*raw_chatmsg)
+                    print('DEBUG: Chat Message: ', *raw_chatmsg) if self.bot.debug else False
+                    print('DEBUG: Connection Message: ', *raw_connectionmsg) if self.bot.debug else False
 
                     if raw_chatmsg:
                         msgs.append(
@@ -326,6 +327,7 @@ class SourceServer(Server):
                         msgs.append(f"`{' '.join(raw_connectionmsg[0])}`")
                     else:
                         continue
+                print('DEBUG: list `msgs`: ', *msgs) if self.bot.debug else False
                 if msgs:
                     x = "\n".join(msgs)
                     await self.bot.chat_channel.send(f'{x}')
