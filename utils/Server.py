@@ -368,7 +368,7 @@ class SourceServer(Server):
     async def update_server_information(self):
         while self.proc.is_running() and not self.bot.is_closed():
             try:
-                with src(('192.168.25.40', 22222)) as server:
+                with src((self.bot.cfg["local_ip"], 22222)) as server:
                     info = server.info()
                 mode = info["game"]
                 cur_map = info["map"]
