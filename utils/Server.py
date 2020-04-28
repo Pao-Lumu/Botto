@@ -316,6 +316,8 @@ class SourceServer(Server):
                 msgs = list()
                 for line in lines:
                     print(line)
+                    print(connections)
+                    print(chat)
                     raw_connectionmsg = regex.findall(connections, line)
                     raw_chatmsg = regex.findall(chat, line)
                     self.bot.bprint(raw_chatmsg)
