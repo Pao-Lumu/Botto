@@ -315,12 +315,9 @@ class SourceServer(Server):
                         self.log = []
                 msgs = list()
                 for line in lines:
-                    print(line)
-                    print(connections)
-                    print(chat)
-                    raw_connectionmsg = regex.findall(connections, line)
-                    raw_chatmsg = regex.findall(chat, line)
-                    self.bot.bprint(raw_chatmsg)
+                    raw_connectionmsg = connections.findall(line)
+                    raw_chatmsg = chat.findall(line)
+                    self.bot.bprint(*raw_chatmsg)
 
                     if raw_chatmsg:
                         msgs.append(
