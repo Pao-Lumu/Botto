@@ -47,13 +47,13 @@ def get_game_info() -> tuple:
     looking_for_gameinfo = True
 
     while looking_for_gameinfo:
-        print(cwd)
+
         root, current = path.split(cwd)
-        json_path = path.join(cwd, '.gameinfo.json')
+        # json_path = path.join(cwd, '.gameinfo.json')
         toml_path = path.join(cwd, '.gameinfo.toml')
 
         if os.path.isfile(toml_path):
-            with open(path.join(cwd, ".gameinfo.toml")) as file:
+            with open(toml_path) as file:
                 try:
                     gi = toml.load(file)
                 except toml.TomlDecodeError as e:
@@ -65,13 +65,17 @@ def get_game_info() -> tuple:
             cwd = root
 
         elif "serverfiles" not in cwd:
+            print(cwd)
             try:
                 # if the TOML file doesn't exist, create it, load defaults, and save
-                pathlib.Path(path.join(cwd, ".gameinfo.toml")).touch()
+                pathlib.Path(toml_path).touch()
+                print("created file")
                 lr = str(datetime.now().utcnow())
+                print(lr)
                 basic = {'name': current.title(), 'folder': cwd, 'last_run': int(lr), 'rcon': '', 'version': '',
                          'executable': process.name(), 'command': process.cmdline()}
-                with open(path.join(cwd, ".gameinfo.toml"), "w+") as file:
+                print(basic)
+                with open(toml_path, "w+") as file:
                     print(toml.dumps(basic))
                     toml.dump(basic, file)
                 return process, basic
