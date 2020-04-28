@@ -63,7 +63,8 @@ class OGBot(commands.Bot):
     def is_game_stopped(self):
         return self._game_stopped.is_set()
 
-    def bprint(self, text, *args):
+    # TODO: REWRITE THIS GARBAGE
+    def bprint(self, text: str = '', *args):
         cur_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         lines = text.split("\n")
         for line in lines:

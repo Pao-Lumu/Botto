@@ -317,7 +317,7 @@ class SourceServer(Server):
                 for line in lines:
                     raw_connectionmsg = connections.findall(line)
                     raw_chatmsg = chat.findall(line)
-                    self.bot.bprint(*raw_chatmsg)
+                    # self.bot.bprint(*raw_chatmsg)
 
                     if raw_chatmsg:
                         msgs.append(
