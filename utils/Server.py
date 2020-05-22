@@ -36,9 +36,11 @@ class Server:
         self.rcon_lock = asyncio.Lock()
         self.last_reconnect = datetime.datetime(1, 1, 1)
 
+        if self.__class__.__name__ == 'Server':
+            self.bot.loop.create_task(self.update_server_information())
+
         # self.bot.loop.create_task(self.chat_from_game_to_guild())
         # self.bot.loop.create_task(self.chat_from_guild_to_game())
-        # self.bot.loop.create_task(self.update_server_information())
 
     def __repr__(self):
         return self._repr
