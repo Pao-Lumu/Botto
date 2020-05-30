@@ -1,4 +1,4 @@
-from typing import Iterable, Dict
+from typing import Iterable, Dict, Tuple
 import os
 import pathlib
 from datetime import datetime
@@ -37,7 +37,7 @@ def get_running() -> psutil.Process:
         print('Oh no')
 
 
-def get_game_info() -> Iterable[psutil.Process, Dict]:
+def get_game_info() -> Tuple[psutil.Process, Dict]:
     try:
         process = get_running()
         cwd = process.cwd()
