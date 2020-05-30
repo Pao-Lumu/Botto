@@ -37,7 +37,7 @@ class Game:
                     self.bot._game_stopped.clear()
                     self.bot._game_running.set()
 
-                    self.bot.bprint(f"Server Status | Now Playing: {data['name']} {data['version']}")
+                    self.bot.bprint(f"Server Status | Now Playing: {data['name']}")
                     await self.bot.loop.run_in_executor(None, functools.partial(self.wait_or_when_cancelled, process))
                     self.bot.bprint(f"Server Status | Offline")
 

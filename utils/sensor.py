@@ -105,20 +105,20 @@ def get_game_info() -> Tuple[psutil.Process, Dict]:
 #             toml.dump(masterlist, file)
 
 
-def get_game_version(proc: psutil.Process):
-    if proc.is_running() and proc.exe() == 'java':
-        server = mc.lookup('localhost:22222')
-        info = server.status(retries=2)
-        return info.version
-    elif proc.is_running() and 'srcds_linux' in proc.exe():
-        try:
-            with src(('127.0.0.1', 22222)) as server:
-                return server.info().get('version')
-                # print(server.info())
-                # print(server.rules())
-                # print(server.ping())
-                # print(server.players())
-        except:
-            return ''
-    else:
-        return ''
+# def get_game_version(proc: psutil.Process):
+#     if proc.is_running() and proc.exe() == 'java':
+#         server = mc.lookup('localhost:22222')
+#         info = server.status(retries=2)
+#         return info.version
+#     elif proc.is_running() and 'srcds_linux' in proc.exe():
+#         try:
+#             with src(('127.0.0.1', 22222)) as server:
+#                 return server.info().get('version')
+#                 # print(server.info())
+#                 # print(server.rules())
+#                 # print(server.ping())
+#                 # print(server.players())
+#         except:
+#             return ''
+#     else:
+#         return ''
