@@ -9,6 +9,7 @@ from discord.ext import commands
 from mcstatus import MinecraftServer as mc
 
 from utils import utilities
+from utils import sensor
 
 
 class ServerControl(commands.Cog):
@@ -179,7 +180,7 @@ Items: {items}
                 config[k] = v if v else ""
             return config
         except TypeError:
-            return False
+            return {}
 
     def write_config_file(self, config):
         p = os.path.join(self.bot.game.working_dir, "server.properties")
@@ -197,6 +198,17 @@ Items: {items}
             return True
         else:
             return False
+
+    @commands.is_owner()
+    @commands.command()
+    async def edit_gameinfo(self, ctx):
+        _, gameinfo = sensor.get_game_info()
+        e = discord.Embed()
+        for k, v in gameinfo.items():
+            if k == "rcon.password":
+                v = "SET" if v else "NOT SET"
+            e.add_field(name=f"{k}: {v}", value="-----------------------------")
+        await ctx.send("List of current gameinfo:", embed=e)
 
 
 def setup(bot):

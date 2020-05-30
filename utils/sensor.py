@@ -1,4 +1,4 @@
-import json
+from typing import Iterable, Dict
 import os
 import pathlib
 from datetime import datetime
@@ -14,6 +14,7 @@ from valve.source.a2s import ServerQuerier as src
 def get_running() -> psutil.Process:
     try:
         if psutil.WINDOWS:
+            print("Windows is not supported.")
             for p in psutil.process_iter(attrs=['connections']):
                 for x in p.info['connections']:
                     if x.laddr.port == 22222:
@@ -36,7 +37,7 @@ def get_running() -> psutil.Process:
         print('Oh no')
 
 
-def get_game_info() -> tuple:
+def get_game_info() -> Iterable[psutil.Process, Dict]:
     try:
         process = get_running()
         cwd = process.cwd()
@@ -47,33 +48,40 @@ def get_game_info() -> tuple:
     looking_for_gameinfo = True
 
     while looking_for_gameinfo:
-
         root, current = path.split(cwd)
-        # json_path = path.join(cwd, '.gameinfo.json')
         toml_path = path.join(cwd, '.gameinfo.toml')
 
         if os.path.isfile(toml_path):
             with open(toml_path) as file:
                 try:
-                    gi = toml.load(file)
+                    gi = {**{'name': current.title(),
+                             'game': '',
+                             'folder': cwd,
+                             'rcon': '',
+                             'executable': process.name(),
+                             'command': process.cmdline()},
+                          **toml.load(file)}
                 except toml.TomlDecodeError as e:
                     print(f"TOML decoding error | {e}")
                     raise toml.TomlDecodeError
+            with open(toml_path, "w") as file:
+                toml.dump(gi, file)
             return process, gi
 
         elif "serverfiles" in cwd:
             cwd = root
 
         elif "serverfiles" not in cwd:
-            print(cwd)
             try:
                 # if the TOML file doesn't exist, create it, load defaults, and save
                 pathlib.Path(toml_path).touch()
                 print(f"created new gameinfo file at {cwd}")
-                lr = datetime.now().timestamp()
-                print(lr)
-                basic = {'name': current.title(), 'folder': cwd, 'last_run': int(lr), 'rcon': '', 'version': '',
-                         'executable': process.name(), 'command': process.cmdline()}
+                basic = {'name': current.title(),
+                         'game': '',
+                         'folder': cwd,
+                         'rcon': '',
+                         'executable': process.name(),
+                         'command': process.cmdline()}
                 with open(toml_path, "w+") as file:
                     toml.dump(basic, file)
                 return process, basic
