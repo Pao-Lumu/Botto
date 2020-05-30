@@ -205,9 +205,8 @@ Items: {items}
         _, gameinfo = sensor.get_game_info()
         e = discord.Embed()
         for k, v in gameinfo.items():
-            if k == "rcon.password":
-                v = "SET" if v else "NOT SET"
-            e.add_field(name=f"{k}: {v}", value="-----------------------------")
+            if isinstance(v, str):
+                e.add_field(name=f"{k}: {v}", value="-----------------------------")
         await ctx.send("List of current gameinfo:", embed=e)
 
 

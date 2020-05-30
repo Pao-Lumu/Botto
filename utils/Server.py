@@ -394,9 +394,9 @@ class SourceServer(Server):
 
 
 def generate_server_object(bot, process, gameinfo: dict) -> Server:
-    if 'mc' in gameinfo['folder'].lower():
+    if 'minecraft' in gameinfo['game'].lower():
         return MinecraftServer(bot, process, **gameinfo)
-    elif 'srcds' in gameinfo['executable'].lower():
+    elif 'srcds' in gameinfo['game'].lower():
         return SourceServer(bot, process, **gameinfo)
     else:
         return Server(bot, process, **gameinfo)
