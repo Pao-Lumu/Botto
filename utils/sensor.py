@@ -91,18 +91,18 @@ def get_game_info() -> Tuple[psutil.Process, Dict]:
             print("Hey... This isn't supposed to happen...")
 
 
-def add_to_masterlist(game_info: dict):
-    with open('masterlist.toml') as file:
-        masterlist = toml.load(file)
-    if game_info['folder'] in masterlist.keys():
-        return
-    else:
-        for game_name, game_path in masterlist.items():
-            if [game_info['folder'], game_info['executable']] in game_path and game_name is not game_info['folder']:
-                masterlist.update({game_info['folder']: [game_info['name'], game_info['executable'],
-                                                         game_info['version'], game_info['command']]})
-        with open('masterlist.toml', 'w') as file:
-            toml.dump(masterlist, file)
+# def add_to_masterlist(game_info: dict):
+#     with open('masterlist.toml') as file:
+#         masterlist = toml.load(file)
+#     if game_info['folder'] in masterlist.keys():
+#         return
+#     else:
+#         for game_name, game_path in masterlist.items():
+#             if [game_info['folder'], game_info['executable']] in game_path and game_name is not game_info['folder']:
+#                 masterlist.update(
+#                     {game_info['folder']: [game_info['name'], game_info['executable'], game_info['command']]})
+#         with open('masterlist.toml', 'w') as file:
+#             toml.dump(masterlist, file)
 
 
 def get_game_version(proc: psutil.Process):
