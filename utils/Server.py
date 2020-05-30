@@ -214,10 +214,11 @@ class MinecraftServer(Server):
                 print(e)
                 await self.bot.chat_channel.send("Message failed to send; the bot is broken, tag Evan", delete_after=10)
                 continue
-            except futures.TimeoutError:
+            except asyncio.exceptions.TimeoutError:
                 pass
             except Exception as e:
                 self.bot.bprint("guild2server catchall:")
+                print(type(e))
                 print(e)
 
     async def update_server_information(self):
@@ -393,7 +394,7 @@ class SourceServer(Server):
 
 
 def generate_server_object(bot, process, gameinfo: dict) -> Server:
-    if 'minecraft' in gameinfo['folder'].lower():
+    if 'mc' in gameinfo['folder'].lower():
         return MinecraftServer(bot, process, **gameinfo)
     elif 'srcds' in gameinfo['executable'].lower():
         return SourceServer(bot, process, **gameinfo)
