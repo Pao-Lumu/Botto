@@ -21,6 +21,8 @@ class Comrade(commands.Cog):
     @commands.Cog.listener()
     async def on_message(self, message):
         await self.bot.wait_until_ready()
+        if message.author.bot:
+            return
         if 'egg' in message.clean_content:
             await message.channel.send(':egg:')
         # if message.channel.id == self.bot.meme_channel.id and message.clean_content:
