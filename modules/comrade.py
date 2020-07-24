@@ -148,11 +148,11 @@ class Comrade(commands.Cog):
         for x in str(abs(hsh)):
             sum_of_hash += int(x)
         egg = sum_of_hash % 6
-        donut = sum_of_hash // 6
+        donut = sum_of_hash // 12
 
         await ctx.send(f"""I rate your message...
-{" ".join([':egg:' for z in range(0, egg)])} eggs out of :egg: and
-{" ".join([':doughnut:' for z in range(0, donut)])} doughnuts out of :doughnut:""")
+{" ".join([':egg:' for z in range(0, egg)])} eggs and
+{" ".join([':doughnut:' for z in range(0, donut)])} doughnuts""")
 
     @staticmethod
     async def auto_thonk(msg):
