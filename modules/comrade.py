@@ -143,7 +143,7 @@ class Comrade(commands.Cog):
     @helpers.is_human()
     @commands.command()
     async def rate(self, ctx):
-        hsh = hash(ctx.message)
+        hsh = hash(ctx.message.clean_content)
         sum_of_hash = 0
         for x in str(abs(hsh)):
             sum_of_hash += int(x)
