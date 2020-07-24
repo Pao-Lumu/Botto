@@ -19,12 +19,13 @@ class Comrade(commands.Cog):
 
     @helpers.is_human()
     @commands.Cog.listener()
-    async def on_message(self, message):
+    async def on_message(self, message: discord.Message):
         await self.bot.wait_until_ready()
         if message.author.bot:
             return
-        if 'egg' in message.clean_content:
-            await message.channel.send(':egg:')
+        if 'egg' in message.clean_content.lower():
+            egg = [':egg:' for x in range(message.clean_content.lower().count('egg'))]
+            await message.channel.send(" ".join(egg))
         # if message.channel.id == self.bot.meme_channel.id and message.clean_content:
         #     if message.clean_content[0] != '#' and message.clean_content[0] != '>':
         #         await self.auto_comrade_check(message)
