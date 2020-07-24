@@ -26,6 +26,11 @@ class Comrade(commands.Cog):
         if 'egg' in message.clean_content.lower():
             egg = [':egg:' for x in range(message.clean_content.lower().count('egg'))]
             await message.channel.send(" ".join(egg))
+        if message.attachments:
+            for attachment in message.attachments:
+                if 'egg' in attachment.filename.lower():
+                    egg = [':egg:' for x in range(message.clean_content.lower().count('egg'))]
+                    await message.channel.send(" ".join(egg))
         # if message.channel.id == self.bot.meme_channel.id and message.clean_content:
         #     if message.clean_content[0] != '#' and message.clean_content[0] != '>':
         #         await self.auto_comrade_check(message)
