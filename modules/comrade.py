@@ -140,6 +140,20 @@ class Comrade(commands.Cog):
         except OSError:
             self.bot.bprint("Hey lotus why don't you eat a fucking dick ~ Zach 2018")
 
+    @helpers.is_human()
+    @commands.command()
+    async def rate(self, ctx):
+        hsh = hash(ctx.message)
+        sum_of_hash = 0
+        for x in str(abs(hsh)):
+            sum_of_hash += int(x)
+        egg = sum_of_hash % 6
+        donut = sum_of_hash // 6
+
+        await ctx.send(f"""I rate your message...
+{" ".join([':egg:' for z in range(0, egg)])} eggs out of :egg: and
+{" ".join([':doughnut:' for z in range(0, donut)])} doughnuts out of :doughnut:""")
+
     @staticmethod
     async def auto_thonk(msg):
         hmm = re.compile("^[Hh]+[Mm][Mm]+\\.*")
