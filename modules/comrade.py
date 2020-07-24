@@ -21,6 +21,8 @@ class Comrade(commands.Cog):
     @commands.Cog.listener()
     async def on_message(self, message):
         await self.bot.wait_until_ready()
+        if message.clean_content.contains('egg'):
+            await message.channel.send(':egg:')
         # if message.channel.id == self.bot.meme_channel.id and message.clean_content:
         #     if message.clean_content[0] != '#' and message.clean_content[0] != '>':
         #         await self.auto_comrade_check(message)
