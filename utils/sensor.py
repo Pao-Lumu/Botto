@@ -37,7 +37,7 @@ def get_running() -> psutil.Process:
         print('Oh no')
 
 
-def get_game_info() -> Tuple[psutil.Process, Dict] | Tuple[None, None]:
+def get_game_info() -> Tuple[psutil.Process, Dict]:
     try:
         process = get_running()
         cwd = process.cwd()
