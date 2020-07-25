@@ -26,7 +26,8 @@ class Comrade(commands.Cog):
         self.bot.bprint(message.clean_content)
         msg = message.clean_content.lower()
         if 'egg' in msg or '🥚' in msg:
-            egg = [':egg:' for x in range(message.clean_content.lower().count('egg'))]
+            egg = [':egg:' for x in
+                   range(message.clean_content.lower().count('egg') + message.clean_content.lower().count('🥚'))]
             await message.channel.send(" ".join(egg))
         if message.attachments:
             for attachment in message.attachments:
