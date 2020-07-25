@@ -26,8 +26,8 @@ class Comrade(commands.Cog):
         self.bot.bprint(message.clean_content)
         msg = message.clean_content.lower()
         if 'egg' in msg or '🥚' in msg:
-            if re.match(r'what,? you egg\??', msg):
-                await message.channel.send(':question:, :point_up: :egg:?')
+            if re.match(r'what,? you egg', msg):
+                await message.channel.send(':question:, :point_up: :egg::question:')
                 return
             egg = [':egg:' for x in
                    range(message.clean_content.lower().count('egg') + message.clean_content.lower().count('🥚'))]
