@@ -37,6 +37,8 @@ class Comrade(commands.Cog):
                 if 'egg' in attachment.filename.lower():
                     egg = [':egg:' for x in range(attachment.filename.lower().count('egg'))]
                     await message.channel.send(" ".join(egg))
+        if 'gay' in msg:
+            await message.channel.send("""I'm not gay. Sorry gays.""")
         # if message.channel.id == self.bot.meme_channel.id and message.clean_content:
         #     if message.clean_content[0] != '#' and message.clean_content[0] != '>':
         #         await self.auto_comrade_check(message)
