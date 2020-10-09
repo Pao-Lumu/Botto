@@ -37,7 +37,10 @@ class MiniActivity:
 
     def __hash__(self):
         if self.type == ActivityType.listening:
-            return hash((self.type, self.name, self.artist, self.title, self.track_id))
+            if hasattr(self, 'artist'):
+                return hash((self.type, self.name, self.artist, self.title, self.track_id))
+            else:
+                return hash((self.type, self.name))
         else:
             return hash((self.type, self.name))
 
