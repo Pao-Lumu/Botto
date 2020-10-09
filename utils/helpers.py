@@ -40,7 +40,7 @@ class MiniActivity:
             if hasattr(self, 'artist'):
                 return hash((self.type, self.name, self.artist, self.title, self.track_id))
             else:
-                return hash((self.type, self.name))
+                return hash((self.type, self.name, self.artist))
         else:
             return hash((self.type, self.name))
 
