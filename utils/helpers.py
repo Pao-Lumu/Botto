@@ -25,7 +25,7 @@ class MiniActivity:
             if self.name != other.name or other.type != self.type:
                 return False
             elif self.name == other.name and self.type == ActivityType.listening:
-                if self.track_id == other.track_id:
+                if hash(self) == hash(other):
                     return True
                 else:
                     return False
