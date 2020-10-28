@@ -113,6 +113,7 @@ class Santa(commands.Cog):
         if ctx.author.id == self.bot.owner_id:
             async with self.hohoholy_blessings:
                 people = list()
+                guild = self.bot.get_guild(442600877434601472)
                 for x, y in self.lookup.items():
                     people.append(x)
 
@@ -165,7 +166,7 @@ Secret Santa gifts can be silly or serious.
 Please try not to give away who you are to your secret santa, as that ruins the fun of the event.
 Misleading your secret santa and giving them a different one is allowed & encouraged.
 """
-                    member = self.bot.get_user(discord_id)
+                    member = guild.get_member(discord_id)
                     print(f"{gifter}: {giftee}")
                     print(member)
                     # await member.send(embed=e)
