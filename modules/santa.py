@@ -168,9 +168,9 @@ Misleading your secret santa and giving them a different one is allowed & encour
 """
                     member = guild.get_member(discord_id)
                     print(f"{gifter}: {giftee}")
-                    print(member)
+                    print(type(member))
                     # await member.send(embed=e)
-                except :
+                except:
                     print()
         else:
             async with self.hohoholy_blessings:
