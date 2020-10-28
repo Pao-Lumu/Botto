@@ -167,11 +167,11 @@ Misleading your secret santa and giving them a different one is allowed & encour
 """
                     member = self.bot.get_user(discord_id) if self.bot.get_user(discord_id) is not None else await self.bot.fetch_user(discord_id)
                     # member = await self.bot.fetch_user(discord_id)
-                    print(f"{gifter}: {giftee}")
-                    print(member)
-                    # await member.send(embed=e)
-                except :
-                    print()
+                    # print(f"{gifter}: {giftee}")
+                    # print(member)
+                    await member.send(embed=e)
+                except Exception as e:
+                    print(f"{type(e)}: {e}")
         else:
             async with self.hohoholy_blessings:
                 try:
