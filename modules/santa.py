@@ -165,7 +165,7 @@ Secret Santa gifts can be silly or serious.
 Please try not to give away who you are to your secret santa, as that ruins the fun of the event.
 Misleading your secret santa and giving them a different one is allowed & encouraged.
 """
-                    member = self.bot.get_user(discord_id)
+                    member = self.bot.fetch_user(discord_id)
                     print(f"{gifter}: {giftee}")
                     print(member)
                     # await member.send(embed=e)
