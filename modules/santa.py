@@ -119,9 +119,16 @@ class Santa(commands.Cog):
                 continue_go = True
                 while continue_go:
                     random.shuffle(people)
-                    used_combos = [('Evan', 'Aero'), ('Aero', 'Zach'), ('Zach', 'Brandon'), ('Brandon', 'Jeromie'),
-                                   ('Jeromie', 'Steven'), ('Steven', 'David'),
-                                   ('David', 'Evan')]  # combos from previous years
+
+                    used_combos = [
+                        # Combos from 2018
+                        ('Evan', 'Aero'), ('Aero', 'Zach'), ('Zach', 'Brandon'), ('Brandon', 'Jeromie'),
+                        ('Jeromie', 'Steven'), ('Steven', 'David'), ('David', 'Evan'),
+
+                        # Combos from 2019
+                        ('Evan', 'Brandon'), ('Brandon', 'Aero'), ('Aero', 'Jeromie'), ('Jeromie', 'Zach'), ('Zach', 'CJ'),
+                        ('CJ', 'David'), ('David', 'Steven'), ('Steven', 'Evan')
+                    ]
                     banned_combos = [('Evan', 'Zach'), ('CJ', 'Forester'), ('CJ', 'Tim')]
 
                     continue_go = self.check_for_combos(people, used_combos, banned_combos)
