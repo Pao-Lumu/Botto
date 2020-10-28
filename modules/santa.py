@@ -111,7 +111,6 @@ class Santa(commands.Cog):
     async def secret(self, ctx):
         """Find out who your secret santa is for this year"""
         if ctx.author.id == self.bot.owner_id:
-            guild = self.bot.get_guild(442600877434601472)
             async with self.hohoholy_blessings:
                 people = list()
                 for x, y in self.lookup.items():
@@ -166,11 +165,11 @@ Secret Santa gifts can be silly or serious.
 Please try not to give away who you are to your secret santa, as that ruins the fun of the event.
 Misleading your secret santa and giving them a different one is allowed & encouraged.
 """
-                    member = guild.get_member(discord_id)
+                    member = self.bot.get_user(discord_id)
                     print(f"{gifter}: {giftee}")
-                    print(type(member))
+                    print(member)
                     # await member.send(embed=e)
-                except:
+                except :
                     print()
         else:
             async with self.hohoholy_blessings:
