@@ -111,9 +111,9 @@ class Santa(commands.Cog):
     async def secret(self, ctx):
         """Find out who your secret santa is for this year"""
         if ctx.author.id == self.bot.owner_id:
+            guild = self.bot.get_guild(442600877434601472)
             async with self.hohoholy_blessings:
                 people = list()
-                guild = self.bot.get_guild(442600877434601472)
                 for x, y in self.lookup.items():
                     people.append(x)
 
