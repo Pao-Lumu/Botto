@@ -14,10 +14,7 @@ from discord.ext import commands
 class OGBot(commands.Bot):
 
     def __init__(self, *args, **kwargs):
-        intents = discord.Intents.default()
-        intents.presences = True
-        intents.typing = True
-        intents.guilds = True
+        intents = discord.Intents.all()
         self.dt_start = None
         command_prefix = kwargs.pop('command_prefix', commands.when_mentioned_or('.'))
         super().__init__(command_prefix=command_prefix, intents=intents, *args, **kwargs)
