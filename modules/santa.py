@@ -144,12 +144,13 @@ class Santa(commands.Cog):
                 self.conn.commit()
 
             for x, person in enumerate(people):
-                discord_id = self.lookup[person]
-                gifter = person
-                giftee = people[(x + 1) % len(people)]
-                e = discord.Embed()
-                e.title = "{}, you are {}'s secret santa.".format(gifter, giftee)
-                e.description = """
+                try:
+                    discord_id = self.lookup[person]
+                    gifter = person
+                    giftee = people[(x + 1) % len(people)]
+                    e = discord.Embed()
+                    e.title = "{}, you are {}'s secret santa.".format(gifter, giftee)
+                    e.description = """
 Use `>ask` if you'd like to ask them their shirt size, shoe size, favorite color, etc. directly
 Use `>respond` if your secret santa `>ask`s you a question via DM and you want to respond.
  
@@ -164,8 +165,12 @@ Secret Santa gifts can be silly or serious.
 Please try not to give away who you are to your secret santa, as that ruins the fun of the event.
 Misleading your secret santa and giving them a different one is allowed & encouraged.
 """
-                member = self.bot.get_user(discord_id)
-                await member.send(embed=e)
+                    member = self.bot.get_user(discord_id)
+                    print(f"{gifter}: {giftee}")
+                    print(member)
+                    # await member.send(embed=e)
+                except :
+                    print()
         else:
             async with self.hohoholy_blessings:
                 try:
