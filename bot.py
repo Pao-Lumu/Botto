@@ -87,9 +87,9 @@ def load_config() -> dict:
 # Bot Event Overrides
 
 
-@bot.event
-async def on_resumed():
-    bot.bprint('Resumed...')
+# @bot.event
+# async def on_resumed():
+#     bot.bprint('Resumed...')
 
 
 @bot.event
