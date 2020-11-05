@@ -198,7 +198,11 @@ Misleading your secret santa is allowed & encouraged.
         if nn:
             member = self.bot.get_user(int(g_id))
             msg = "`>ask` message from your gifter:\n{}".format(nn)
-            await member.send(content=msg)
+            try:
+                await member.send(content=msg)
+                await ctx.send("Message Sent!")
+            except:
+                await ctx.send("Message may have failed to send. Consult Evan.")
         else:
             await ctx.send("Please add a message.")
 
@@ -212,7 +216,11 @@ Misleading your secret santa is allowed & encouraged.
         if nn:
             member = self.bot.get_user(int(g_id))
             msg = "`>respond` message from your giftee, {}:\n{}".format(u_name, nn)
-            await member.send(content=msg)
+            try:
+                await member.send(content=msg)
+                await ctx.send("Message Sent!")
+            except:
+                await ctx.send("Message may have failed to send. Consult Evan.")
         else:
             await ctx.send("Please add a message.")
 
