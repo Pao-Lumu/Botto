@@ -11,6 +11,7 @@ import toml
 
 
 def get_running() -> psutil.Process:
+    print("get_running")
     try:
         if psutil.WINDOWS:
             print("Windows is not supported.")
@@ -37,12 +38,14 @@ def get_running() -> psutil.Process:
 
 
 def is_lgsm(proc: psutil.Process):
+    print("is_lgsm")
     if "serverfiles" in str(proc.cwd()):
         return True
     return False
 
 
 def find_root_directory(start_dir: Path) -> path:
+    print("find_root_directory")
     if not path.exists(start_dir):
         raise FileNotFoundError("Not a valid file/directory path or not accessible")
     else:
@@ -60,6 +63,7 @@ def find_root_directory(start_dir: Path) -> path:
 
 
 def get_game_info() -> Tuple[psutil.Process, Dict]:
+    print("running get_game_info")
     try:
         process = get_running()
         cwd = process.cwd()
