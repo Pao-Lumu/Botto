@@ -14,7 +14,6 @@ import toml
 # noinspection PyPackageRequirements
 from discord.ext import commands
 
-import game
 import ogbot_base
 from ogbotcmd import OGBotCmd
 from utils import helpers
@@ -28,7 +27,8 @@ initial_extensions = [
     'modules.music',
     'modules.comrade',
     'modules.server',
-    'modules.warframe'
+    'modules.warframe',
+    'modules.game'
 ]
 
 bot = ogbot_base.OGBot(command_prefix=commands.when_mentioned_or(">"), cog_folder="modules",
@@ -359,7 +359,7 @@ if __name__ == '__main__':
 
     bot.log = log
     bot.cfg = config['bot_configuration']
-    game = game.Game(bot)
+    # game = game.Game(bot)
     try:
         cp1 = datetime.datetime.now() - start
         bot.run(token, start_time=start)

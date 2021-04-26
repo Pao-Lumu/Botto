@@ -1,3 +1,12 @@
+# noinspection PyPackageRequirements
+import asyncio
+import os
+from difflib import SequenceMatcher
+
+import discord
+from discord.ext import commands
+
+from utils import helpers
 import asyncio
 import functools
 
@@ -7,7 +16,7 @@ from utils import Server as srv
 from utils import sensor
 
 
-class Game:
+class Game(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
@@ -72,3 +81,7 @@ class Game:
                 self.bot.game = None
                 await self.bot.change_presence()
                 await self.bot.wait_until_game_running(2)
+
+
+def setup(bot):
+    bot.add_cog(Game(bot))

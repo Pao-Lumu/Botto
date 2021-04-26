@@ -93,7 +93,7 @@ def get_game_info() -> Tuple[psutil.Process, Dict]:
                     break
 
         # define paths to noteworthy places
-        root_dir = root
+        root_dir = root.as_posix()
         log_dir = path.join(root_dir, 'log')
         server_files = path.join(root_dir, 'serverfiles')
         lgsm_dir = path.join(root_dir, 'lgsm')
@@ -122,7 +122,7 @@ def get_game_info() -> Tuple[psutil.Process, Dict]:
                     'server_files': server_files,
                     # This list comprehension is really annoying and probably pointless.
                     'rcon_password': [v if re.match("rcon.?pa", k, re.I) else '' for k, v in game_cfg.items()][0],
-                    'launch_script': path.join(root_dir, game_name + "server.sh"),
+                    'launch_script': path.join(root_dir, game_name),
                     'executable': process.name(),
                     'command': process.cmdline()}
     # if the TOML file exists, load then override the defaults, and save
