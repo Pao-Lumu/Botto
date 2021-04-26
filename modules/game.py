@@ -69,10 +69,9 @@ class Game(commands.Cog):
         await self.bot.wait_until_game_running(1)
         self.bot.game = None
         while not self.bot.is_closed():
-            process, data = sensor.get_game_info()
-
             # If game is running upon instantiation
             if self.bot.is_game_running:
+                process, data = sensor.get_game_info()
                 self.bot.game = srv.generate_server_object(self.bot, process, data)
                 await self.bot.wait_until_game_stopped(2)
 

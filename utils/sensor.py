@@ -11,10 +11,10 @@ import toml
 
 
 def get_running() -> psutil.Process:
-    print("get_running")
+    # print("get_running")
     try:
         if psutil.WINDOWS:
-            print("Windows is not supported.")
+            print("Windows might be compatible sometimes, but is not supported.")
             for p in psutil.process_iter(attrs=['connections']):
                 for x in p.info['connections']:
                     if x.laddr.port == 22222:
@@ -38,19 +38,19 @@ def get_running() -> psutil.Process:
 
 
 def is_lgsm(proc: psutil.Process):
-    print("is_lgsm")
+    # print("is_lgsm")
     if "serverfiles" in str(proc.cwd()):
         return True
     return False
 
 
-def find_root_directory(start_dir: str) -> Path:
-    print("find_root_directory")
+def find_root_directory(start_dir: str) -> str:
+    # print("find_root_directory")
     if not os.path.isdir(start_dir):
         print(start_dir)
         raise FileNotFoundError(start_dir + "is either not a valid directory path or not accessible")
     else:
-        print("starting to search")
+        # print("starting to search")
         parent = start_dir
         looking_for_root = True
         while looking_for_root:
@@ -59,14 +59,14 @@ def find_root_directory(start_dir: str) -> Path:
                 continue
             elif "serverfiles" not in parent:  # if already in top folder or running MC return parent
                 looking_for_root = False
-                print("found/defaulted")
-                return Path(parent)
+                # print("found/defaulted")
+                return parent
             else:
                 print("Hey... This isn't supposed to happen...")
 
 
 def get_game_info() -> Tuple[psutil.Process, Dict]:
-    print("running get_game_info")
+    # print("running get_game_info")
     try:
         process = get_running()
         cwd = process.cwd()
@@ -77,7 +77,7 @@ def get_game_info() -> Tuple[psutil.Process, Dict]:
     root = find_root_directory(cwd)
     toml_path = path.join(root, '.gameinfo.toml')
 
-    defaults = {'name': root.name,
+    defaults = {'name': Path(root).name,
                 'game': '',
                 'folder': cwd,
                 'rcon': '',
@@ -93,7 +93,7 @@ def get_game_info() -> Tuple[psutil.Process, Dict]:
                     break
 
         # define paths to noteworthy places
-        root_dir = root.as_posix()
+        root_dir = root
         log_dir = path.join(root_dir, 'log')
         server_files = path.join(root_dir, 'serverfiles')
         lgsm_dir = path.join(root_dir, 'lgsm')
@@ -139,6 +139,8 @@ def get_game_info() -> Tuple[psutil.Process, Dict]:
         except toml.TomlDecodeError as e:
             print(f"TOML decoding error | {e}")
             raise toml.TomlDecodeError
+        except Exception as e:
+            print(f"Exception {type(e)}: {e}")
         return process, game_info
     else:
         try:
