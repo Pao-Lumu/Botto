@@ -88,7 +88,7 @@ def get_game_info() -> Tuple[psutil.Process, Dict]:
         game_name = ""
         with os.scandir(root) as scan:
             for f in scan:
-                if f.name.endswith('server.sh'):
+                if f.name.endswith('server'):
                     game_name = f.name
                     break
 
@@ -97,7 +97,7 @@ def get_game_info() -> Tuple[psutil.Process, Dict]:
         log_dir = path.join(root_dir, 'log')
         server_files = path.join(root_dir, 'serverfiles')
         lgsm_dir = path.join(root_dir, 'lgsm')
-        config_dir = path.join(lgsm_dir, 'config-lgsm', game_name + 'server')
+        config_dir = path.join(lgsm_dir, 'config-lgsm', game_name)
         readable_name = ''
 
         try:
@@ -120,24 +120,25 @@ def get_game_info() -> Tuple[psutil.Process, Dict]:
                     'logs': log_dir,
                     'configs': config_dir,
                     'server_files': server_files,
-                    # This list comprehension is annoying and probably pointless.
+                    # This list comprehension is really annoying and probably pointless.
                     'rcon_password': [v if re.match("rcon.?pa", k, re.I) else '' for k, v in game_cfg.items()][0],
                     'launch_script': path.join(root_dir, game_name + "server.sh"),
                     'executable': process.name(),
                     'command': process.cmdline()}
-    # if the TOML file exists, load then override the defaults
+    # if the TOML file exists, load then override the defaults, and save
     # this should correctly add new fields when they are programmed in.
     if os.path.isfile(toml_path):
-        with open(toml_path) as file:
-            try:
-                game_info = {**defaults, **toml.load(file)}
+        try:
+            with open(toml_path) as file:
 
-                with open(toml_path, "w") as file:
-                    toml.dump(game_info, file)
+                    game_info = {**defaults, **toml.load(file)}
 
-            except toml.TomlDecodeError as e:
-                print(f"TOML decoding error | {e}")
-                raise toml.TomlDecodeError
+            with open(toml_path, "w") as file:
+                toml.dump(game_info, file)
+
+        except toml.TomlDecodeError as e:
+            print(f"TOML decoding error | {e}")
+            raise toml.TomlDecodeError
         return process, game_info
     else:
         try:
