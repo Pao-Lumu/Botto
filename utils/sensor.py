@@ -1,14 +1,13 @@
-from typing import Iterable, Dict, Tuple
+import csv
 import os
-import pathlib
-from datetime import datetime
+import re
 from os import path
+from pathlib import Path
 from subprocess import PIPE, DEVNULL
+from typing import Dict, Tuple
 
 import psutil
 import toml
-from mcstatus import MinecraftServer as mc
-from valve.source.a2s import ServerQuerier as src
 
 
 def get_running() -> psutil.Process:
@@ -37,6 +36,29 @@ def get_running() -> psutil.Process:
         print('Oh no')
 
 
+def is_lgsm(proc: psutil.Process):
+    if "serverfiles" in str(proc.cwd()):
+        return True
+    return False
+
+
+def find_root_directory(start_dir: Path) -> path:
+    if not path.exists(start_dir):
+        raise FileNotFoundError("Not a valid file/directory path or not accessible")
+    else:
+        parent = start_dir
+        looking_for_root = True
+        while looking_for_root:
+            parent, current = path.split(parent)
+            if "serverfiles" in parent:  # if using LGSM, move up until you're in the top folder, if using MC, ignore
+                continue
+            elif "serverfiles" not in parent:  # if already in top folder or running MC return parent
+                return parent
+            else:
+                print("Hey... This isn't supposed to happen...")
+    pass
+
+
 def get_game_info() -> Tuple[psutil.Process, Dict]:
     try:
         process = get_running()
@@ -45,80 +67,83 @@ def get_game_info() -> Tuple[psutil.Process, Dict]:
         raise ProcessLookupError('Process not running or not accessible by bot.')
     except AttributeError:
         return None, None
-    looking_for_gameinfo = True
+    root = find_root_directory(cwd)
+    toml_path = path.join(root, '.gameinfo.toml')
 
-    while looking_for_gameinfo:
-        root, current = path.split(cwd)
-        toml_path = path.join(cwd, '.gameinfo.toml')
+    defaults = {'name': root.name,
+                'game': '',
+                'folder': cwd,
+                'rcon': '',
+                'executable': process.name(),
+                'command': process.cmdline()}
 
-        if os.path.isfile(toml_path):
-            with open(toml_path) as file:
-                try:
-                    gi = {**{'name': current.title(),
-                             'game': '',
-                             'folder': cwd,
-                             'rcon': '',
-                             'executable': process.name(),
-                             'command': process.cmdline()},
-                          **toml.load(file)}
-                except toml.TomlDecodeError as e:
-                    print(f"TOML decoding error | {e}")
-                    raise toml.TomlDecodeError
-            with open(toml_path, "w") as file:
-                toml.dump(gi, file)
-            return process, gi
+    if is_lgsm(process):
+        game_name = ""
+        with os.scandir(root) as scan:
+            for f in scan:
+                if f.name.endswith('server.sh'):
+                    game_name = f.name
+                    break
 
-        elif "serverfiles" in cwd:
-            cwd = root
+        # define paths to noteworthy places
+        root_dir = root
+        log_dir = path.join(root_dir, 'log')
+        server_files = path.join(root_dir, 'serverfiles')
+        lgsm_dir = path.join(root_dir, 'lgsm')
+        config_dir = path.join(lgsm_dir, 'config-lgsm', game_name + 'server')
+        readable_name = ''
 
-        elif "serverfiles" not in cwd:
-            try:
-                # if the TOML file doesn't exist, create it, load defaults, and save
-                pathlib.Path(toml_path).touch()
-                print(f"created new gameinfo file at {cwd}")
-                basic = {'name': current.title(),
-                         'game': '',
-                         'folder': cwd,
-                         'rcon': '',
-                         'executable': process.name(),
-                         'command': process.cmdline()}
-                with open(toml_path, "w+") as file:
-                    toml.dump(basic, file)
-                return process, basic
-            except Exception as e:
-                print(f"Exception {type(e)}: {e}")
-        else:
-            print("Hey... This isn't supposed to happen...")
-
-
-# def add_to_masterlist(game_info: dict):
-#     with open('masterlist.toml') as file:
-#         masterlist = toml.load(file)
-#     if game_info['folder'] in masterlist.keys():
-#         return
-#     else:
-#         for game_name, game_path in masterlist.items():
-#             if [game_info['folder'], game_info['executable']] in game_path and game_name is not game_info['folder']:
-#                 masterlist.update(
-#                     {game_info['folder']: [game_info['name'], game_info['executable'], game_info['command']]})
-#         with open('masterlist.toml', 'w') as file:
-#             toml.dump(masterlist, file)
-
-
-def get_game_version(proc: psutil.Process):
-    if proc.is_running() and proc.exe() == 'java':
-        server = mc.lookup('localhost:22222')
-        info = server.status(retries=2)
-        return info.version
-    elif proc.is_running() and 'srcds_linux' in proc.exe():
         try:
-            with src(('127.0.0.1', 22222)) as server:
-                return server.info().get('version')
-                # print(server.info())
-                # print(server.rules())
-                # print(server.ping())
-                # print(server.players())
-        except:
-            return ''
+            with open(path.join(config_dir, f'{game_name}.cfg')) as f:
+                game_cfg = toml.load(f)
+        except toml.TomlDecodeError as e:
+            print("File failed to parse.")
+            print(e)
+            print(e.mro())
+
+        with open(path.join(lgsm_dir, 'data', 'serverlist.csv')) as svr_names:
+            for row in csv.reader(svr_names, csv.unix_dialect):
+                if row[1] == game_name:
+                    readable_name = row[2]
+                    break
+
+        defaults = {'name': readable_name,
+                    'game': game_name,
+                    'folder': root_dir,
+                    'logs': log_dir,
+                    'configs': config_dir,
+                    'server_files': server_files,
+                    # This list comprehension is annoying and probably pointless.
+                    'rcon_password': [v if re.match("rcon.?pa", k, re.I) else '' for k, v in game_cfg.items()][0],
+                    'launch_script': path.join(root_dir, game_name + "server.sh"),
+                    'executable': process.name(),
+                    'command': process.cmdline()}
+    # if the TOML file exists, load then override the defaults
+    # this should correctly add new fields when they are programmed in.
+    if os.path.isfile(toml_path):
+        with open(toml_path) as file:
+            try:
+                game_info = {**defaults, **toml.load(file)}
+
+                with open(toml_path, "w") as file:
+                    toml.dump(game_info, file)
+
+            except toml.TomlDecodeError as e:
+                print(f"TOML decoding error | {e}")
+                raise toml.TomlDecodeError
+        return process, game_info
     else:
-        return ''
+        try:
+            # if the TOML file doesn't exist, create it, load defaults, and save
+            Path(toml_path).touch()
+            print(f"created new gameinfo file at {cwd}")
+
+            with open(toml_path, "w") as file:
+                toml.dump(defaults, file)
+        except toml.TomlDecodeError as e:
+            print(f"TOML decoding error | {e}")
+            raise toml.TomlDecodeError
+        except Exception as e:
+            print(f"Exception {type(e)}: {e}")
+
+        return process, defaults
