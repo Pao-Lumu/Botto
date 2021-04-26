@@ -16,6 +16,7 @@ import valve.source
 from discord import Forbidden
 from mcstatus import MinecraftServer as mc
 from valve.source.a2s import ServerQuerier as src
+import a2s
 
 valvercon.RCONMessage.ENCODING = "utf-8"
 
@@ -48,11 +49,14 @@ class Server:
     def is_running(self) -> bool:
         return self.proc.is_running()
 
-    async def _log_loop(self): pass
+    async def _log_loop(self):
+        pass
 
-    async def chat_from_game_to_guild(self): pass
+    async def chat_from_game_to_guild(self):
+        pass
 
-    async def chat_from_guild_to_game(self): pass
+    async def chat_from_guild_to_game(self):
+        pass
 
     async def update_server_information(self):
         print("server")
@@ -73,6 +77,36 @@ class Server:
 
     def is_chat_channel(self, m) -> bool:
         return m.channel == self.bot.chat_channel
+
+
+class A2SCompatibleServer(Server):
+    def __init__(self, bot, process, *args, **kwargs):
+        super().__init__(bot, process, *args, **kwargs)
+        self._repr = "A2S-Compatible Server"
+        self.readable_name = kwargs.setdefault('name', 'A2S-Compatible Server')
+
+    async def update_server_information(self):
+        while self.proc.is_running() and not self.bot.is_closed():
+            try:
+                info = a2s.info((self.bot.cfg["local_ip"], 22222))
+
+                mode = info["game"]
+                cur_map = info["map"]
+                cur_p = info["player_count"]
+                max_p = info["max_players"]
+                chat_status = f"Playing: {self.readable_name} | ({cur_p} players)"
+
+                await self.bot.chat_channel.edit(topic=chat_status)
+                await self.bot.set_bot_status(self.readable_name,
+                                              f"({cur_p} player(s) online)",
+                                              f"CPU: {self.proc.cpu_percent()}% | Mem: {round(self.proc.memory_percent(), 2)}%")
+            except discord.Forbidden:
+                print("Bot lacks permission to edit channels. (discord.Forbidden)")
+            except valve.source.NoResponseError:
+                print("No Response from server before timeout (NoResponseError)")
+            except Exception as e:
+                print(f"Error: {e} {type(e)}")
+            await asyncio.sleep(30)
 
 
 class MinecraftServer(Server):
@@ -276,7 +310,28 @@ class MinecraftServer(Server):
                 await asyncio.sleep(30)
 
 
-class SourceServer(Server):
+class ValheimServer(A2SCompatibleServer):
+    def __init__(self, bot, process: psutil.Process, *args, **kwargs):
+        super().__init__(bot, process, *args, **kwargs)
+        self.bot.loop.create_task(self.chat_from_game_to_guild())
+        self.bot.loop.create_task(self.chat_from_guild_to_game())
+        self.bot.loop.create_task(self.update_server_information())
+        self.log = list()
+        self.log_lock = asyncio.Lock()
+        self.bot.loop.create_task(self._log_loop())
+        self._repr = "Valheim"
+        self.readable_name = kwargs.setdefault('name', 'Valheim Server')
+
+        self.logs = kwargs.pop('logs')
+
+    async def chat_from_game_to_guild(self):
+        pass  # NYI
+
+    async def chat_from_guild_to_game(self):
+        pass  # Need to look into the RCON mod I have.
+
+
+class SourceServer(A2SCompatibleServer):
     def __init__(self, bot, process: psutil.Process, *args, **kwargs):
         super().__init__(bot, process, *args, **kwargs)
         self.bot.loop.create_task(self.chat_from_game_to_guild())
@@ -373,8 +428,8 @@ class SourceServer(Server):
     async def update_server_information(self):
         while self.proc.is_running() and not self.bot.is_closed():
             try:
-                with src((self.bot.cfg["local_ip"], 22222)) as server:
-                    info = server.info()
+                info = a2s.info((self.bot.cfg["local_ip"], 22222))
+
                 mode = info["game"]
                 cur_map = info["map"]
                 cur_p = info["player_count"]
@@ -394,12 +449,15 @@ class SourceServer(Server):
 
 
 def generate_server_object(bot, process, gameinfo: dict) -> Server:
-    if 'minecraft' in gameinfo['game'].lower():
+    if 'java' in gameinfo['game'].lower() and (
+            'forge' in ' '.join(gameinfo['command'])
+            or 'minecraft' in ' '.join(gameinfo['command'])
+            or 'nogui' in ' '.join(gameinfo['command'])):  # words cannot describe how scuffed this is.
         return MinecraftServer(bot, process, **gameinfo)
-    elif 'srcds' in gameinfo['game'].lower():
+    elif 'srcds' in gameinfo['executable'].lower():
         return SourceServer(bot, process, **gameinfo)
-    else:
-        return Server(bot, process, **gameinfo)
+    elif 'valheim_server' in gameinfo['executable'].lower():
+        return ValheimServer(bot, process, **gameinfo)
 
 
 class SrcdsLoggingProtocol(asyncio.DatagramProtocol):

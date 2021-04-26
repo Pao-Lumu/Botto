@@ -13,7 +13,8 @@ _all_ = [
     "psutil",
     "regex",
     "pytz",
-    "aiohttp"
+    "aiohttp",
+    "python-a2s"
 ]
 
 windows = []
