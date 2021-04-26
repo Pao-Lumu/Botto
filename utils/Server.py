@@ -88,7 +88,7 @@ class A2SCompatibleServer(Server):
     async def update_server_information(self):
         while self.proc.is_running() and not self.bot.is_closed():
             try:
-                info = a2s.info((self.bot.cfg["local_ip"], 22222))
+                info = a2s.info((self.bot.cfg["local_ip"], 22223))  # TODO: ADD QUERY PORT AS AN OPTION
 
                 mode = info["game"]
                 cur_map = info["map"]
