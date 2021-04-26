@@ -44,11 +44,13 @@ def is_lgsm(proc: psutil.Process):
     return False
 
 
-def find_root_directory(start_dir: Path) -> path:
+def find_root_directory(start_dir: str) -> Path:
     print("find_root_directory")
-    if not path.exists(start_dir):
-        raise FileNotFoundError("Not a valid file/directory path or not accessible")
+    if not os.path.isdir(start_dir):
+        print(start_dir)
+        raise FileNotFoundError(start_dir + "is either not a valid directory path or not accessible")
     else:
+        print("starting to search")
         parent = start_dir
         looking_for_root = True
         while looking_for_root:
@@ -56,10 +58,11 @@ def find_root_directory(start_dir: Path) -> path:
             if "serverfiles" in parent:  # if using LGSM, move up until you're in the top folder, if using MC, ignore
                 continue
             elif "serverfiles" not in parent:  # if already in top folder or running MC return parent
-                return parent
+                looking_for_root = False
+                print("found/defaulted")
+                return Path(parent)
             else:
                 print("Hey... This isn't supposed to happen...")
-    pass
 
 
 def get_game_info() -> Tuple[psutil.Process, Dict]:
