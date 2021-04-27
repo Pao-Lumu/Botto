@@ -28,7 +28,8 @@ class Server:
         self.name = kwargs.pop('name', 'a game')
         self.ip = kwargs.pop('ip', '127.0.0.1')
         self.port = kwargs.pop('port', '22222')
-        self.password = kwargs.pop('rcon_password') if kwargs.get('rcon_password') else kwargs.pop('rcon') if kwargs.get('rcon') else self.bot.cfg["default_rcon_password"]  # TODO: SHORTEN THIS
+        self.password = kwargs.pop('rcon_password') if kwargs.get('rcon_password') else kwargs.pop(
+            'rcon') if kwargs.get('rcon') else self.bot.cfg["default_rcon_password"]
         self.working_dir = kwargs.pop('folder', '')
         self._repr = "a game"
 
@@ -88,12 +89,9 @@ class A2SCompatibleServer(Server):
     async def update_server_information(self):
         while self.proc.is_running() and not self.bot.is_closed():
             try:
-                info = a2s.info((self.bot.cfg["local_ip"], 22223))  # TODO: ADD QUERY PORT AS AN OPTION
+                info = await a2s.ainfo((self.ip, 22223))
 
-                mode = info["game"]
-                cur_map = info["map"]
-                cur_p = info["player_count"]
-                max_p = info["max_players"]
+                cur_p = info.player_count
                 chat_status = f"Playing: {self.readable_name} | ({cur_p} players)"
 
                 await self.bot.chat_channel.edit(topic=chat_status)
@@ -430,10 +428,10 @@ class SourceServer(A2SCompatibleServer):
             try:
                 info = a2s.info((self.bot.cfg["local_ip"], 22222))
 
-                mode = info["game"]
-                cur_map = info["map"]
-                cur_p = info["player_count"]
-                max_p = info["max_players"]
+                mode = info.game
+                cur_map = info.map
+                cur_p = info.player_count
+                max_p = info.max_players
                 cur_status = f"Playing: {self.readable_name} - {mode} on map {cur_map} ({cur_p}/{max_p} players)"
 
                 await self.bot.chat_channel.edit(topic=cur_status)
