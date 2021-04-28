@@ -3,9 +3,9 @@ import datetime
 import os
 import socket
 import textwrap as tw
-from concurrent import futures
 from os import path
 
+import a2s
 import aiofiles
 import discord
 import mcrcon
@@ -15,8 +15,6 @@ import valve.rcon as valvercon
 import valve.source
 from discord import Forbidden
 from mcstatus import MinecraftServer as mc
-from valve.source.a2s import ServerQuerier as src
-import a2s
 
 valvercon.RCONMessage.ENCODING = "utf-8"
 
@@ -92,12 +90,12 @@ class A2SCompatibleServer(Server):
                 info = await a2s.ainfo((self.ip, 22223))
 
                 cur_p = info.player_count
-                chat_status = f"Playing: {self.readable_name} | ({cur_p} players)"
+                chat_status = f"Playing: {self.readable_name} | ({cur_p} player{'s' if cur_p != 1 else ''})"
 
                 await self.bot.chat_channel.edit(topic=chat_status)
                 await self.bot.set_bot_status(self.readable_name,
-                                              f"({cur_p} player(s) online)",
-                                              f"CPU: {self.proc.cpu_percent()}% | Mem: {round(self.proc.memory_percent(), 2)}%")
+                                              f"({cur_p} player{'s' if cur_p != 1 else ''} online)",
+                                              f"CPU: {sum(self.proc.cpu_percent(interval=0.1, percpu=True)) / os.cpu_count()}% | Mem: {round(self.proc.memory_percent(), 2)}%")
             except discord.Forbidden:
                 print("Bot lacks permission to edit channels. (discord.Forbidden)")
             except valve.source.NoResponseError:
@@ -311,6 +309,7 @@ class MinecraftServer(Server):
 class ValheimServer(A2SCompatibleServer):
     def __init__(self, bot, process: psutil.Process, *args, **kwargs):
         super().__init__(bot, process, *args, **kwargs)
+        self.game = kwargs.pop('game', 'vhserver')
         self.bot.loop.create_task(self.chat_from_game_to_guild())
         self.bot.loop.create_task(self.chat_from_guild_to_game())
         self.bot.loop.create_task(self.update_server_information())
@@ -323,10 +322,77 @@ class ValheimServer(A2SCompatibleServer):
         self.logs = kwargs.pop('logs')
 
     async def chat_from_game_to_guild(self):
-        pass  # NYI
+        fpath = path.join(self.logs, "console", self.game, "-console.log")
+
+        server_filter = regex.compile(r".{1,15} ((has (left|joined)|died))")
+        chat_filter = regex.compile(r"(?<=Message) \: (Shout|Normal) ([\w\d\s]){1,15}: (.*)$")
+
+        while self.proc.is_running() and not self.bot.is_closed():
+            try:
+                await self.read_server_log(str(fpath), chat_filter, server_filter)
+            except Exception as e:
+                print(e)
+
+    async def read_server_log(self, fpath, chat_filter, server_filter):
+        async with aiofiles.open(fpath) as log:
+            await log.seek(0, 2)
+            while self.proc.is_running() and not self.bot.is_closed():
+                lines = await log.readlines()  # Returns instantly
+                msgs = list()
+                for line in lines:
+                    raw_playermsg = regex.findall(chat_filter, line)
+                    raw_servermsg = regex.findall(server_filter, line)
+
+                    if raw_playermsg:
+                        x = self.check_for_mentions(raw_playermsg)
+                        msgs.append(x)
+                    elif raw_servermsg:
+                        msgs.append(f'`{raw_servermsg[0].rstrip()}`')
+                    else:
+                        continue
+                if msgs:
+                    x = "\n".join(msgs)
+                    await self.bot.chat_channel.send(f'{x}')
+                for msg in msgs:
+                    self.bot.bprint(f"{self.bot.game} | {''.join(msg)}")
+                await asyncio.sleep(.75)
+
+    def check_for_mentions(self, raw_playermsg) -> str:
+        message = raw_playermsg[0]
+        indexes = [m.start() for m in regex.finditer('@', message)]
+        if indexes:
+            try:
+                for index in indexes:
+                    mention = message[index + 1:]
+                    length = len(mention) + 1
+                    for ind in range(0, length):
+                        member = discord.utils.find(lambda m: m.name == mention[:ind] or m.nick == mention[:ind],
+                                                    self.bot.chat_channel.members)
+                        if member:
+                            message = message.replace("@" + mention[:ind], f"<@{member.id}>")
+                            break
+            except Exception as e:
+                self.bot.bprint("ERROR | Server2Guild Mentions Exception caught: " + str(e))
+                pass
+        return message
 
     async def chat_from_guild_to_game(self):
-        pass  # Need to look into the RCON mod I have.
+        with valvercon.RCON(('127.0.0.1', 22224), self.password) as rcon:
+            while self.proc.is_running() and not self.bot.is_closed():
+                try:
+                    msg = await self.bot.wait_for('message', check=self.is_chat_channel, timeout=5)
+                    if not hasattr(msg, 'author') or (hasattr(msg, 'author') and msg.author.bot):
+                        pass
+                    elif msg.clean_content:
+                        rcon(f"say {msg.author.name}: {msg.clean_content}")
+                        self.bot.bprint(f"Discord | <{msg.author.name}>: {msg.clean_content}")
+                    if msg.attachments:
+                        rcon.command(f"say {msg.author.name}: Image {msg.attachments[0]['filename']}")
+                        self.bot.bprint(f"Discord | {msg.author.name}: Image {msg.attachments[0]['filename']}")
+                except asyncio.exceptions.TimeoutError:
+                    pass
+                except Exception as e:
+                    print(f"Caught Unexpected {type(e)}: ({str(e)}) (Source Server Guild2Game)")
 
 
 class SourceServer(A2SCompatibleServer):
