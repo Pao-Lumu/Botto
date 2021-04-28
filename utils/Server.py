@@ -322,7 +322,7 @@ class ValheimServer(A2SCompatibleServer):
         self.logs = kwargs.pop('logs')
 
     async def chat_from_game_to_guild(self):
-        fpath = path.join(self.logs, "console", self.game, "-console.log")
+        fpath = path.join(self.logs, "console", self.game+"-console.log")
 
         server_filter = regex.compile(r".{1,15} ((has (left|joined)|died))")
         chat_filter = regex.compile(r"(?<=Message) \: (Shout|Normal) ([\w\d\s]){1,15}: (.*)$")
