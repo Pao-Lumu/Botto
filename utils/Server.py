@@ -95,7 +95,7 @@ class A2SCompatibleServer(Server):
                 await self.bot.chat_channel.edit(topic=chat_status)
                 await self.bot.set_bot_status(self.readable_name,
                                               f"({cur_p} player{'s' if cur_p != 1 else ''} online)",
-                                              f"CPU: {sum(psutil.cpu_percent(interval=0.1, )) / os.cpu_count()}% | Mem: {round(self.proc.memory_percent(), 2)}%")
+                                              f"CPU: {self.proc.cpu_percent(interval=0.1)}% | Mem: {round(self.proc.memory_percent(), 2)}%")
             except discord.Forbidden:
                 print("Bot lacks permission to edit channels. (discord.Forbidden)")
             except valve.source.NoResponseError:
