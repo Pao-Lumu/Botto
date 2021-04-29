@@ -322,10 +322,10 @@ class ValheimServer(A2SCompatibleServer):
         self.logs = kwargs.pop('logs')
 
     async def chat_from_game_to_guild(self):
-        fpath = path.join(self.logs, "console", self.game+"-console.log")
+        fpath = path.join(self.logs, "console", self.game + "-console.log")
 
-        server_filter = regex.compile(r".{1,15} ((has (left|joined)|died))")
-        chat_filter = regex.compile(r"(?<=Message) \: (Shout|Normal) ([\w\d\s]){1,15}: (.*)$")
+        server_filter = regex.compile(r"(.{1,15}) ((?:has (?:left|joined)|died))")
+        chat_filter = regex.compile(r"(?<=Message) \: (Shout|Normal) ([\w\d\s]{1,15}): (.*)$")
 
         while self.proc.is_running() and not self.bot.is_closed():
             try:
@@ -344,10 +344,16 @@ class ValheimServer(A2SCompatibleServer):
                     raw_servermsg = regex.findall(server_filter, line)
 
                     if raw_playermsg:
-                        x = self.check_for_mentions(raw_playermsg)
+                        # x = self.check_for_mentions(raw_playermsg)
+                        if raw_playermsg[0] == "Shout":
+                            if "I have arrived" in raw_playermsg[2]:
+                                continue
+                            msgs.append(f"{raw_playermsg[1]} shouted {raw_playermsg[2]}")
+                        elif raw_playermsg[0] == "Normal":
+                            msgs.append(f"{raw_playermsg[1]} said {raw_playermsg[2]}")
                         msgs.append(x)
                     elif raw_servermsg:
-                        msgs.append(f'`{raw_servermsg[0].rstrip()}`')
+                        msgs.append(f'`{" ".join(raw_servermsg)}`')
                     else:
                         continue
                 if msgs:
