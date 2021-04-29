@@ -342,19 +342,19 @@ class ValheimServer(A2SCompatibleServer):
                 msgs = list()
                 for line in lines:
                     raw_playermsg = regex.findall(chat_filter, line)
-                    raw_servermsg = regex.findall(server_filter, line)
+                    raw_servermsg = regex.findall(server_filter, line)[0]
 
                     if raw_playermsg:
                         # x = self.check_for_mentions(raw_playermsg)
-                        if raw_playermsg[0] == "Shout":
-                            if "I have arrived" in raw_playermsg[2]:
+                        if raw_playermsg[0][0] == "Shout":
+                            if "I have arrived" in raw_playermsg[0][2]:
                                 continue
-                            msgs.append(f"{raw_playermsg[1]} shouted {raw_playermsg[2]}")
+                            msgs.append(f"{raw_playermsg[0][1]} shouted {raw_playermsg[0][2]}")
                         elif raw_playermsg[0] == "Normal":
-                            msgs.append(f"{raw_playermsg[1]} said {raw_playermsg[2]}")
+                            msgs.append(f"{raw_playermsg[0][1]} said {raw_playermsg[0][2]}")
                         msgs.append(x)
                     elif raw_servermsg:
-                        msgs.append(f'`{" ".join(raw_servermsg)}`')
+                        msgs.append(f'`{" ".join(raw_servermsg[0])}`')
                     else:
                         continue
                 if msgs:
