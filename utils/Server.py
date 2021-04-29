@@ -339,16 +339,19 @@ class ValheimServer(A2SCompatibleServer):
             await log.seek(0, 2)
             while self.proc.is_running() and not self.bot.is_closed():
                 lines = await log.readlines()  # Returns instantly
-                msgs = list()
+                msgs = []
                 for line in lines:
                     raw_playermsg = regex.findall(chat_filter, line)
                     raw_servermsg = regex.findall(server_filter, line)
 
                     if raw_playermsg:
                         # x = self.check_for_mentions(raw_playermsg)
+                        if raw_playermsg[0][1] == "RCON":
+                            continue
+                        if "I have arrived" in raw_playermsg[0][2]:
+                            continue
+
                         if raw_playermsg[0][0] == "Shout":
-                            if "I have arrived" in raw_playermsg[0][2]:
-                                continue
                             msgs.append(f"{raw_playermsg[0][1]} shouted {raw_playermsg[0][2]}")
                         elif raw_playermsg[0] == "Normal":
                             msgs.append(f"{raw_playermsg[0][1]} said {raw_playermsg[0][2]}")
