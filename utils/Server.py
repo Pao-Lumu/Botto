@@ -342,7 +342,7 @@ class ValheimServer(A2SCompatibleServer):
                 msgs = list()
                 for line in lines:
                     raw_playermsg = regex.findall(chat_filter, line)
-                    raw_servermsg = regex.findall(server_filter, line)[0]
+                    raw_servermsg = regex.findall(server_filter, line)
 
                     if raw_playermsg:
                         # x = self.check_for_mentions(raw_playermsg)
