@@ -331,6 +331,7 @@ class ValheimServer(A2SCompatibleServer):
             try:
                 await self.read_server_log(str(fpath), chat_filter, server_filter)
             except Exception as e:
+                print(type(e))
                 print(e)
 
     async def read_server_log(self, fpath, chat_filter, server_filter):
