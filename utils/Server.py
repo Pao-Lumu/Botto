@@ -340,6 +340,7 @@ class ValheimServer(A2SCompatibleServer):
             while self.proc.is_running() and not self.bot.is_closed():
                 lines = await log.readlines()  # Returns instantly
                 msgs = []
+                print(msgs)
                 for line in lines:
                     raw_playermsg = regex.findall(chat_filter, line)
                     raw_servermsg = regex.findall(server_filter, line)
