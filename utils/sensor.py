@@ -57,10 +57,12 @@ def find_root_directory(start_dir: str) -> str:
             parent, current = path.split(parent)
             if "serverfiles" in parent:  # if using LGSM, move up until you're in the top folder, if using MC, ignore
                 continue
-            elif "serverfiles" not in parent:  # if already in top folder or running MC return parent
+            elif "serverfiles" not in parent and "serverfiles" in current:  # if already in top folder or running MC return parent
                 looking_for_root = False
                 # print("found/defaulted")
                 return parent
+            elif "serverfiles" not in parent:
+                return os.path.join(parent, current)
             else:
                 print("Hey... This isn't supposed to happen...")
 
