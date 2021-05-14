@@ -527,7 +527,9 @@ def generate_server_object(bot, process, gameinfo: dict) -> Server:
     if 'java' in gameinfo['game'].lower() and (
             'forge' in ' '.join(gameinfo['command'])
             or 'minecraft' in ' '.join(gameinfo['command'])
+            or 'minecraft' in gameinfo['game']
             or 'nogui' in ' '.join(gameinfo['command'])):  # words cannot describe how scuffed this is.
+        bot.bprint("Found Minecraft ")
         return MinecraftServer(bot, process, **gameinfo)
     elif 'srcds' in gameinfo['executable'].lower():
         return SourceServer(bot, process, **gameinfo)
