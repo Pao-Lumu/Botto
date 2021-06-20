@@ -524,10 +524,10 @@ class SourceServer(A2SCompatibleServer):
 
 
 def generate_server_object(bot, process, gameinfo: dict) -> Server:
-    if 'java' in gameinfo['game'].lower() and (
+    if 'java' in gameinfo['executable'].lower() and (
             'forge' in ' '.join(gameinfo['command'])
-            or 'minecraft' in ' '.join(gameinfo['command'])
-            or 'minecraft' in gameinfo['game']
+            or 'server.jar' in ' '.join(gameinfo['command'])
+            or gameinfo['game'] == "minecraft"
             or 'nogui' in ' '.join(gameinfo['command'])):  # words cannot describe how scuffed this is.
         print("Found Minecraft")
         return MinecraftServer(bot, process, **gameinfo)
@@ -535,6 +535,8 @@ def generate_server_object(bot, process, gameinfo: dict) -> Server:
         return SourceServer(bot, process, **gameinfo)
     elif 'valheim_server' in gameinfo['executable'].lower():
         return ValheimServer(bot, process, **gameinfo)
+    else:
+        print("Didn't find server... hm.")
 
 
 class SrcdsLoggingProtocol(asyncio.DatagramProtocol):
