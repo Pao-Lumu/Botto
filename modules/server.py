@@ -93,17 +93,16 @@ Items: {items}
             password = self.bot.gameinfo["rcon"] if self.bot.gameinfo["rcon"] else self.bot.cfg["default_rcon_password"]
         except KeyError:
             password = self.bot.cfg["default_rcon_password"]
-        if "minecraft" in self.bot.gwd:
+        try:
             rcon = mcrcon.MCRcon("127.0.0.1", password, 22232)
-            try:
-                rcon.connect()
-                x = rcon.command(f'{concmd.lstrip("/")}')
-                if x:
-                    await ctx.send(f'`{x}`')
-            except Exception as e:
-                await ctx.send(str(e))
-            finally:
-                rcon.disconnect()
+            rcon.connect()
+            x = rcon.command(f'{concmd.lstrip("/")}')
+            if x:
+                await ctx.send(f'`{x}`')
+        except Exception as e:
+            await ctx.send(str(e))
+        finally:
+            rcon.disconnect()
 
     @commands.is_owner()
     @minecraft.command()
