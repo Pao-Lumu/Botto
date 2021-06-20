@@ -131,6 +131,12 @@ class MinecraftServer(Server):
             print(e)
             pass
 
+    async def _move_alog(self):
+        await self._rcon_connect()
+        async with self.rcon_lock:
+            self.rcon("seed")
+        pass
+
     async def chat_from_game_to_guild(self):
         fpath = path.join(self.working_dir, "logs", "latest.log") if path.exists(
             path.join(self.working_dir, "logs", "latest.log")) else os.path.join(self.working_dir, "server.log")
@@ -141,6 +147,8 @@ class MinecraftServer(Server):
         while self.proc.is_running() and not self.bot.is_closed():
             try:
                 await self.read_server_log(str(fpath), player_filter, server_filter)
+                await self._move_alog()
+                await asyncio.sleep(1)
             except Exception as e:
                 print(e)
 
@@ -169,7 +177,6 @@ class MinecraftServer(Server):
                     self.bot.bprint(f"{self.bot.game} | {''.join(msg)}")
 
                 if date != datetime.datetime.now().day:
-                    await asyncio.sleep(10)
                     break
                 await asyncio.sleep(.75)
 
