@@ -134,7 +134,7 @@ class MinecraftServer(Server):
     async def _move_alog(self):
         await self._rcon_connect()
         async with self.rcon_lock:
-            self.rcon("seed")
+            self.rcon.command("seed")
         pass
 
     async def chat_from_game_to_guild(self):
