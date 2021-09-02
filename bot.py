@@ -9,6 +9,7 @@ import sys
 
 # noinspection PyPackageRequirements
 import discord
+import psutil
 import pyfiglet
 import toml
 # noinspection PyPackageRequirements
@@ -23,7 +24,7 @@ if len(sys.argv) > 1:
 
 initial_extensions = [
     'modules.admin',
-    'modules.santa',
+    # 'modules.santa',
     'modules.music',
     'modules.comrade',
     'modules.server',
@@ -360,8 +361,12 @@ if __name__ == '__main__':
     bot.log = log
     bot.cfg = config['bot_configuration']
     # game = game.Game(bot)
+    if psutil.WINDOWS:
+        print("Windows might be compatible sometimes, but is not supported.")
     try:
         cp1 = datetime.datetime.now() - start
         bot.run(token, start_time=start)
+    except Exception as e:
+        print(e)
     finally:
         sys.exit(1)

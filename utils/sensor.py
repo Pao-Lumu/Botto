@@ -14,7 +14,6 @@ def get_running() -> psutil.Process:
     # print("get_running")
     try:
         if psutil.WINDOWS:
-            print("Windows might be compatible sometimes, but is not supported.")
             for p in psutil.process_iter(attrs=['connections']):
                 for x in p.info['connections']:
                     if x.laddr.port == 22222:
