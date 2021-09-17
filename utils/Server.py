@@ -102,7 +102,8 @@ class A2SCompatibleServer(Server):
                 print("No Response from server before timeout (NoResponseError)")
             except Exception as e:
                 print(f"Error: {e} {type(e)}")
-            await asyncio.sleep(30)
+            finally:
+                await asyncio.sleep(30)
 
 
 class MinecraftServer(Server):
@@ -328,89 +329,89 @@ class ValheimServer(A2SCompatibleServer):
 
         self.logs = kwargs.pop('logs')
 
-    async def chat_from_game_to_guild(self):
-        fpath = path.join(self.logs, "console", self.game + "-console.log")
-
-        server_filter = regex.compile(r"(.{1,15}) ((?:has (?:left|joined)|died))")
-        chat_filter = regex.compile(r"(?<=Message) \: (Shout|Normal) ([\w\d\s]{1,15}): (.*)$")
-
-        while self.proc.is_running() and not self.bot.is_closed():
-            try:
-                await self.read_server_log(str(fpath), chat_filter, server_filter)
-            except Exception as e:
-                print(type(e))
-                print(e)
-
-    async def read_server_log(self, fpath, chat_filter, server_filter):
-        async with aiofiles.open(fpath) as log:
-            await log.seek(0, 2)
-            while self.proc.is_running() and not self.bot.is_closed():
-                lines = await log.readlines()  # Returns instantly
-                msgs = []
-                print(msgs)
-                for line in lines:
-                    raw_playermsg = regex.findall(chat_filter, line)
-                    raw_servermsg = regex.findall(server_filter, line)
-
-                    if raw_playermsg:
-                        # x = self.check_for_mentions(raw_playermsg)
-                        if raw_playermsg[0][1] == "RCON":
-                            continue
-                        if "I have arrived" in raw_playermsg[0][2]:
-                            continue
-
-                        if raw_playermsg[0][0] == "Shout":
-                            msgs.append(f"{raw_playermsg[0][1]} shouted {raw_playermsg[0][2]}")
-                        elif raw_playermsg[0] == "Normal":
-                            msgs.append(f"{raw_playermsg[0][1]} said {raw_playermsg[0][2]}")
-                        msgs.append(x)
-                    elif raw_servermsg:
-                        msgs.append(f'`{" ".join(raw_servermsg[0])}`')
-                    else:
-                        continue
-                if msgs:
-                    x = "\n".join(msgs)
-                    await self.bot.chat_channel.send(f'{x}')
-                for msg in msgs:
-                    self.bot.bprint(f"{self.bot.game} | {''.join(msg)}")
-                await asyncio.sleep(.75)
-
-    def check_for_mentions(self, raw_playermsg) -> str:
-        message = raw_playermsg[0]
-        indexes = [m.start() for m in regex.finditer('@', message)]
-        if indexes:
-            try:
-                for index in indexes:
-                    mention = message[index + 1:]
-                    length = len(mention) + 1
-                    for ind in range(0, length):
-                        member = discord.utils.find(lambda m: m.name == mention[:ind] or m.nick == mention[:ind],
-                                                    self.bot.chat_channel.members)
-                        if member:
-                            message = message.replace("@" + mention[:ind], f"<@{member.id}>")
-                            break
-            except Exception as e:
-                self.bot.bprint("ERROR | Server2Guild Mentions Exception caught: " + str(e))
-                pass
-        return message
-
-    async def chat_from_guild_to_game(self):
-        with valvercon.RCON(('127.0.0.1', 22224), self.password) as rcon:
-            while self.proc.is_running() and not self.bot.is_closed():
-                try:
-                    msg = await self.bot.wait_for('message', check=self.is_chat_channel, timeout=5)
-                    if not hasattr(msg, 'author') or (hasattr(msg, 'author') and msg.author.bot):
-                        pass
-                    elif msg.clean_content:
-                        rcon(f"say {msg.author.name}: {msg.clean_content}")
-                        self.bot.bprint(f"Discord | <{msg.author.name}>: {msg.clean_content}")
-                    if msg.attachments:
-                        rcon.command(f"say {msg.author.name}: Image {msg.attachments[0]['filename']}")
-                        self.bot.bprint(f"Discord | {msg.author.name}: Image {msg.attachments[0]['filename']}")
-                except asyncio.exceptions.TimeoutError:
-                    pass
-                except Exception as e:
-                    print(f"Caught Unexpected {type(e)}: ({str(e)}) (Source Server Guild2Game)")
+    # async def chat_from_game_to_guild(self):
+    #     fpath = path.join(self.logs, "console", self.game + "-console.log")
+    #
+    #     server_filter = regex.compile(r"(.{1,15}) ((?:has (?:left|joined)|died))")
+    #     chat_filter = regex.compile(r"(?<=Message) \: (Shout|Normal) ([\w\d\s]{1,15}): (.*)$")
+    #
+    #     while self.proc.is_running() and not self.bot.is_closed():
+    #         try:
+    #             await self.read_server_log(str(fpath), chat_filter, server_filter)
+    #         except Exception as e:
+    #             print(type(e))
+    #             print(e)
+    #
+    # async def read_server_log(self, fpath, chat_filter, server_filter):
+    #     async with aiofiles.open(fpath) as log:
+    #         await log.seek(0, 2)
+    #         while self.proc.is_running() and not self.bot.is_closed():
+    #             lines = await log.readlines()  # Returns instantly
+    #             msgs = []
+    #             print(msgs)
+    #             for line in lines:
+    #                 raw_playermsg = regex.findall(chat_filter, line)
+    #                 raw_servermsg = regex.findall(server_filter, line)
+    #
+    #                 if raw_playermsg:
+    #                     # x = self.check_for_mentions(raw_playermsg)
+    #                     if raw_playermsg[0][1] == "RCON":
+    #                         continue
+    #                     if "I have arrived" in raw_playermsg[0][2]:
+    #                         continue
+    #
+    #                     if raw_playermsg[0][0] == "Shout":
+    #                         msgs.append(f"{raw_playermsg[0][1]} shouted {raw_playermsg[0][2]}")
+    #                     elif raw_playermsg[0] == "Normal":
+    #                         msgs.append(f"{raw_playermsg[0][1]} said {raw_playermsg[0][2]}")
+    #                     msgs.append(x)
+    #                 elif raw_servermsg:
+    #                     msgs.append(f'`{" ".join(raw_servermsg[0])}`')
+    #                 else:
+    #                     continue
+    #             if msgs:
+    #                 x = "\n".join(msgs)
+    #                 await self.bot.chat_channel.send(f'{x}')
+    #             for msg in msgs:
+    #                 self.bot.bprint(f"{self.bot.game} | {''.join(msg)}")
+    #             await asyncio.sleep(.75)
+    #
+    # def check_for_mentions(self, raw_playermsg) -> str:
+    #     message = raw_playermsg[0]
+    #     indexes = [m.start() for m in regex.finditer('@', message)]
+    #     if indexes:
+    #         try:
+    #             for index in indexes:
+    #                 mention = message[index + 1:]
+    #                 length = len(mention) + 1
+    #                 for ind in range(0, length):
+    #                     member = discord.utils.find(lambda m: m.name == mention[:ind] or m.nick == mention[:ind],
+    #                                                 self.bot.chat_channel.members)
+    #                     if member:
+    #                         message = message.replace("@" + mention[:ind], f"<@{member.id}>")
+    #                         break
+    #         except Exception as e:
+    #             self.bot.bprint("ERROR | Server2Guild Mentions Exception caught: " + str(e))
+    #             pass
+    #     return message
+    #
+    # async def chat_from_guild_to_game(self):
+    #     with valvercon.RCON(('127.0.0.1', 22224), self.password) as rcon:
+    #         while self.proc.is_running() and not self.bot.is_closed():
+    #             try:
+    #                 msg = await self.bot.wait_for('message', check=self.is_chat_channel, timeout=5)
+    #                 if not hasattr(msg, 'author') or (hasattr(msg, 'author') and msg.author.bot):
+    #                     pass
+    #                 elif msg.clean_content:
+    #                     rcon(f"say {msg.author.name}: {msg.clean_content}")
+    #                     self.bot.bprint(f"Discord | <{msg.author.name}>: {msg.clean_content}")
+    #                 if msg.attachments:
+    #                     rcon.command(f"say {msg.author.name}: Image {msg.attachments[0]['filename']}")
+    #                     self.bot.bprint(f"Discord | {msg.author.name}: Image {msg.attachments[0]['filename']}")
+    #             except asyncio.exceptions.TimeoutError:
+    #                 pass
+    #             except Exception as e:
+    #                 print(f"Caught Unexpected {type(e)}: ({str(e)}) (Source Server Guild2Game)")
 
 
 class SourceServer(A2SCompatibleServer):
