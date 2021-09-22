@@ -510,7 +510,7 @@ class SourceServer(A2SCompatibleServer):
     async def update_server_information(self):
         while self.proc.is_running() and not self.bot.is_closed():
             try:
-                info = a2s.info((self.bot.cfg["local_ip"], 22222))
+                info = await a2s.ainfo((self.bot.cfg["local_ip"], 22222))
 
                 mode = info.game
                 cur_map = info.map
